@@ -78,7 +78,7 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - The week is Tuesday to Monday UK time, the same as the Blitz week. The draft opens on Tuesday
   and locks at the week's first kickoff. [Owner: good for now]
 - Known risks of personal packs, accepted by the owner: every extra wallet is an extra draw
-  (limited by the 150,000 $ELEVN holding and the 72-hour hold), and random packs with prizes
+  (limited by the 300,000 $ELEVN holding and the 72-hour hold), and random packs with prizes
   weigh more on the pending legal review than shared packs would.
 
 ### 3.3 Penalty Shootout [Owner: side mini-game]
@@ -120,12 +120,12 @@ Three places:
 
 ## 5. Prizes and access
 
-- Holding 150,000 $ELEVN unlocks both modes: one Blitz entry per matchday and one draft per
-  week. [Proposed]
+- Holding 150,000 $ELEVN unlocks Blitz, the main mode: one entry per matchday. Holding
+  150,000 more (300,000 in all) also unlocks Draft: one draft per week. [Owner]
 - The 60% prize share: Blitz 60%, Draft 40%. Shootout 0%. [Owner]
 - Blitz: one pot per matchday, all of it to the daily board. [Owner] Draft: one pot per week.
   [Owner] A pot with too few entrants rolls forward (threshold [Open]).
-- The Blitz daily board and the Draft weekly board each pay the top 10. [Proposed]
+- The Blitz daily board pays the top 10. [Proposed] The Draft weekly board pays the top 5. [Owner]
 - Blitz prizes are sent at day close, one transfer per winner, only if the wallet still holds
   the requirement and passes the 72-hour hold; a failed transfer falls back to the daily batch.
   [Owner] Details in `docs/blueprint/BLITZ.md`.
@@ -214,12 +214,12 @@ Settled by the owner on 2026-11-14:
 - Draft: weekly, personal packs with the fairness rules in 3.2, no goalkeepers, 5 packs of 3,
   five-a-side, at most 2 per club, locking at the week's first kickoff.
 - Penalty Shootout stays as a side mini-game with no prize.
-- Prize split: Blitz 60%, Draft 40%.
+- Prize split: Blitz 60%, Draft 40%. Draft pays the top 5.
+- Access: 150,000 $ELEVN for Blitz; 150,000 more for Draft.
 - Prizes in SOL on devnet; the weekly $500 from fees when they cover it, else project funds.
 - Section 2 design work goes through the Higgsfield MCP together with the references.
 
 Still to confirm:
-- Draft: one captain; top 10 paid.
+- Draft: one captain on double points, as in Blitz?
 - Blitz: the "still to confirm" list at the end of BLITZ.md.
-- The 150,000 $ELEVN rule unlocking both modes.
 - The design of the payout wallet that sends prizes at day close.
