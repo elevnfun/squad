@@ -1,4 +1,4 @@
-# elevn 2.0 blueprint (v4, with the owner's answers of 2026-11-14)
+# elevn 2.0 blueprint (v5, with the owner's revised Blitz rules of 2026-11-14)
 
 **Status: waiting for the owner's approval. Nothing here is built yet.**
 Tags: [Owner] = stated by the owner, build as written. [Proposed] = recommended, needs a yes.
@@ -31,7 +31,7 @@ Midweek days, international breaks, the winter break and the summer have no matc
 
 | Mode | Role | Result in | Prizes |
 |---|---|---|---|
-| Matchday Blitz | Main | About 2 hours | SOL: a prize per fixture at full time, plus a matchday prize |
+| Matchday Blitz | Main | About 2 hours per squad; the day's prize at the last whistle | A daily pot (top 10) and a fixed $500 USDC weekly prize |
 | Matchday Draft | Main | That matchday's matches | SOL, one pot per matchday |
 | Season (the weekly game that exists today) | Under Squad | A week | SOL, weekly, as now |
 | Squad Battles | Under Squad | Seconds | Ladder only, no SOL |
@@ -40,23 +40,26 @@ Midweek days, international breaks, the winter break and the summer have no matc
 | Higher or Lower, daily grid | Parked | | |
 
 ### 3.1 Matchday Blitz [Owner: main mode]
-- Pick 3 players from one real fixture and make one captain (double points). Locks at kickoff.
-- At least one pick from each club. [Owner]
-- You can make a team for every fixture of the matchday. Your matchday total is the sum of all
-  your teams' points, and the matchday leaderboard updates live as matches are played. [Owner]
-- Every fixture of the matchday opens for picks at once, so all teams can be set in one sitting.
-  Each team can be changed until its own kickoff. A fixture you skip scores 0. [Proposed]
-- Confirmed line-ups are shown about an hour before kickoff, so you can swap out a player who
-  is not starting. [Proposed]
-- Live points during the match. The result locks after one stats re-pull, about 15 minutes
-  after full time; later corrections are ignored, and the rules say so. [Owner]
-- Two prizes [Owner]: half of the Blitz pot goes to fixture prizes, shared equally between that
-  matchday's fixtures and won by the top 3 on each fixture's board at full time; the other half
-  goes to the top 10 on the matchday table after the last match.
-- A prize is credited to the player's prize page the moment the result locks, and the SOL is
-  sent in the next daily batch.
-- To watch in section 4: on matchdays with 10 or more fixtures, whether players finish all
-  their teams. If they don't, count only the best 6.
+
+The full rules, edge cases, data model and tests are in `docs/blueprint/BLITZ.md` (the owner's
+document of 2026-11-14). It replaces every earlier Blitz rule. In short:
+
+- Each matchday a player builds 3 squads, one per fixture, on any 3 fixtures they choose from the
+  launch leagues. On a matchday with fewer than 3 fixtures, one squad per fixture. [Owner]
+- A squad is 3 players from one fixture, at least one from each club, with one captain (double
+  points). [Owner] A fixture can be chosen only once. [Proposed]
+- Each squad locks at its own kickoff. Until then it can be changed or swapped to another fixture
+  that has not kicked off. Picking late with the live board in view is allowed, and the rules
+  page says so. [Owner]
+- The day total is the sum of the 3 squads, on one live daily leaderboard. [Owner]
+- Each squad goes Live, then Full time (provisional), then Banked about 15 minutes after full
+  time, with a reveal card. The board shows the prize line and "If the day ended now you'd win
+  $X". Banked points are final. [Owner]
+- Daily prize: the top 10 on the daily board, credited and sent when the last fixture of the
+  matchday is banked. [Owner; top 10 and its split are Proposed]
+- Weekly prize: a fixed $500 USDC, on the sum of a player's best 3 daily totals that week.
+  [Owner; scoring and split are Proposed]
+- No per-fixture prizes, no "team for every fixture", no full-time leader bonus. [Owner]
 - Scoring: the existing engine, no Rising Stars, match bonus switched on. [Proposed]
 
 ### 3.2 Matchday Draft [Owner: main mode]
@@ -109,12 +112,16 @@ Four places:
 
 - Holding 150,000 $ELEVN unlocks every mode, plus one Season squad as today. [Proposed]
 - The 60% prize share: Blitz 40%, Draft 40%, Season 20%. Battles and Shootout 0%. [Owner: for now, may change later]
-- One pot per mode per matchday; the Blitz pot is split half to fixture prizes, half to the
-  matchday prize (section 3.1). [Owner] A pot with too few entrants rolls forward.
-- Fixture prizes pay the top 3; matchday prizes (Blitz and Draft) pay the top 10. Exact ties
-  split the prize. [Proposed]
-- Prizes are credited when the result locks and paid in the next daily batch, only if the wallet
-  still holds the requirement. [Owner] (The 14-part vesting stays for Season.)
+- One pot per mode per matchday. All of the Blitz pot goes to the daily board. [Owner] A pot with
+  too few entrants rolls forward (threshold [Open]).
+- Blitz and Draft matchday prizes pay the top 10. [Proposed]
+- Blitz prizes are sent at day close, one transfer per winner, only if the wallet still holds
+  the requirement and passes the 72-hour hold; a failed transfer falls back to the daily batch.
+  [Owner] Blitz prizes in USDC. [Proposed] Details in `docs/blueprint/BLITZ.md`.
+- The Blitz weekly $500 USDC is a fixed prize paid by the project, not from creator fees.
+  [Owner] Its treasury source is [Open], and it must go to the legal review.
+- Draft prizes are credited after the last match and paid in the next daily batch. The 14-part
+  vesting stays for Season.
 - One prize per wallet per board.
 - The 72-hour holding rule is in config.toml but not enforced in code. It must be enforced
   before any matchday prize is paid.
@@ -182,11 +189,16 @@ Each step ships as a new card on Today, with tests against real cached matches.
 ## 9. Decisions
 
 Settled by the owner on 2026-11-14: shared Draft packs; no goalkeepers in Draft; the 40 / 40 / 20
-split for now; Blitz pays per fixture at full time and per matchday, half each, credited at once
-and paid in the next daily batch; Blitz totals are the sum of every fixture team, with at least
-one pick per club;
-section 2 design work goes through the Higgsfield MCP together with the references.
+split for now; the revised Blitz rules in `docs/blueprint/BLITZ.md` (3 squads on 3 chosen
+fixtures, lock at each kickoff, the banked moment, the daily prize sent at the last whistle, a
+$500 USDC weekly prize, no full-time leader bonus); section 2 design work goes through the
+Higgsfield MCP together with the references.
 
-Still [Proposed], waiting for a yes: all Blitz fixtures open at once and line-ups shown; top 3 per
-fixture and top 10 per matchday paid; the 150,000 $ELEVN rule unlocking every mode; Draft only on
-matchdays with at least 4 fixtures.
+Still to confirm:
+- Blitz (listed in full at the end of BLITZ.md): daily top 10 and its split; USDC for daily
+  prizes; tiebreak order; best-3 weekly scoring and its split; week boundaries; edge cases; the
+  treasury source for the $500; the rollover threshold; how the Blitz weekly prize sits beside
+  Season's weekly prize and Draft's weekly table.
+- How prizes are sent at day close without the owner signing: today the server holds no key.
+- The 150,000 $ELEVN rule unlocking every mode.
+- Draft only on matchdays with at least 4 fixtures, top 10 paid.

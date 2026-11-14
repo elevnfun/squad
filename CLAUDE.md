@@ -17,10 +17,11 @@ Owner's decisions (2026-11-14):
 - Matchday Blitz and Daily Draft are the two main modes.
 - Draft: 5 packs of 3 (15 players) across the three leagues; a five-a-side with at least
   1 defender, 1 midfielder, 1 attacker; no goalkeepers; at most 2 players per club. Packs are the same for everyone.
-- Blitz: a team of 3 for each fixture (at least 1 player from each club); the matchday total
-  is the sum of all fixture teams, on a live leaderboard.
-- Results must feel instant: Blitz pays a prize per fixture at full time (half the Blitz pot) and a
-  matchday prize (the other half); prizes are credited at once and paid in the next daily batch.
+- Blitz: full rules in `docs/blueprint/BLITZ.md`, which replaces every earlier Blitz rule. 3 squads
+  per matchday on any 3 fixtures the player chooses; each squad is 3 players from one fixture (at
+  least 1 from each club) and locks at its own kickoff; one live daily leaderboard; a "banked"
+  moment after each full time; the daily prize is sent at the last whistle of the day; a fixed
+  $500 USDC weekly prize. No per-fixture prizes and no full-time leader bonus.
 - Prize split 40% Blitz, 40% Draft, 20% Season for now.
 - Section 2 design goes through the Higgsfield MCP, with the references.
 - Squad Battles is in, as one ladder across all three leagues.
