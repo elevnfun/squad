@@ -24,7 +24,8 @@ Owner's decisions (2026-11-14):
   least 1 from each club) and locks at its own kickoff; one live daily leaderboard; a "banked"
   moment after each full time; the daily prize is sent at the last whistle of the day; a fixed
   $500 weekly prize. No per-fixture prizes and no full-time leader bonus.
-- Prizes in SOL while on devnet.
+- Prize split: Blitz 60%, Draft 40%. Prizes in SOL while on devnet.
+- Penalty Shootout stays as a side mini-game with no prize.
 - Section 2 design goes through the Higgsfield MCP, with the references.
 - Live predictions are parked.
 - Above all: do not overcomplicate the platform or let it get jumbled.

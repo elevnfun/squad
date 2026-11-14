@@ -1,4 +1,4 @@
-# elevn 2.0 blueprint (v6, two modes only, owner's decision of 2026-11-14)
+# elevn 2.0 blueprint (v7, two modes and one mini-game, owner's decisions of 2026-11-14)
 
 **Status: waiting for the owner's approval. Nothing here is built yet.**
 Tags: [Owner] = stated by the owner, build as written. [Proposed] = recommended, needs a yes.
@@ -36,7 +36,9 @@ Midweek days, international breaks, the winter break and the summer have no matc
 
 Removed by the owner on 2026-11-14: Season (the weekly squad-of-15 game that is live today),
 and with it Squad Battles, which needed a Season eleven. Parked: live predictions, Higher or
-Lower, the daily grid. Penalty Shootout: [Open], see section 9.
+Lower, the daily grid.
+
+Penalty Shootout stays as a side mini-game with no prize (section 3.3). [Owner]
 
 ### 3.1 Matchday Blitz [Owner: main mode]
 
@@ -67,17 +69,23 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - Build a five-a-side from your 15: at least 1 defender, 1 midfielder and 1 attacker, no
   goalkeepers, at most 2 players from one club. [Owner] One captain. [Proposed]
 - The team scores on that week's real matches and is paid once a week. [Owner]
-- To keep the luck fair [Proposed]:
+- To keep the luck fair [Owner]:
   - Packs are fixed per wallet per week, with no re-rolls and one draft per wallet.
   - Every pack has the same make-up by price: one top player, one mid-priced, one budget. Luck
     decides who you get, not how strong your packs are.
   - Packs only hold players whose club plays that week, and every 15 includes at least
     2 defenders, 2 midfielders and 2 attackers.
 - The week is Tuesday to Monday UK time, the same as the Blitz week. The draft opens on Tuesday
-  and locks at the week's first kickoff. [Proposed]
+  and locks at the week's first kickoff. [Owner: good for now]
 - Known risks of personal packs, accepted by the owner: every extra wallet is an extra draw
   (limited by the 150,000 $ELEVN holding and the 72-hour hold), and random packs with prizes
   weigh more on the pending legal review than shared packs would.
+
+### 3.3 Penalty Shootout [Owner: side mini-game]
+- Shooter picks a corner and power, keeper picks a dive; five rounds.
+- You play against another player's stored picks, so there is no queue.
+- A ladder for bragging rights. No prize, because it is mostly guessing.
+- It is not a third mode: it sits as a small card under the two mode cards on Today.
 
 ## 4. Keeping it simple
 
@@ -85,7 +93,7 @@ Three places:
 
 | Nav | What it holds |
 |---|---|
-| Today | What you can play now: the Blitz card and the Draft card |
+| Today | What you can play now: the Blitz card, the Draft card, and the small Shootout card |
 | Ranks | The Blitz daily and weekly boards, the Draft weekly board, and your prizes |
 | Chat | The community room |
 
@@ -98,7 +106,7 @@ Three places:
 
 - Holding 150,000 $ELEVN unlocks both modes: one Blitz entry per matchday and one draft per
   week. [Proposed]
-- The 60% prize share: with Season gone, Blitz 50% and Draft 50%. [Proposed; was 40 / 40 / 20]
+- The 60% prize share: Blitz 60%, Draft 40%. Shootout 0%. [Owner]
 - Blitz: one pot per matchday, all of it to the daily board. [Owner] Draft: one pot per week.
   [Owner] A pot with too few entrants rolls forward (threshold [Open]).
 - The Blitz daily board and the Draft weekly board each pay the top 10. [Proposed]
@@ -174,8 +182,9 @@ and replacing the scroll story with a static poster (the owner wants the designe
    pots; 72-hour hold enforced; the payout wallet; the Today hub and three-tab navigation.
 2. Matchday Blitz.
 3. Draft.
-4. Retire Season: close the current gameweek game and its pages once Blitz is live.
-5. Home scroll story (designed in section 2, built here).
+4. Penalty Shootout.
+5. Retire Season: close the current gameweek game and its pages once Blitz is live.
+6. Home scroll story (designed in section 2, built here).
 
 Each mode ships with tests against real cached matches.
 
@@ -184,14 +193,15 @@ Each mode ships with tests against real cached matches.
 Settled by the owner on 2026-11-14:
 - Two modes only: Matchday Blitz and Draft. Season is removed.
 - Blitz: the rules in `docs/blueprint/BLITZ.md`.
-- Draft: weekly, personal packs, no goalkeepers, 5 packs of 3, five-a-side, at most 2 per club.
+- Draft: weekly, personal packs with the fairness rules in 3.2, no goalkeepers, 5 packs of 3,
+  five-a-side, at most 2 per club, locking at the week's first kickoff.
+- Penalty Shootout stays as a side mini-game with no prize.
+- Prize split: Blitz 60%, Draft 40%.
 - Prizes in SOL on devnet; the weekly $500 from fees when they cover it, else project funds.
 - Section 2 design work goes through the Higgsfield MCP together with the references.
 
 Still to confirm:
-- Penalty Shootout: keep it as a side mini-game with no prize, or remove it too?
-- The prize split with Season gone: 50 / 50?
-- Draft: the fairness rules for packs; one captain; locking at the week's first kickoff; top 10.
+- Draft: one captain; top 10 paid.
 - Blitz: the "still to confirm" list at the end of BLITZ.md.
 - The 150,000 $ELEVN rule unlocking both modes.
 - The design of the payout wallet that sends prizes at day close.
