@@ -1,0 +1,262 @@
+# $ELEVN game config: every number from the Project Brief & Build Spec lives here.
+# Status tags follow the brief: [Confirmed] build as written, [Proposed] confirm with
+# the owner first, [Open] undecided, [Deferred] not in the first build.
+# Secrets never go here; the API key is read from APIFOOTBALL_KEY (see .env.example).
+
+[seasons]
+last = 2025      # 2025/26
+current = 2026   # 2026/27
+
+# ------------------------------------------------------------------ leagues ---
+# [Confirmed] launch with PL, La Liga, Bundesliga; Serie A and Ligue 1 later
+[leagues.premier-league]
+id = 39
+phase = "launch"
+
+[leagues.la-liga]
+id = 140
+phase = "launch"
+
+[leagues.bundesliga]
+id = 78
+phase = "launch"
+
+[leagues.serie-a]
+id = 135
+phase = "later"
+
+[leagues.ligue-1]
+id = 61
+phase = "later"
+
+# ------------------------------------------------------------------- squad ---
+[squad]                                     # [Confirmed 2026-11-01]
+size = 15
+quota = { GK = 2, DEF = 5, MID = 5, FWD = 3 }
+starting_xi_min = { GK = 1, DEF = 3, MID = 2, FWD = 1 }
+starting_xi_size = 11
+budget = 100.0
+max_per_club = 3
+captain_multiplier = 2.0
+vice_captain = true
+auto_subs = true
+max_rising_stars = 2                        # [Confirmed]
+dark_horse_slot = false                     # [Deferred] add after launch
+# [Confirmed 2026-11-01] While editing, a draft may hold any number of players at any
+# total cost, in any positions or clubs. Every rule above (size, quota, budget, club
+# limit, Rising Stars) is checked only when the user saves; an invalid draft cannot be saved.
+validate_on_save_only = true
+# [Confirmed 2026-11-01] Users pick every player themselves (no auto-built or suggested
+# squads). A squad belongs to one league area and may only contain that league's players;
+# a user in several areas has a separate squad per area.
+single_league_per_squad = true
+auto_pick = false
+
+# --------------------------------------------------------------- transfers ---
+[transfers]                                 # [Confirmed]
+free_per_gameweek = 3
+carryover = false
+extra_transfer_penalty = -8
+free_replacement_for_unavailable = true     # injured / suspended / left league / off-season
+# [Confirmed 2026-11-01] players are sold at their current price, profit included: a squad's
+# budget is its bank plus what its players sell for today. Build at 100M; if two of your
+# players rise, selling them frees the extra money for someone else.
+sell_at_current_price = true
+
+# --------------------------------------------------------------- gameweeks ---
+[gameweeks]
+# A match played more than this many days from its round's median kickoff (postponed or
+# brought forward) counts for the gameweek it is actually played in (FPL-style double
+# gameweek), as long as both gameweeks are still open.
+reschedule_days = 4
+match_hours = 2                             # last kickoff + this + settlement delay = settlement
+# [Confirmed 2026-11-01] the next transfer window opens this long after the gameweek's
+# last match ends (before settlement); next week's prices are set when the last match ends
+window_opens_after_last_match_hours = 1
+
+# ----------------------------------------------------------------- scoring ---
+[scoring]                                   # [Confirmed] core = FPL x2
+appearance_under_60 = 2
+appearance_60_plus = 4
+clean_sheet_min_minutes = 60
+goal = { GK = 20, DEF = 12, MID = 10, FWD = 8 }
+assist = 6
+clean_sheet = { GK = 8, DEF = 8, MID = 2, FWD = 0 }
+saves_per_point_block = 3                   # every 3 saves ...
+saves_block_points = 2                      # ... = 2 points (GK only)
+penalty_save = 10
+goals_conceded_per_block = 2                # every 2 conceded ...
+goals_conceded_block_points = -2            # ... = -2 (GK, DEF)
+yellow_card = -2
+red_card = -6
+own_goal = -4
+penalty_miss = -4
+# [Confirmed 2026-11-01] captain x2 applies to positive points only; negatives count once
+captain_doubles_negatives = false
+
+[scoring.involvement]                       # [Confirmed] all positions
+cap_per_match = 4.0
+accurate_pass = 0.02
+key_pass = 0.5
+shot_on_target = 0.5
+tackle = 0.3
+duel_won = 0.1
+
+[scoring.match_bonus]                       # [Deferred]
+enabled = false
+points = [6, 4, 2]
+
+[scoring.defensive_contributions]           # [Deferred]
+enabled = false
+points = 4
+threshold = { DEF = 5, MID = 6, FWD = 6 }   # tackles + interceptions + blocks
+
+# ------------------------------------------------------------ rising stars ---
+[rising_stars]                              # [Proposed] unless noted
+max_age = 23
+max_price = 6.0
+min_minutes_share_last5 = 0.5
+per_league = [8, 10]
+refresh = "monthly"
+start_level = 1
+start_multiplier = 1.10
+level_step = 0.05
+max_level = 5                               # x1.30
+upgrade_min_points = 12
+upgrade_min_rating = 7.5
+levels_persist_season = true
+multiply_negatives = false                  # [Confirmed]
+
+# ----------------------------------------------------------------- pricing ---
+[pricing]                                   # [Confirmed]
+weight_last_season = 0.6
+weight_this_season = 0.4
+min_minutes = 450
+price_min = 4.0
+price_max = 15.0
+rounding = 0.1
+default_price = { GK = 4.5, DEF = 4.5, MID = 5.0, FWD = 5.5 }
+# "percentile" (chosen 2026-11-01): k-th lowest PPG in a position gets the k-th lowest
+# FPL price; keeps FPL's price spread. "line": price = a + b x PPG least-squares fit
+# (squashed top prices on real data: Haaland 10.5M vs FPL 15.8M).
+method = "percentile"
+# Small-sample shrinkage (added 2026-11-01): PPG is pulled toward the position average
+# as if the player also had this many minutes at average output.
+# shrunk = (minutes x PPG + shrink_minutes x position_avg) / (minutes + shrink_minutes)
+shrink_minutes = 900
+min_fit_players = 8          # fewer matched players in a position -> pooled fallback
+weak_fit_min_slope = 0.1     # "line" method only
+weak_fit_min_r2 = 0.15       # "line" method only
+
+[pricing.weekly]                            # [Proposed]
+form_matches = 5
+form_weight = 0.05
+ownership_weight = 0.5
+max_change = 0.10                           # +/-10% per week
+# and never more than this many millions per week, so selling a
+# riser cannot become a quick profit engine (FPL moves at most ~0.3M a week)
+max_change_abs = 0.3                        # [Confirmed 2026-11-01]
+
+# ------------------------------------------------------------------ access ---
+[access]
+token_supply = 1_000_000_000
+per_area_requirement = 150_000              # [Confirmed]
+all_areas_requirement = 750_000             # [Confirmed]
+squads_per_requirement = 1                  # [Confirmed 2026-11-01] one squad per 150k in an area
+champions_leaderboard = false               # [Proposed]; funding [Open]
+# 150k = one squad in one area; 750k covers one squad in each of the five areas
+token_mint = ""                             # $ELEVN mint address; set at launch (a devnet test mint before)
+solana_rpc = "https://api.devnet.solana.com"
+min_holding_hours = 72                      # [Proposed] anti-sybil
+# [Confirmed 2026-11-01] below the requirement mid-gameweek -> the squad is frozen: no points from
+# that moment and never restored by buying back. Highest-numbered squads freeze first.
+below_requirement = "freeze"
+# [Proposed] requirement drops at 7-day average market cap (USD); never increases
+requirement_schedule = [
+  { market_cap = 0, requirement = 150_000 },
+  { market_cap = 5_000_000, requirement = 75_000 },
+  { market_cap = 20_000_000, requirement = 40_000 },
+]
+
+# ------------------------------------------------------------------ prizes ---
+[prizes]
+one_prize_per_wallet = true                 # [Confirmed]
+# [Confirmed 2026-11-01] prizes are paid in SOL, never in $ELEVN; the pool is the prize share of the
+# week's creator fees, split as below (split and minimum confirmed for now)
+pool_share_of_fees = 0.60                   # = fees.prizes
+split_across_areas = "squads"               # by squads entered per area
+place_split = [0.5, 0.3, 0.2]               # top 3 in each area
+minimum_per_area_sol = 1.0                  # topped up from the low-volume reserve
+minimum_per_area_sol_devnet = 0.1           # the public devnet test season, where SOL comes from a faucet
+settlement_delay_hours = 24                 # [Confirmed]
+instant_share = 0.30                        # [Confirmed] sent at settlement
+vesting_share = 0.70                        # [Confirmed]
+vesting_days = 14                           # [Confirmed 2026-11-01] 70% in 14 daily parts, each sent only on
+                                            # days the wallet holds the requirement (missed days wait)
+unclaimed_return_days = 90                  # [Confirmed 2026-11-01] unpaid parts return to the pool
+payout_currency = "SOL"                     # [Confirmed 2026-11-01]
+manual_review = true                        # [Proposed] first weeks
+
+# -------------------------------------------------------------------- fees ---
+[fees]                                      # [Confirmed]
+prizes = 0.60
+buyback = 0.20
+low_volume_reserve = 0.10
+operations = 0.10
+buyback_burn = true                         # [Confirmed 2026-11-01] buy $ELEVN with the 20%, then burn it
+# [Confirmed 2026-11-01] all fees land in one wallet; every payout is sent from it in one daily
+# batch the owner signs; nothing is locked on the fee side
+fee_wallet = ""                             # public address; set before launch (devnet test wallet before)
+batch_every_hours = 24
+cluster = "devnet"                          # devnet until launch; buyback swaps run on mainnet only
+operations_wallet = ""                      # where the 10% operations share goes; empty = stays in the fee wallet
+buyback_min_sol = 0.05                      # buy back once the bucket holds at least this much
+transfers_per_tx = 18
+reserve_trigger_volume = 0                  # [Open] X; 0 = unset
+
+[usernames]                                 # [Confirmed 2026-11-13] picked after sign-in; reset when $ELEVN launches
+min_length = 3
+max_length = 20                             # letters, digits and underscore, starting with a letter
+change_days = 7                             # one change a week; a name given up stays locked as long
+reserved = ["admin", "administrator", "elevn", "mod", "moderator", "official", "support", "staff", "team",
+            "system", "root", "owner", "help", "faucet", "payouts"]
+reserved_parts = ["admin", "elevn", "moderator", "official"]   # refused anywhere in a name, lookalikes too
+
+[chat]                                      # [Confirmed 2026-11-13] one room; anyone reads, posting needs a username
+max_length = 500                            # and a saved squad; plain text, no links
+min_seconds_between = 3
+per_wallet_per_10min = 20
+per_ip_per_10min = 60                       # the connection is stored only as a keyed hash
+reports_to_hide = 3                         # reports from different players hide a message until the admin looks
+reports_per_hour = 10                       # reports one player can make in an hour
+max_lines = 8
+page = 50
+hidden_window_minutes = 10                  # pollers learn about messages hidden this recently
+
+[faucet]                                    # the public devnet test season only; refuses any other cluster
+amount = 300_000                            # test $ELEVN per wallet, once: enough for two squads
+per_ip_per_day = 3                          # wallets one connection can fill a day
+per_day = 300                               # wallets filled a day in all
+min_sol = 0.01                              # stop while the payer can still pay (a new wallet costs ~0.002 SOL)
+
+[treasury]                                # [Confirmed 2026-11-01] ~3% of supply for development:
+                                            # mostly marketing, plus an emergency cash cushion; no prizes
+supply_share = 0.03
+tokens = 30_000_000
+
+# --------------------------------------------------------------------- web ---
+[web]
+domain = "elevn.fun"
+# sites allowed to call the API and to request sign-in messages (the wallet checks the
+# message names the site it is shown on)
+origins = ["http://localhost:3000", "https://elevn.fun", "https://www.elevn.fun", "https://elevn-sigma.vercel.app"]
+session_hours = 24
+nonce_minutes = 10
+
+# -------------------------------------------------------------------- data ---
+[api_football]
+base_url = "https://v3.football.api-sports.io"
+daily_request_limit = 7500
+live_poll_seconds = 15
+player_stats_poll_seconds = 60
+fixtures_per_request = 20

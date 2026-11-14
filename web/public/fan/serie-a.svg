@@ -1,0 +1,11 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='400' height='500' viewBox='0 0 400 500'>
+<defs>
+<linearGradient id='wash' x1='0' y1='0' x2='0' y2='1'><stop offset='.6' stop-color='#ffffff'/><stop offset='1' stop-color='#f4efe2'/></linearGradient>
+<filter id='soon' x='-10%' y='-10%' width='120%' height='120%'><feGaussianBlur stdDeviation='7'/></filter>
+</defs>
+<rect width='400' height='500' fill='url(#wash)'/>
+<g filter='url(#soon)'>
+<g transform='translate(65 48) scale(0.3610)'><g transform='translate(86 40)'><path d='M178 486 L287 666 L397 490 L394 486 Z M208 0 L1 485 L176 484 L288 190 L336 317 L275 319 L236 427 L378 427 L400 485 L575 485 L368 1 Z' fill='#0a0b0d' fill-rule='evenodd'/><path d='M572 486 L401 486 L294 663 Z M4 486 L282 663 L175 486 Z M287 194 L178 485 L398 485 L377 428 L233 427 L274 318 L334 317 Z' fill='#c8961f' fill-rule='evenodd'/></g></g>
+</g>
+<g transform='translate(24 24)'><clipPath id='fc'><rect width='48' height='32' rx='6'/></clipPath><g clip-path='url(#fc)'><rect width='16' height='32' fill='#009246'/><rect x='16' width='16' height='32' fill='#ffffff'/><rect x='32' width='16' height='32' fill='#ce2b37'/></g><rect x='.5' y='.5' width='47' height='31' rx='5.5' fill='none' stroke='#0a0b0d' stroke-opacity='.18'/></g>
+</svg>

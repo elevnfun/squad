@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+/* elevn colours (web/DESIGN.md): night match. Near-black and warm white carry 90% of every screen;
+   trophy gold is the one colour (main action, active, the logo dot, captain); broadcast red is
+   reserved for LIVE; the pitch brings the green. */
+:root {
+  color-scheme: dark;
+  --bg: #0a0b0d;          /* the night */
+  --surface: #131519;     /* cards */
+  --surface-2: #1b1e23;   /* table headers, inputs, the alternate band */
+  --line: rgba(255, 255, 255, 0.09);
+  --text: #f4f4f1;        /* warm white, 17.9:1 */
+  --muted: #a4a8af;       /* 8.3:1 */
+  --accent: #f2c14e;      /* trophy gold: the main button, focus, active */
+  --accent-ink: #0a0b0d;  /* text on gold, 11.7:1 */
+  --link: #f2c14e;        /* gold as text, 11.7:1 */
+  --highlight: #f2c14e;   /* the dot, captain, current page */
+  --highlight-ink: #f2c14e;
+  --live: #ff5a52;        /* LIVE only, black label 6.4:1 */
+  --pitch: #1b4d2e;       /* the grass */
+  --pitch-2: #1f5533;     /* its mowing stripe */
+  --wash: #221e12;        /* your own row, notices: gold in the dark */
+  --info: #f2c14e;
+  --danger: #ff6b63;
+  --ok: #3ddc84;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-link: var(--link);
+  --color-highlight: var(--highlight);
+  --color-highlight-ink: var(--highlight-ink);
+  --color-pitch: var(--pitch);
+  --color-live: var(--live);
+  --color-wash: var(--wash);
+  --color-info: var(--info);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --font-sans: var(--font-sora);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  /* a floodlight far above the page: the faintest warm pool at the top, the rest is night */
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(242, 193, 78, .07), transparent 70%) no-repeat, var(--bg);
+  color: var(--text);
+  caret-color: var(--highlight);
+  font-variant-numeric: tabular-nums;
+}
+::selection { background: var(--accent); color: var(--accent-ink); }
+html { scrollbar-color: rgba(255, 255, 255, 0.25) transparent; }
+h1, h2, h3 { text-wrap: balance; }
+p, li, dd { text-wrap: pretty; }
+a { text-underline-offset: 3px; }
+
+/* The one button family (DESIGN.md): gold primary with a black label, white-outlined
+   secondary. Both step up a pixel on hover and press down on click. */
+@layer components {
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 22px;
+  border-radius: 999px; font-size: 15px; font-weight: 600; white-space: nowrap;
+  transition: transform .15s ease-out, background-color .15s ease-out, box-shadow .15s ease-out; }
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .5; transform: none; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+.btn-primary:hover { background: #f7cf6a; box-shadow: 0 6px 22px rgba(242, 193, 78, .28); }
+.btn-secondary { border: 1.5px solid rgba(255, 255, 255, .28); color: var(--text); background: transparent; }
+.btn-secondary:hover { border-color: var(--text); background: rgba(255, 255, 255, .04); }
+.btn-sm { height: 36px; padding: 0 16px; font-size: 14px; }
+
+/* Links inside text draw their underline on hover */
+.link { color: var(--link); font-weight: 600; text-decoration: underline; text-decoration-color: transparent;
+  transition: text-decoration-color .15s ease-out; }
+.link:hover { text-decoration-color: currentColor; }
+}
+
+/* The home hero's floodlight (tasteskill "lit studio sweep"): a warm white pool
+   falling from above the pitch, with a static film grain you only notice up close. */
+.floodlit { position: relative; isolation: isolate; }
+.floodlit::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  top: -10rem; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw);
+  background:
+    radial-gradient(ellipse 55% 60% at 68% 18%, rgba(255, 244, 214, .16) 0%, rgba(242, 193, 78, .08) 30%, rgba(242, 193, 78, .03) 55%, transparent 75%),
+    radial-gradient(ellipse 45% 40% at 15% 95%, rgba(31, 85, 51, .22) 0%, transparent 70%);
+}
+.floodlit::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; opacity: .06;
+  top: -10rem; bottom: 0; left: calc(50% - 50vw); right: calc(50% - 50vw);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* wallet button in brand colours */
+.wallet-adapter-button-trigger {
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
+  border-radius: 999px !important;
+  height: 40px !important;
+  padding: 0 16px !important;
+  font-size: 14px !important;
+  font-family: var(--font-sora) !important;
+}
+.wallet-adapter-modal-wrapper { background: var(--bg) !important; color: var(--text) !important; }
+
+/* The dot of the folding "elevn." logo is gold */
+.logo-fold .fold-text-piece[data-fold-text="."] { color: var(--highlight); }
+
+/* Keyboard focus: a clear gold ring on anything focused from the keyboard */
+:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; border-radius: 4px; }
+
+/* Opening intro: the cover is server-rendered, and shown from the first paint when the script in
+   layout.tsx (intro/markup.ts) switches the intro on.
+   The page can't scroll under it, and the logo's dot waits for the ball to land there. */
+#intro-cover { display: none; position: fixed; left: 0; top: 0; z-index: 60; width: 100vw; height: 100lvh; overflow: hidden; background: var(--bg); }
+.intro-on #intro-cover { display: block; }
+.intro-on { overflow: hidden; }
+.intro-dot-hidden .logo-fold .fold-text-segment:has(> [data-fold-text="."]) { opacity: 0; }
+
+/* The pitch: grass with mowing stripes, darker at the far end like a floodlit stadium */
+.pitch-grass {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .28), transparent 35%, transparent 80%, rgba(0, 0, 0, .18)),
+    repeating-linear-gradient(180deg, var(--pitch) 0 9%, var(--pitch-2) 9% 18%);
+}
+
+/* React Bits StaggeredMenu as the phone menu: its toggle sits in our header bar, its own logo bar is
+   hidden (our header has the logo), and the panel takes the night palette with big white words. */
+.elevn-menu .sm-logo { display: none; }
+.elevn-menu .staggered-menu-header { height: 72px; padding: 0 24px; justify-content: flex-end; }
+.elevn-menu .sm-toggle { font-size: 14px; font-weight: 600; color: var(--text); }
+.elevn-menu--hidden .staggered-menu-header { visibility: hidden; }
+.elevn-menu .staggered-menu-panel { background: var(--bg); padding: 6.5em 24px 2em; }
+.elevn-menu .sm-panel-item { color: var(--text); font-size: clamp(2rem, 9vw, 3rem); text-transform: none; letter-spacing: -0.03em; font-weight: 800; }
+.elevn-menu .sm-panel-item:hover { color: var(--accent); }
+.elevn-menu .sm-panel-list { gap: 0.35rem; }
+/* the small row under the big words (phones and tablets): the reading pages */
+.elevn-menu .sm-socials-title { font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.elevn-menu .sm-socials-list { gap: 0.25rem 1.25rem; }
+.elevn-menu .sm-socials-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 18px; font-weight: 600; color: var(--text); }
+.elevn-menu .sm-socials-link:hover { color: var(--accent); }
+/* from desktop width the Menu button sits on the page's own right edge */
+@media (min-width: 1024px) { .elevn-menu .staggered-menu-header { padding: 0 max(80px, calc((100% - 1360px) / 2 + 80px)); } }
+
+/* The league page's season rail: the ticks fill in from the left once, on arrival. */
+@keyframes rail-in { from { opacity: 0; transform: scaleY(.3); } }
+.rail-tick { animation: rail-in .5s cubic-bezier(.22, .61, .36, 1) backwards; animation-delay: calc(var(--i) * 14ms); }
+@media (prefers-reduced-motion: reduce) { .rail-tick { animation: none; } }
+
+/* No typing cursor over ordinary text: the arrow everywhere, the hand on what can be clicked, and the
+   text cursor only where you can actually type. */
+html, body { cursor: default; }
+a, button, summary, label, select, [role="button"], [role="option"], [role="radio"], [role="tab"] { cursor: pointer; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, [contenteditable="true"] { cursor: text; }
+button:disabled, [aria-disabled="true"] { cursor: default; }
+
+/* The home page as slides: the page snaps from one full-screen slide to the next (firmly on large
+   screens, gently on phones where a slide can be taller than the screen). A slide fades in as it arrives;
+   inside it, the parts marked data-rise follow one after another (--i steps of 90ms). A slide you have
+   left doesn't vanish: it dims and sinks back a little, so the next one reads as coming in front of it.
+   The scrollbar stays and still works. */
+:root { --ease-out: cubic-bezier(.22, .61, .36, 1); --ease-soft: cubic-bezier(.32, .72, 0, 1); }
+html.slides { scroll-snap-type: y proximity; }
+@media (min-width: 1024px) and (min-height: 700px) { html.slides { scroll-snap-type: y mandatory; } }
+.slide { scroll-snap-align: start; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; }
+/* The fixed "Test season" bar (components/TestSeason.tsx): its height is set here, only while the bar is on
+   the page, and the bar, the room under the footer and the home page's last snap all read it, so the footer
+   always ends above the bar */
+:root:has(.test-season-bar) { --test-bar: 2.25rem; }
+.slide-snap-end { scroll-snap-align: end; scroll-margin-bottom: var(--test-bar, 0px); }
+.slide-inner { width: 100%; opacity: 0; transform-origin: 50% 30%;
+  transition: opacity .8s var(--ease-out), transform .9s var(--ease-soft), filter .8s var(--ease-out); }
+.slide[data-on] > .slide-inner { opacity: 1; transform: none; filter: none; }
+.slide[data-seen]:not([data-on]) > .slide-inner { opacity: .28; transform: scale(.975); filter: saturate(.6); }
+.slide [data-rise] { opacity: 0; transform: translateY(22px);
+  transition: opacity .7s var(--ease-out), transform .8s var(--ease-soft); transition-delay: calc(var(--i, 0) * 90ms + 80ms); }
+.slide[data-seen] [data-rise] { opacity: 1; transform: none; }
+
+/* The home page's place marker: one short line per slide down the right edge, the current one long and
+   gold. Click a line to go to its slide. Large screens only. */
+.slide-rail { position: fixed; right: 28px; top: 50%; z-index: 15; display: none; flex-direction: column; gap: 10px;
+  transform: translateY(-50%); transition: opacity .4s var(--ease-out), visibility .4s; }
+@media (min-width: 1024px) { .slide-rail { display: flex; } }
+.slide-rail a { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 4px 0; }
+.slide-rail .rail-line { display: block; height: 2px; width: 14px; border-radius: 2px; background: rgba(255, 255, 255, .28);
+  transition: width .45s var(--ease-soft), background-color .3s var(--ease-out); }
+.slide-rail .rail-label { font-size: 12px; font-weight: 500; color: var(--muted); opacity: 0; transform: translateX(6px);
+  transition: opacity .25s var(--ease-out), transform .3s var(--ease-out); }
+.slide-rail a:hover .rail-label, .slide-rail a:focus-visible .rail-label { opacity: 1; transform: none; }
+.slide-rail a:hover .rail-line { background: var(--text); }
+.slide-rail a[aria-current="true"] .rail-line { width: 32px; background: var(--accent); }
+
+/* The hero squad walks on: each shirt rises in after the one before, once the squad has loaded */
+@keyframes shirt-in { from { opacity: 0; transform: translateY(12px) scale(.94); } }
+.shirt-in { animation: shirt-in .6s var(--ease-soft) both; animation-delay: calc(var(--i, 0) * 55ms); }
+
+/* Any page of the full site fades in when you arrive on it (app/(site)/template.tsx; the home page has its
+   own intro and skips it). Backwards fill only, so no stacking context is left behind once it has played. */
+@keyframes page-enter { from { opacity: 0; } }
+.page-enter { animation: page-enter .45s var(--ease-out) backwards; }
+
+/* Reveal (components/Reveal.tsx): rises into place once, the first time it scrolls into view */
+.reveal { opacity: 0; transform: translateY(18px);
+  transition: opacity .7s var(--ease-out), transform .8s var(--ease-soft); transition-delay: calc(var(--i, 0) * 80ms); }
+.reveal[data-shown] { opacity: 1; transform: none; }
+
+/* The roadmap's line draws down as its stages come into view */
+.road-line { transform-origin: top; transform: scaleY(0); transition: transform 1.6s var(--ease-soft) .15s; }
+.road-line[data-shown] { transform: none; }
+
+/* FAQ answers open and close smoothly where the browser can animate to the answer's own height */
+@supports (interpolate-size: allow-keywords) {
+  :root { interpolate-size: allow-keywords; }
+  details.smooth::details-content { block-size: 0; overflow: clip; opacity: 0;
+    transition: block-size .35s var(--ease-soft), opacity .3s var(--ease-out), content-visibility .35s allow-discrete; }
+  details.smooth[open]::details-content { block-size: auto; opacity: 1; }
+}
+
+/* Without script (or on paper) nothing would ever mark these as shown, so they start in place */
+@media (scripting: none), print {
+  .slide-inner, .slide [data-rise], .reveal, .road-line { opacity: 1; transform: none; filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-inner, .slide [data-rise], .reveal, .road-line { opacity: 1; transform: none; filter: none; transition: none; }
+  .slide[data-seen]:not([data-on]) > .slide-inner { opacity: 1; transform: none; filter: none; }
+  .shirt-in, .page-enter { animation: none; }
+}

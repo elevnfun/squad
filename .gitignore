@@ -1,0 +1,28 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# local database
+.pgdata/
+
+# API cache and generated outputs
+cache/
+out/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# os
+.DS_Store
+
+# devnet test keys (never commit keys)
+keys/
+*.keypair.json
+
+# rendered videos and other exports (not source)
+exports/
+.vercel
+.env*
