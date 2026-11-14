@@ -16,7 +16,11 @@ The project runs in four sections, in this order:
 Owner's decisions (2026-11-14):
 - Matchday Blitz and Daily Draft are the two main modes.
 - Draft: 5 packs of 3 (15 players) across the three leagues; a five-a-side with at least
-  1 defender, 1 midfielder, 1 attacker; goalkeeper optional; at most 2 players per club.
+  1 defender, 1 midfielder, 1 attacker; no goalkeepers; at most 2 players per club. Packs are the same for everyone.
+- Blitz: a team of 3 for each fixture (at least 1 player from each club); the matchday total
+  is the sum of all fixture teams, on a live leaderboard.
+- Prize split 40% Blitz, 40% Draft, 20% Season for now.
+- Section 2 design goes through the Higgsfield MCP, with the references.
 - Squad Battles is in, as one ladder across all three leagues.
 - Penalty Shootout is a side mini-game. Live predictions are parked.
 - Above all: do not overcomplicate the platform or let it get jumbled.

@@ -1,4 +1,4 @@
-# elevn 2.0 blueprint (v2, after the debate)
+# elevn 2.0 blueprint (v3, with the owner's answers of 2026-11-14)
 
 **Status: waiting for the owner's approval. Nothing here is built yet.**
 Tags: [Owner] = stated by the owner, build as written. [Proposed] = recommended, needs a yes.
@@ -41,27 +41,31 @@ Midweek days, international breaks, the winter break and the summer have no matc
 
 ### 3.1 Matchday Blitz [Owner: main mode]
 - Pick 3 players from one real fixture and make one captain (double points). Locks at kickoff.
-- At least one pick from each club, so nobody stacks the favourite. [Proposed]
+- At least one pick from each club. [Owner]
+- You can make a team for every fixture of the matchday. Your matchday total is the sum of all
+  your teams' points, and the matchday leaderboard updates live as matches are played. [Owner]
+- Every fixture of the matchday opens for picks at once, so all teams can be set in one sitting.
+  Each team can be changed until its own kickoff. A fixture you skip scores 0. [Proposed]
+- Confirmed line-ups are shown about an hour before kickoff, so you can swap out a player who
+  is not starting. [Proposed]
 - Live points during the match. A provisional result at full time; final after the stats re-pull.
-- One entry per fixture, up to 5 fixtures a matchday. Your best two scores make your matchday
-  total. [Proposed]
 - Every fixture has its own board for bragging rights; SOL goes to the matchday table only.
+- To watch in section 4: on matchdays with 10 or more fixtures, whether players finish all
+  their teams. If they don't, count only the best 6.
 - Scoring: the existing engine, no Rising Stars, match bonus switched on. [Proposed]
 
 ### 3.2 Matchday Draft [Owner: main mode]
 - Open 5 packs of 3 players: 15 players, mixed across the three leagues. [Owner]
 - Build a five-a-side from those 15: at least 1 defender, 1 midfielder and 1 attacker,
-  goalkeeper optional, at most 2 players from one club. [Owner] One captain. [Proposed]
-- The packs are the same for everyone that matchday. You still open them one by one. [Proposed]
+  at most 2 players from one club. [Owner] No goalkeepers: packs hold outfield players only.
+  [Owner] One captain. [Proposed]
+- The packs are the same for everyone that matchday. You still open them one by one. [Owner]
   Reason: with personal packs, every extra wallet is a free re-roll.
 - Packs only hold players whose club plays that matchday, and always include at least
   2 defenders, 2 midfielders and 2 attackers.
 - Runs on matchdays with at least 4 fixtures. Locks at the first kickoff. [Proposed]
 - Scores that matchday's matches. A weekly Draft table adds up your best five matchdays, so the
   team "keeps accumulating" without a second set of rules. [Proposed]
-- Goalkeeper: [Open] the owner's rule is "optional"; both debate agents wanted goalkeepers left
-  out, because a goalkeeper's clean sheet and saves can outscore a forward. Recommendation:
-  keep "optional, at most one" and settle it in section 4 with real match data.
 
 ### 3.3 Squad Battles [Owner: in, one ladder for all three leagues]
 - One ladder across the three leagues. You bring a saved Season eleven.
@@ -99,7 +103,7 @@ Four places:
 ## 5. Prizes and access
 
 - Holding 150,000 $ELEVN unlocks every mode, plus one Season squad as today. [Proposed]
-- The 60% prize share: Blitz 40%, Draft 40%, Season 20%. Battles and Shootout 0%. [Proposed]
+- The 60% prize share: Blitz 40%, Draft 40%, Season 20%. Battles and Shootout 0%. [Owner: for now, may change later]
 - One pot per mode per matchday. A matchday with too few entrants rolls its pot forward.
 - Top 10 are paid, not top 3. Exact ties split the prize. [Proposed]
 - Matchday prizes are added up and paid once a week in one transfer per winner, and only if the
@@ -167,11 +171,12 @@ and replacing the scroll story with a static poster (the owner wants the designe
 
 Each step ships as a new card on Today, with tests against real cached matches.
 
-## 9. Decisions the owner still has to make
+## 9. Decisions
 
-1. Draft packs: the same for everyone (recommended) or personal to each wallet?
-2. Goalkeeper in Draft: optional (your rule) or left out?
-3. Prizes: the 40 / 40 / 20 split, top 10, paid weekly?
-4. Blitz: the "one pick from each club" and "best two of five fixtures" rules?
-5. Higgsfield in section 2: "code based, no AI model generation" is read here as building the
-   3D in code. Which Higgsfield feature did you have in mind?
+Settled by the owner on 2026-11-14: shared Draft packs; no goalkeepers in Draft; the 40 / 40 / 20
+split for now; Blitz totals are the sum of every fixture team, with at least one pick per club;
+section 2 design work goes through the Higgsfield MCP together with the references.
+
+Still [Proposed], waiting for a yes: all Blitz fixtures open at once and line-ups shown; top 10
+paid, weekly, hold-through; the 150,000 $ELEVN rule unlocking every mode; Draft only on
+matchdays with at least 4 fixtures.
