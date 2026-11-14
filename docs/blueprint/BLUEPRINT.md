@@ -117,9 +117,13 @@ Four places:
 - Blitz and Draft matchday prizes pay the top 10. [Proposed]
 - Blitz prizes are sent at day close, one transfer per winner, only if the wallet still holds
   the requirement and passes the 72-hour hold; a failed transfer falls back to the daily batch.
-  [Owner] Blitz prizes in USDC. [Proposed] Details in `docs/blueprint/BLITZ.md`.
-- The Blitz weekly $500 USDC is a fixed prize paid by the project, not from creator fees.
-  [Owner] Its treasury source is [Open], and it must go to the legal review.
+  [Owner] Details in `docs/blueprint/BLITZ.md`.
+- Currency: every prize is paid in SOL while the site is on devnet, the weekly $500 included
+  (its SOL equivalent). USDC is decided again before mainnet. [Owner]
+- The Blitz weekly $500 is paid from creator fees when the week's fees cover it, and topped up
+  from project funds when they don't. [Owner] It must go to the legal review.
+- Sending at day close without the owner signing needs a key on the server: a separate payout
+  wallet holding about a week of prizes, never the fee wallet. [Proposed; the owner calls it solvable]
 - Draft prizes are credited after the last match and paid in the next daily batch. The 14-part
   vesting stays for Season.
 - One prize per wallet per board.
@@ -195,10 +199,9 @@ $500 USDC weekly prize, no full-time leader bonus); section 2 design work goes t
 Higgsfield MCP together with the references.
 
 Still to confirm:
-- Blitz (listed in full at the end of BLITZ.md): daily top 10 and its split; USDC for daily
-  prizes; tiebreak order; best-3 weekly scoring and its split; week boundaries; edge cases; the
-  treasury source for the $500; the rollover threshold; how the Blitz weekly prize sits beside
-  Season's weekly prize and Draft's weekly table.
-- How prizes are sent at day close without the owner signing: today the server holds no key.
+- Blitz (listed in full at the end of BLITZ.md): daily top 10 and its split; tiebreak order;
+  best-3 weekly scoring and its split; week boundaries; edge cases; the rollover threshold; how
+  the Blitz weekly prize sits beside Season's weekly prize and Draft's weekly table.
+- The design of the payout wallet that sends prizes at day close.
 - The 150,000 $ELEVN rule unlocking every mode.
 - Draft only on matchdays with at least 4 fixtures, top 10 paid.

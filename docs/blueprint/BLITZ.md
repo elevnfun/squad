@@ -1,5 +1,9 @@
 # Matchday Blitz: revised rules and payouts
 
+**Owner's update, 2026-11-14 (overrides the text below):** every prize is paid in SOL while the
+site is on devnet, the weekly $500 included as its SOL equivalent; the weekly prize comes from
+creator fees when they cover it and from project funds when they don't.
+
 **For:** the main build agent working on elevn 2.0
 **From:** the owner, 2026-11-14
 **Replaces:** blueprint section 3.1 (Matchday Blitz), the Blitz parts of section 5 (Prizes and access)
