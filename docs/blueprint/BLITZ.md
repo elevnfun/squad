@@ -6,6 +6,9 @@ creator fees when they cover it and from project funds when they don't.
 Also settled since: Season is removed and Draft is weekly, so the overlap note in section 4 no
 longer applies; holding 150,000 $ELEVN is the confirmed access rule for Blitz; a captain is
 mandatory in every squad. Wherever the text below says USDC, read SOL while on devnet.
+The weekly $500 is paid from the team's own wallet. The 72-hour hold does not apply to the daily
+prize, only to the weekly prize. A wallet gets one entry (3 squads) a matchday however much it
+holds, and can play the moment it holds the tokens. Notifications are a feature for the future.
 
 **For:** the main build agent working on elevn 2.0
 **From:** the owner, 2026-11-14

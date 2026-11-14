@@ -15,7 +15,7 @@ site never turns into a jumble of games.
 Audience: crypto-native football fans on phones, arriving from X and Telegram.
 
 Ground rules: free to enter for $ELEVN holders; prizes from creator fees, except the Blitz
-weekly prize, which project funds top up; real football data; legal review still pending.
+weekly prize, which the team pays from its own wallet; real football data; legal review still pending.
 Draft's personal packs add luck by the owner's choice, where the first plan put skill over chance.
 
 How we will know it works: time to a first result under 3 hours; sessions per player per day;
@@ -76,14 +76,21 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - One captain on double points, and choosing one is mandatory: a team without a captain
   cannot be saved. [Owner]
 - The team scores on that week's real matches and is paid once a week. [Owner]
+- If a player's club plays twice in the week, both matches count. [Owner]
+- If a player's match is postponed or cancelled, the manager can swap that player for someone
+  else. If they don't, the swap happens automatically. [Owner] The replacement comes from the
+  manager's own 15, from players whose match has not kicked off, keeping the team legal; the
+  automatic pick is the highest-priced one. [Proposed]
+- Ties: more captain points first, then the earlier save, then an equal split. [Proposed]
 - To keep the luck fair [Owner]:
   - Packs are fixed per wallet per week, with no re-rolls and one draft per wallet.
   - Every pack has the same make-up by price: one top player, one mid-priced, one budget. Luck
     decides who you get, not how strong your packs are.
   - Packs only hold players whose club plays that week, and every 15 includes at least
     2 defenders, 2 midfielders and 2 attackers.
-- The week is Tuesday to Monday UK time, the same as the Blitz week. The draft opens on Tuesday
-  and locks at the week's first kickoff. [Owner: good for now]
+- The week is Tuesday to Monday UK time, the same as the Blitz week. It locks at the week's
+  first kickoff. [Owner: good for now] When the draft opens is [Open]: three leagues with
+  different calendars share one week, so the owner will come back to it.
 - Known risks of personal packs, accepted by the owner: every extra wallet is an extra draw
   (limited by the 300,000 $ELEVN holding and the 72-hour hold), and random packs with prizes
   weigh more on the pending legal review than shared packs would.
@@ -91,7 +98,8 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 ### 3.3 Penalty Shootout [Owner: side mini-game]
 - Shooter picks a corner and power, keeper picks a dive; five rounds.
 - You play against another player's stored picks, so there is no queue.
-- A ladder for bragging rights. No prize, because it is mostly guessing.
+- No prize, because it is mostly guessing. No $ELEVN holding is needed to play. [Owner]
+- Its leaderboard gets its own section of the site. [Owner] Daily limits are [Open].
 - It is not a third mode: it sits as a small card under the two mode cards on Today.
 
 ## 4. Keeping it simple
@@ -108,6 +116,10 @@ Three places:
 - Logged out, the home page is the scroll story. Logged in, the logo opens Today.
 - Each mode is one card with one state and one button: Play, Live or Result.
 - One scoring engine, one sign-in, one prize page for both modes.
+- News, How to play, FAQ, About and Roadmap stay in the existing side menu, rewritten for the
+  new modes. [Owner]
+- Chat: a connected wallet that holds the tokens can post. [Owner]
+- Notifications (push or Telegram when a squad is banked) are a feature for the future. [Owner]
 - News page: football news, not platform news. Platform updates go out on X. [Owner]
   - Main feed: our own two or three sentence write-ups of the facts (transfers, injuries,
     results), in elevn's voice, with the source named on every item. A genuine rewrite of the
@@ -127,26 +139,39 @@ Three places:
 
 ## 5. Prizes and access
 
-- Holding 150,000 $ELEVN unlocks Blitz, the main mode: one entry per matchday. Holding
-  150,000 more (300,000 in all) also unlocks Draft: one draft per week. [Owner]
+- Holding 150,000 $ELEVN unlocks Blitz, the main mode. Holding 150,000 more (300,000 in all)
+  also unlocks Draft. [Owner]
+- One entry per wallet however much it holds: 3 Blitz squads a matchday and one draft a week.
+  [Owner]
+- A wallet can play the moment it holds the tokens. [Owner]
 - The 60% prize share: Blitz 60%, Draft 40%. Shootout 0%. [Owner]
-- Blitz: one pot per matchday, all of it to the daily board. [Owner] Draft: one pot per week.
-  [Owner] A pot with too few entrants rolls forward (threshold [Open]).
-- The Blitz daily board pays the top 10. [Proposed] The Draft weekly board pays the top 5. [Owner]
-- Blitz prizes are sent at day close, one transfer per winner, only if the wallet still holds
-  the requirement and passes the 72-hour hold; a failed transfer falls back to the daily batch.
-  [Owner] Details in `docs/blueprint/BLITZ.md`.
+- Blitz: one pot per matchday, all of it to the daily board, made of Blitz's share of the fees
+  collected since the last matchday. Draft: one pot per week, made of Draft's share of that
+  week's fees. [Owner] A pot with too few entrants rolls forward (threshold [Open]).
+- Minimum pots, topped up from the 10% low-volume reserve: 0.5 SOL per Blitz matchday and
+  1 SOL per Draft week (0.05 and 0.1 on devnet). [Proposed]
+- The Blitz daily board pays the top 10. [Proposed] The Draft weekly board pays the top 5, on a
+  stepped split with 1st and 2nd the biggest winners [Owner]: 35% / 25% / 18% / 12% / 10%.
+  [Proposed]
+- Blitz daily prizes are sent at day close, one transfer per winner, only if the wallet still
+  holds the requirement; a failed transfer falls back to the daily batch. [Owner] Details in
+  `docs/blueprint/BLITZ.md`.
+- The 72-hour hold does not apply to Blitz daily prizes. It applies to the weekly prizes: the
+  Blitz weekly prize and the Draft prize. [Owner]
+- Draft uses the same holding rule as Blitz: the wallet must hold its requirement (300,000)
+  when the prize is paid. [Owner]
+- A pause switch lets the owner hold automatic sending if a result looks wrong. [Proposed]
 - Currency: every prize is paid in SOL while the site is on devnet, the weekly $500 included
   (its SOL equivalent). USDC is decided again before mainnet. [Owner]
-- The Blitz weekly $500 is paid from creator fees when the week's fees cover it, and topped up
-  from project funds when they don't. [Owner] It must go to the legal review.
+- The Blitz weekly $500 is paid from the team's own wallet, not from creator fees, so it never
+  reduces the daily pots. [Owner] It must go to the legal review.
 - Sending at day close without the owner signing needs a key on the server: a separate payout
   wallet holding about a week of prizes, never the fee wallet. [Proposed; the owner calls it solvable]
 - Draft prizes are credited and sent when the week's last matchday closes, the same way as the
-  Blitz weekly prize. [Proposed] The 14-part vesting goes with Season.
+  Blitz weekly prize. [Proposed] The 14-part vesting goes with Season; no Season prizes are owed.
 - One prize per wallet per board.
 - The 72-hour holding rule is in config.toml but not enforced in code. It must be enforced
-  before any matchday prize is paid.
+  before any weekly prize is paid.
 - SOL prizes for Blitz and Draft stay on devnet until the legal review signs off in writing.
 
 ## 6. Home page scroll story
@@ -224,9 +249,17 @@ Settled by the owner on 2026-11-14:
 - Prize split: Blitz 60%, Draft 40%. Draft pays the top 5.
 - Access: 150,000 $ELEVN for Blitz; 150,000 more for Draft.
 - A captain on double points is mandatory in every Blitz squad and every Draft team.
-- Prizes in SOL on devnet; the weekly $500 from fees when they cover it, else project funds.
+- Prizes in SOL on devnet; the weekly $500 from the team's own wallet.
+- One entry per wallet; play at once; the 72-hour hold only on weekly prizes.
+- Draft: double matches both count; postponed players are swapped, automatically if need be.
+- Chat for any connected wallet holding the tokens; Shootout needs no holding and gets its own
+  leaderboard section; info pages stay in the side menu; notifications are for later.
 - Section 2 design work goes through the Higgsfield MCP together with the references.
 
 Still to confirm:
-- Blitz: the "still to confirm" list at the end of BLITZ.md.
+- When the Draft opens each week (the owner will come back to it).
+- The minimum pots (0.5 SOL per Blitz matchday, 1 SOL per Draft week) and the Draft split
+  (35 / 25 / 18 / 12 / 10).
+- Blitz: the "still to confirm" list at the end of BLITZ.md, and the rollover threshold.
+- Shootout's daily limits.
 - The design of the payout wallet that sends prizes at day close.

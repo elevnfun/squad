@@ -28,7 +28,15 @@ Owner's decisions (2026-11-14):
 - Access: holding 150,000 $ELEVN unlocks Blitz (the main mode); 150,000 more (300,000 in all)
   also unlocks Draft. Draft pays the top 5.
 - A captain on double points is mandatory in every Blitz squad and every Draft team.
-- Penalty Shootout stays as a side mini-game with no prize.
+- One entry per wallet however much it holds. A wallet can play as soon as it holds the tokens.
+  The 72-hour hold applies only to weekly prizes (Blitz weekly and Draft), not Blitz daily prizes.
+- The $500 weekly prize is paid from the team's own wallet, not from creator fees.
+- Draft: a club's two matches in a week both count; a player whose match is postponed or cancelled
+  is swapped out, automatically if the manager doesn't do it.
+- Penalty Shootout stays as a side mini-game with no prize and no holding requirement; its
+  leaderboard gets its own section.
+- Chat: any connected wallet holding the tokens can post. Info pages stay in the side menu.
+  Notifications are a feature for the future.
 - Section 2 design goes through the Higgsfield MCP, with the references.
 - Live predictions are parked.
 - The site's News page carries football news, not platform news. Platform updates go on X.
