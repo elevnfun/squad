@@ -101,6 +101,10 @@ Three places:
 - Logged out, the home page is the scroll story. Logged in, the logo opens Today.
 - Each mode is one card with one state and one button: Play, Live or Result.
 - One scoring engine, one sign-in, one prize page for both modes.
+- News page: football news, not platform news. [Owner] Platform updates go out on X.
+  Where the football news comes from is still to be chosen: built from the match data the site
+  already has (injuries, line-ups, results, form), headlines linked from football outlets, or
+  both. [Open]
 - First visit: an interactive tutorial, built into the website, runs the first time a player
   opens it. It highlights each area of the site in turn and explains it. It can be skipped.
   It is not a PDF or a separate guide. It is built last, after the rest of the website is
