@@ -125,7 +125,8 @@ Four places:
 From the 3D website guide, route 03 (built in code): one hero object, the scrollbar is the
 timeline, real HTML text over a fixed canvas. Written before any building, as the guide asks.
 
-Hero object: the match ball, drawn in code with three.js. No model file and no AI imagery.
+Hero object: the match ball, built in code, with no AI-generated imagery. The design work
+goes through the Higgsfield MCP together with the references. [Owner]
 A white and gold ball on the night background follows the guide's contrast rule.
 
 | Scroll | Camera | Object | Words |
@@ -153,12 +154,12 @@ Full record: docs/blueprint/DEBATE.md.
 | Attack | Verdict | Change made |
 |---|---|---|
 | "Daily" is false on about half of all days | Conceded | Matchday rhythm, published calendar |
-| Prizes split too thin | Conceded | One pot per matchday, rollover, top 10, weekly payout |
+| Prizes split too thin | Conceded | One pot per mode per matchday, rollover, top 10 on matchday tables |
 | Multi-wallet farming | Conceded | Shared packs, 72-hour hold enforced, hold-through payout |
 | Gambling exposure | Partly | No SOL for Battles or Shootout; matchday SOL on devnet until sign-off |
 | Simulated battles feel unfair | Closed | Real points, 10% swing, breakdown, ladder only |
 | API request budget | Mostly rejected | The new modes add no calls; simulate a worst Saturday before adding leagues |
-| Scoring fits 3 and 5 players badly | Partly | Match bonus on, ties split, goalkeeper rule tested with data |
+| Scoring fits 3 and 5 players badly | Partly | Match bonus on, ties split, no goalkeepers in Draft |
 | Too many things at once | Partly | One card per mode, staged release |
 | Too few players per board | Conceded | One matchday board, stored opponents |
 | 3D page too heavy on phones | Partly | Poster first, budgets, still fallback |
@@ -182,7 +183,8 @@ Each step ships as a new card on Today, with tests against real cached matches.
 
 Settled by the owner on 2026-11-14: shared Draft packs; no goalkeepers in Draft; the 40 / 40 / 20
 split for now; Blitz pays per fixture at full time and per matchday, half each, credited at once
-and paid in the next daily batch; Blitz totals are the sum of every fixture team, with at least one pick per club;
+and paid in the next daily batch; Blitz totals are the sum of every fixture team, with at least
+one pick per club;
 section 2 design work goes through the Higgsfield MCP together with the references.
 
 Still [Proposed], waiting for a yes: all Blitz fixtures open at once and line-ups shown; top 3 per
