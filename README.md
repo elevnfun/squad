@@ -3,6 +3,9 @@
 Token-gated fantasy football on Solana. Hold the token to unlock a league area, pick a squad of real
 players, score from live match data and win weekly prizes.
 
+**Live at [elevn.fun](https://elevn.fun)** as a public test season on Solana devnet: test tokens from the
+site's faucet, no real value.
+
 This repo holds the backend (pricing, ingestion, scoring, game logic, web API) and the website in `web/`.
 
 ## Layout
