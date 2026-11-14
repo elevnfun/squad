@@ -101,8 +101,10 @@ Three places:
 - Logged out, the home page is the scroll story. Logged in, the logo opens Today.
 - Each mode is one card with one state and one button: Play, Live or Result.
 - One scoring engine, one sign-in, one prize page for both modes.
-- First visit: a player is met with a short guide the first time they open the site. [Owner;
-  what it covers and how it can be skipped are still to be described by the owner]
+- First visit: an interactive tutorial, built into the website, runs the first time a player
+  opens it. It highlights each area of the site in turn and explains it. It can be skipped.
+  It is not a PDF or a separate guide. It is built last, after the rest of the website is
+  complete. [Owner]
 
 ## 5. Prizes and access
 
@@ -187,6 +189,7 @@ and replacing the scroll story with a static poster (the owner wants the designe
 4. Penalty Shootout.
 5. Retire Season: close the current gameweek game and its pages once Blitz is live.
 6. Home scroll story (designed in section 2, built here).
+7. The first-visit interactive tutorial, once everything else is complete.
 
 Each mode ships with tests against real cached matches.
 
