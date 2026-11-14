@@ -28,6 +28,7 @@ Owner's decisions (2026-11-14):
 - Penalty Shootout stays as a side mini-game with no prize.
 - Section 2 design goes through the Higgsfield MCP, with the references.
 - Live predictions are parked.
+- First-time players are met with a short guide.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 
 Background: `docs/blueprint/reference/six-formats.md`. Every game number lives in `config.toml`.

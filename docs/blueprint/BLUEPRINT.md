@@ -101,6 +101,8 @@ Three places:
 - Logged out, the home page is the scroll story. Logged in, the logo opens Today.
 - Each mode is one card with one state and one button: Play, Live or Result.
 - One scoring engine, one sign-in, one prize page for both modes.
+- First visit: a player is met with a short guide the first time they open the site. [Owner;
+  what it covers and how it can be skipped are still to be described by the owner]
 
 ## 5. Prizes and access
 
