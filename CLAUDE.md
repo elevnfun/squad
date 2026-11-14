@@ -14,18 +14,19 @@ The project runs in four sections, in this order:
 4. Trial and error.
 
 Owner's decisions (2026-11-14):
-- Matchday Blitz and Daily Draft are the two main modes.
-- Draft: 5 packs of 3 (15 players) across the three leagues; a five-a-side with at least
-  1 defender, 1 midfielder, 1 attacker; no goalkeepers; at most 2 players per club. Packs are the same for everyone.
+- Two game modes only: Matchday Blitz and Draft. Season (the weekly squad-of-15 game) is removed,
+  and Squad Battles with it.
+- Draft: weekly. 5 personal packs of 3 (15 players, different for every wallet) across the three
+  leagues; a five-a-side with at least 1 defender, 1 midfielder, 1 attacker; no goalkeepers; at
+  most 2 players per club; paid weekly.
 - Blitz: full rules in `docs/blueprint/BLITZ.md`, which replaces every earlier Blitz rule. 3 squads
   per matchday on any 3 fixtures the player chooses; each squad is 3 players from one fixture (at
   least 1 from each club) and locks at its own kickoff; one live daily leaderboard; a "banked"
   moment after each full time; the daily prize is sent at the last whistle of the day; a fixed
-  $500 USDC weekly prize. No per-fixture prizes and no full-time leader bonus.
-- Prize split 40% Blitz, 40% Draft, 20% Season for now.
+  $500 weekly prize. No per-fixture prizes and no full-time leader bonus.
+- Prizes in SOL while on devnet.
 - Section 2 design goes through the Higgsfield MCP, with the references.
-- Squad Battles is in, as one ladder across all three leagues.
-- Penalty Shootout is a side mini-game. Live predictions are parked.
+- Live predictions are parked.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 
 Background: `docs/blueprint/reference/six-formats.md`. Every game number lives in `config.toml`.
