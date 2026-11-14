@@ -108,8 +108,10 @@ Three places:
   - Mixed in: items built from the site's own match data (line-ups, injuries, who is in form).
   - Bigger stories: the outlet's headline and a one-line excerpt from its RSS feed, linking out.
   - Never: scraping and republishing full articles.
-  - The write-ups are generated automatically, so they draw only on a short list of trusted
-    sources. Which sources is [Open].
+  - The write-ups are generated automatically, so they draw only on these sources [Owner]:
+    the three leagues' official sites (premierleague.com, laliga.com, bundesliga.com),
+    Sky Sports, BBC Sport and FotMob.
+  - To check when it is built: each source's terms, and which of them offer an RSS feed.
   - Built after the two modes, before the tutorial.
 - First visit: an interactive tutorial, built into the website, runs the first time a player
   opens it. It highlights each area of the site in turn and explains it. It can be skipped.
