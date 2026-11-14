@@ -29,6 +29,8 @@ Owner's decisions (2026-11-14):
 - Section 2 design goes through the Higgsfield MCP, with the references.
 - Live predictions are parked.
 - The site's News page carries football news, not platform news. Platform updates go on X.
+  Our own short write-ups of the facts with the source named, items from the site's match data,
+  and RSS headlines linking out. Never republish scraped articles.
 - First visit: an interactive tutorial built into the website highlights each area and explains
   it, and can be skipped. Not a PDF. Built last, after the rest of the website is complete.
 - Above all: do not overcomplicate the platform or let it get jumbled.

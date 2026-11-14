@@ -101,10 +101,16 @@ Three places:
 - Logged out, the home page is the scroll story. Logged in, the logo opens Today.
 - Each mode is one card with one state and one button: Play, Live or Result.
 - One scoring engine, one sign-in, one prize page for both modes.
-- News page: football news, not platform news. [Owner] Platform updates go out on X.
-  Where the football news comes from is still to be chosen: built from the match data the site
-  already has (injuries, line-ups, results, form), headlines linked from football outlets, or
-  both. [Open]
+- News page: football news, not platform news. Platform updates go out on X. [Owner]
+  - Main feed: our own two or three sentence write-ups of the facts (transfers, injuries,
+    results), in elevn's voice, with the source named on every item. A genuine rewrite of the
+    facts, never a reworded copy of one article.
+  - Mixed in: items built from the site's own match data (line-ups, injuries, who is in form).
+  - Bigger stories: the outlet's headline and a one-line excerpt from its RSS feed, linking out.
+  - Never: scraping and republishing full articles.
+  - The write-ups are generated automatically, so they draw only on a short list of trusted
+    sources. Which sources is [Open].
+  - Built after the two modes, before the tutorial.
 - First visit: an interactive tutorial, built into the website, runs the first time a player
   opens it. It highlights each area of the site in turn and explains it. It can be skipped.
   It is not a PDF or a separate guide. It is built last, after the rest of the website is
@@ -193,7 +199,8 @@ and replacing the scroll story with a static poster (the owner wants the designe
 4. Penalty Shootout.
 5. Retire Season: close the current gameweek game and its pages once Blitz is live.
 6. Home scroll story (designed in section 2, built here).
-7. The first-visit interactive tutorial, once everything else is complete.
+7. The football News page.
+8. The first-visit interactive tutorial, once everything else is complete.
 
 Each mode ships with tests against real cached matches.
 
