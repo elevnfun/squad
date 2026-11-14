@@ -3,6 +3,9 @@
 **Owner's update, 2026-11-14 (overrides the text below):** every prize is paid in SOL while the
 site is on devnet, the weekly $500 included as its SOL equivalent; the weekly prize comes from
 creator fees when they cover it and from project funds when they don't.
+Also settled since: Season is removed and Draft is weekly, so the overlap note in section 4 no
+longer applies; holding 150,000 $ELEVN is the confirmed access rule for Blitz; a captain is
+mandatory in every squad. Wherever the text below says USDC, read SOL while on devnet.
 
 **For:** the main build agent working on elevn 2.0
 **From:** the owner, 2026-11-14

@@ -14,8 +14,12 @@ site never turns into a jumble of games.
 
 Audience: crypto-native football fans on phones, arriving from X and Telegram.
 
-Ground rules: free to enter for $ELEVN holders; prizes only from creator fees; real football
-data; skill over chance; legal review still pending.
+Ground rules: free to enter for $ELEVN holders; prizes from creator fees, except the Blitz
+weekly prize, which project funds top up; real football data; legal review still pending.
+Draft's personal packs add luck by the owner's choice, where the first plan put skill over chance.
+
+How we will know it works: time to a first result under 3 hours; sessions per player per day;
+the share of players who come back the next day and the next week.
 
 ## 2. The rhythm: matchday, not daily
 
@@ -48,7 +52,8 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - Each matchday a player builds 3 squads, one per fixture, on any 3 fixtures they choose from the
   launch leagues. On a matchday with fewer than 3 fixtures, one squad per fixture. [Owner]
 - A squad is 3 players from one fixture, at least one from each club, with one captain (double
-  points). Choosing a captain is mandatory: a squad without one cannot be saved. [Owner] A fixture can be chosen only once. [Proposed]
+  points). Choosing a captain is mandatory: a squad without one cannot be saved. [Owner]
+- A fixture can be chosen only once. [Proposed]
 - Each squad locks at its own kickoff. Until then it can be changed or swapped to another fixture
   that has not kicked off. Picking late with the live board in view is allowed, and the rules
   page says so. [Owner]
@@ -58,7 +63,7 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
   $X". Banked points are final. [Owner]
 - Daily prize: the top 10 on the daily board, credited and sent when the last fixture of the
   matchday is banked. [Owner; top 10 and its split are Proposed]
-- Weekly prize: a fixed $500 USDC, on the sum of a player's best 3 daily totals that week.
+- Weekly prize: a fixed $500 (paid as its SOL equivalent on devnet), on the sum of a player's best 3 daily totals that week.
   [Owner; scoring and split are Proposed]
 - No per-fixture prizes, no "team for every fixture", no full-time leader bonus. [Owner]
 - Scoring: the existing engine, no Rising Stars, match bonus switched on. [Proposed]
