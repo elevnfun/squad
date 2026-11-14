@@ -42,7 +42,8 @@ leaderboard**, the daily prize is paid **at the last whistle of the day**, and t
   - Example: User A picks 2 Premier League matches and 1 La Liga match. User B picks 1 Bundesliga,
     1 Premier League and 1 La Liga match. Both compete on the same daily leaderboard.
 - Each squad is **3 players from that one fixture**, with **at least one player from each club**,
-  and **one captain** (double points). [Owner]
+  and **one captain** (double points). [Owner] Choosing a captain is mandatory: a squad without
+  one cannot be saved. [Owner]
 - A player may choose each fixture only once (no two squads on the same match). [Proposed]
 - The UI says "3 squads", not "up to 3". Fewer squads is allowed, but every empty slot scores 0, so
   the UI should push players to fill all 3. [Owner]

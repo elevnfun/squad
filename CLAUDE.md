@@ -27,6 +27,7 @@ Owner's decisions (2026-11-14):
 - Prize split: Blitz 60%, Draft 40%. Prizes in SOL while on devnet.
 - Access: holding 150,000 $ELEVN unlocks Blitz (the main mode); 150,000 more (300,000 in all)
   also unlocks Draft. Draft pays the top 5.
+- A captain on double points is mandatory in every Blitz squad and every Draft team.
 - Penalty Shootout stays as a side mini-game with no prize.
 - Section 2 design goes through the Higgsfield MCP, with the references.
 - Live predictions are parked.

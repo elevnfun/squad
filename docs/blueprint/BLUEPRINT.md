@@ -48,7 +48,7 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - Each matchday a player builds 3 squads, one per fixture, on any 3 fixtures they choose from the
   launch leagues. On a matchday with fewer than 3 fixtures, one squad per fixture. [Owner]
 - A squad is 3 players from one fixture, at least one from each club, with one captain (double
-  points). [Owner] A fixture can be chosen only once. [Proposed]
+  points). Choosing a captain is mandatory: a squad without one cannot be saved. [Owner] A fixture can be chosen only once. [Proposed]
 - Each squad locks at its own kickoff. Until then it can be changed or swapped to another fixture
   that has not kicked off. Picking late with the live board in view is allowed, and the rules
   page says so. [Owner]
@@ -67,7 +67,9 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - Once a week you open 5 packs of 3 players: 15 players, mixed across the three leagues. [Owner]
 - Packs are personal: every wallet gets its own players, so luck is part of the game. [Owner]
 - Build a five-a-side from your 15: at least 1 defender, 1 midfielder and 1 attacker, no
-  goalkeepers, at most 2 players from one club. [Owner] One captain. [Proposed]
+  goalkeepers, at most 2 players from one club. [Owner]
+- One captain on double points, and choosing one is mandatory: a team without a captain
+  cannot be saved. [Owner]
 - The team scores on that week's real matches and is paid once a week. [Owner]
 - To keep the luck fair [Owner]:
   - Packs are fixed per wallet per week, with no re-rolls and one draft per wallet.
@@ -216,10 +218,10 @@ Settled by the owner on 2026-11-14:
 - Penalty Shootout stays as a side mini-game with no prize.
 - Prize split: Blitz 60%, Draft 40%. Draft pays the top 5.
 - Access: 150,000 $ELEVN for Blitz; 150,000 more for Draft.
+- A captain on double points is mandatory in every Blitz squad and every Draft team.
 - Prizes in SOL on devnet; the weekly $500 from fees when they cover it, else project funds.
 - Section 2 design work goes through the Higgsfield MCP together with the references.
 
 Still to confirm:
-- Draft: one captain on double points, as in Blitz?
 - Blitz: the "still to confirm" list at the end of BLITZ.md.
 - The design of the payout wallet that sends prizes at day close.
