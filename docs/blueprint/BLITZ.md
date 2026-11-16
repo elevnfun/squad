@@ -13,6 +13,8 @@ The daily board and the weekly $500 each pay the top 5, not the top 10. Ties: mo
 wins, then the prize is split; there is no "saved earlier" step. A pot with fewer than 3 entrants
 rolls forward. The edge cases in section 5, one squad per fixture, line-ups shown and the match
 bonus are confirmed. A review switch lets the owner approve prizes before they are sent.
+Both top-5 boards split 50 / 25 / 12 / 8 / 5 percent ($250 / $125 / $60 / $40 / $25 for the weekly
+prize). The week is Tuesday 00:00 to Monday 23:59 UK time, confirmed.
 
 **For:** the main build agent working on elevn 2.0
 **From:** the owner, 2026-11-14

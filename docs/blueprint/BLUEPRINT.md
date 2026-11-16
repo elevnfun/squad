@@ -1,6 +1,7 @@
-# elevn 2.0 blueprint (v7, two modes and one mini-game, owner's decisions of 2026-11-14)
+# elevn 2.0 blueprint (v8, every rule settled by the owner, 2026-11-16)
 
-**Status: waiting for the owner's approval. Nothing here is built yet.**
+**Status: every rule is settled. Waiting for the owner's go-ahead to start section 2 (design).
+Nothing here is built yet.**
 Tags: [Owner] = stated by the owner, build as written. [Proposed] = recommended, needs a yes.
 [Open] = the owner must choose.
 
@@ -82,12 +83,12 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - One captain on double points, and choosing one is mandatory: a team without a captain
   cannot be saved. [Owner]
 - The team scores on that week's real matches and is paid once a week. [Owner]
-- If a player's club plays twice in the week, both matches count. [Owner]
+- If a player's club plays twice between Friday and Monday, both matches count. [Owner]
 - If a player's match is postponed or cancelled, the manager can swap that player for someone
   else. If they don't, the swap happens automatically. [Owner]
 - The replacement comes from the manager's own 15: the highest-valued unused player in the
   same position (defender for defender, and so on) whose match has not kicked off. [Owner]
-  If no player in that position is left, the slot scores 0. [Proposed]
+  If no player in that position is left, the slot scores 0. [Owner]
 - Ties: more captain points wins; if that is equal too, the prize is split. [Owner]
 - To keep the luck fair [Owner]:
   - Packs are fixed per wallet per week, with no re-rolls and one draft per wallet.
@@ -95,9 +96,9 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
     decides who you get, not how strong your packs are.
   - Packs only hold players whose club plays that week, and every 15 includes at least
     2 defenders, 2 midfielders and 2 attackers.
-- The week is Tuesday to Monday UK time, the same as the Blitz week. It locks at the week's
-  first kickoff. [Owner: good for now] When the draft opens is [Open]: three leagues with
-  different calendars share one week, so the owner will come back to it.
+- The Draft opens on Tuesday and locks at the first kickoff on Friday, every week. It scores
+  the matches from Friday to Monday. Midweek matches count for Blitz, not for Draft. [Owner]
+- The Blitz week, for the $500 prize, is Tuesday 00:00 to Monday 23:59 UK time. [Owner]
 - Known risks of personal packs, accepted by the owner: every extra wallet is an extra draw
   (limited by the 300,000 $ELEVN holding and the 72-hour hold), and random packs with prizes
   weigh more on the pending legal review than shared packs would.
@@ -161,7 +162,7 @@ Three places:
 - Every prize board pays the top 5: the Blitz daily board, the Blitz weekly $500 and the Draft
   weekly board. [Owner]
 - The split is steep, with 1st and 2nd far ahead [Owner]: 50% / 25% / 12% / 8% / 5% on all
-  three boards, which makes the weekly $500 pay $250 / $125 / $60 / $40 / $25. [Proposed]
+  three boards, which makes the weekly $500 pay $250 / $125 / $60 / $40 / $25. [Owner]
 - Blitz daily prizes are sent at day close, one transfer per winner, only if the wallet still
   holds the requirement; a failed transfer falls back to the daily batch. [Owner] Details in
   `docs/blueprint/BLITZ.md`.
@@ -266,7 +267,4 @@ Settled by the owner on 2026-11-14:
   leaderboard section; info pages stay in the side menu; notifications are for later.
 - Section 2 design work goes through the Higgsfield MCP together with the references.
 
-Still to confirm:
-- The week's start and end, and when the Draft opens and locks: one question, because the
-  three leagues' calendars differ. The owner is coming back to it.
-- The 50 / 25 / 12 / 8 / 5 split.
+Still to confirm: nothing. Details of the payout wallet are worked out in the build section.

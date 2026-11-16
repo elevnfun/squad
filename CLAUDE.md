@@ -13,7 +13,7 @@ The project runs in four sections, in this order:
 3. Functionality confirmed: build and test each mode.
 4. Trial and error.
 
-Owner's decisions (2026-11-14):
+Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is settled):
 - Two game modes only: Matchday Blitz and Draft. Season (the weekly squad-of-15 game) is removed,
   and Squad Battles with it.
 - Draft: weekly. 5 personal packs of 3 (15 players, different for every wallet) across the three
@@ -31,9 +31,12 @@ Owner's decisions (2026-11-14):
 - One entry per wallet however much it holds. A wallet can play as soon as it holds the tokens.
   The 72-hour hold applies only to weekly prizes (Blitz weekly and Draft), not Blitz daily prizes.
 - The $500 weekly prize is paid from the team's own wallet, not from creator fees.
-- Draft: a club's two matches in a week both count; a player whose match is postponed or cancelled
+- Draft opens on Tuesday and locks at Friday's first kickoff; it scores Friday to Monday. The
+  Blitz week is Tuesday to Monday UK time.
+- Draft: a club's two matches in the window both count; a player whose match is postponed or cancelled
   is swapped out, automatically if the manager doesn't do it.
-- Every prize board pays the top 5 (Blitz daily, Blitz weekly $500, Draft weekly), on a steep split.
+- Every prize board pays the top 5 (Blitz daily, Blitz weekly $500, Draft weekly), split
+  50 / 25 / 12 / 8 / 5 percent.
   Ties: more captain points wins, else the prize is split. A pot with fewer than 3 entrants rolls
   forward. Minimum pots: 0.5 SOL per Blitz matchday, 1 SOL per Draft week.
 - Prizes are sent from a separate payout wallet, never the fee wallet. A review switch, on at the
