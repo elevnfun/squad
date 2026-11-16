@@ -35,7 +35,7 @@ Midweek days, international breaks, the winter break and the summer have no matc
 
 | Mode | Rhythm | Result in | Prizes |
 |---|---|---|---|
-| Matchday Blitz | Every matchday | About 2 hours per squad; the day's prize at the last whistle | A daily pot (top 10) and a fixed $500 weekly prize |
+| Matchday Blitz | Every matchday | About 2 hours per squad; the day's prize at the last whistle | A daily pot (top 5) and a fixed $500 weekly prize (top 5) |
 | Draft | Once a week | The week's matches | One weekly pot |
 
 Removed by the owner on 2026-11-14: Season (the weekly squad-of-15 game that is live today),
@@ -53,7 +53,8 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
   launch leagues. On a matchday with fewer than 3 fixtures, one squad per fixture. [Owner]
 - A squad is 3 players from one fixture, at least one from each club, with one captain (double
   points). Choosing a captain is mandatory: a squad without one cannot be saved. [Owner]
-- A fixture can be chosen only once. [Proposed]
+- A fixture can be chosen only once. Confirmed line-ups are shown about an hour before
+  kickoff. [Owner]
 - Each squad locks at its own kickoff. Until then it can be changed or swapped to another fixture
   that has not kicked off. Picking late with the live board in view is allowed, and the rules
   page says so. [Owner]
@@ -61,12 +62,17 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - Each squad goes Live, then Full time (provisional), then Banked about 15 minutes after full
   time, with a reveal card. The board shows the prize line and "If the day ended now you'd win
   $X". Banked points are final. [Owner]
-- Daily prize: the top 10 on the daily board, credited and sent when the last fixture of the
-  matchday is banked. [Owner; top 10 and its split are Proposed]
-- Weekly prize: a fixed $500 (paid as its SOL equivalent on devnet), on the sum of a player's best 3 daily totals that week.
-  [Owner; scoring and split are Proposed]
+- Daily prize: the top 5 on the daily board, credited and sent when the last fixture of the
+  matchday is banked. [Owner]
+- Weekly prize: a fixed $500 (paid as its SOL equivalent on devnet) for the top 5, on the sum
+  of a player's best 3 daily totals that week. [Owner]
+- Ties: the player with more captain points wins. If that is equal too, the tied players
+  split the prize. There is no "saved earlier" step. [Owner]
+- Postponed before kickoff: swap to a fixture that has not started, else that squad scores 0.
+  Abandoned mid-match: the squad keeps its points so far. The day closes when the last match
+  that actually finishes is banked. [Owner]
 - No per-fixture prizes, no "team for every fixture", no full-time leader bonus. [Owner]
-- Scoring: the existing engine, no Rising Stars, match bonus switched on. [Proposed]
+- Scoring: the existing engine, no Rising Stars, match bonus switched on. [Owner]
 
 ### 3.2 Draft [Owner: main mode, weekly]
 - Once a week you open 5 packs of 3 players: 15 players, mixed across the three leagues. [Owner]
@@ -78,10 +84,11 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - The team scores on that week's real matches and is paid once a week. [Owner]
 - If a player's club plays twice in the week, both matches count. [Owner]
 - If a player's match is postponed or cancelled, the manager can swap that player for someone
-  else. If they don't, the swap happens automatically. [Owner] The replacement comes from the
-  manager's own 15, from players whose match has not kicked off, keeping the team legal; the
-  automatic pick is the highest-priced one. [Proposed]
-- Ties: more captain points first, then the earlier save, then an equal split. [Proposed]
+  else. If they don't, the swap happens automatically. [Owner]
+- The replacement comes from the manager's own 15: the highest-valued unused player in the
+  same position (defender for defender, and so on) whose match has not kicked off. [Owner]
+  If no player in that position is left, the slot scores 0. [Proposed]
+- Ties: more captain points wins; if that is equal too, the prize is split. [Owner]
 - To keep the luck fair [Owner]:
   - Packs are fixed per wallet per week, with no re-rolls and one draft per wallet.
   - Every pack has the same make-up by price: one top player, one mid-priced, one budget. Luck
@@ -99,7 +106,8 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - Shooter picks a corner and power, keeper picks a dive; five rounds.
 - You play against another player's stored picks, so there is no queue.
 - No prize, because it is mostly guessing. No $ELEVN holding is needed to play. [Owner]
-- Its leaderboard gets its own section of the site. [Owner] Daily limits are [Open].
+- Its leaderboard gets its own section of the site. [Owner]
+- 10 ranked games a day per wallet, and unlimited unranked practice. [Owner]
 - It is not a third mode: it sits as a small card under the two mode cards on Today.
 
 ## 4. Keeping it simple
@@ -147,12 +155,13 @@ Three places:
 - The 60% prize share: Blitz 60%, Draft 40%. Shootout 0%. [Owner]
 - Blitz: one pot per matchday, all of it to the daily board, made of Blitz's share of the fees
   collected since the last matchday. Draft: one pot per week, made of Draft's share of that
-  week's fees. [Owner] A pot with too few entrants rolls forward (threshold [Open]).
+  week's fees. [Owner] A pot with fewer than 3 entrants rolls forward. [Owner: for the start]
 - Minimum pots, topped up from the 10% low-volume reserve: 0.5 SOL per Blitz matchday and
-  1 SOL per Draft week (0.05 and 0.1 on devnet). [Proposed]
-- The Blitz daily board pays the top 10. [Proposed] The Draft weekly board pays the top 5, on a
-  stepped split with 1st and 2nd the biggest winners [Owner]: 35% / 25% / 18% / 12% / 10%.
-  [Proposed]
+  1 SOL per Draft week (0.05 and 0.1 on devnet). [Owner]
+- Every prize board pays the top 5: the Blitz daily board, the Blitz weekly $500 and the Draft
+  weekly board. [Owner]
+- The split is steep, with 1st and 2nd far ahead [Owner]: 50% / 25% / 12% / 8% / 5% on all
+  three boards, which makes the weekly $500 pay $250 / $125 / $60 / $40 / $25. [Proposed]
 - Blitz daily prizes are sent at day close, one transfer per winner, only if the wallet still
   holds the requirement; a failed transfer falls back to the daily batch. [Owner] Details in
   `docs/blueprint/BLITZ.md`.
@@ -160,15 +169,16 @@ Three places:
   Blitz weekly prize and the Draft prize. [Owner]
 - Draft uses the same holding rule as Blitz: the wallet must hold its requirement (300,000)
   when the prize is paid. [Owner]
-- A pause switch lets the owner hold automatic sending if a result looks wrong. [Proposed]
+- A review switch, on at the start: while it is on, prizes wait for the owner to look at the
+  result and approve it, then send at once. No fixed delay. [Owner]
 - Currency: every prize is paid in SOL while the site is on devnet, the weekly $500 included
   (its SOL equivalent). USDC is decided again before mainnet. [Owner]
 - The Blitz weekly $500 is paid from the team's own wallet, not from creator fees, so it never
   reduces the daily pots. [Owner] It must go to the legal review.
 - Sending at day close without the owner signing needs a key on the server: a separate payout
-  wallet holding about a week of prizes, never the fee wallet. [Proposed; the owner calls it solvable]
+  wallet holding about a week of prizes, never the fee wallet. [Owner]
 - Draft prizes are credited and sent when the week's last matchday closes, the same way as the
-  Blitz weekly prize. [Proposed] The 14-part vesting goes with Season; no Season prizes are owed.
+  Blitz weekly prize. The 14-part vesting goes with Season; no Season prizes are owed.
 - One prize per wallet per board.
 - The 72-hour holding rule is in config.toml but not enforced in code. It must be enforced
   before any weekly prize is paid.
@@ -257,9 +267,6 @@ Settled by the owner on 2026-11-14:
 - Section 2 design work goes through the Higgsfield MCP together with the references.
 
 Still to confirm:
-- When the Draft opens each week (the owner will come back to it).
-- The minimum pots (0.5 SOL per Blitz matchday, 1 SOL per Draft week) and the Draft split
-  (35 / 25 / 18 / 12 / 10).
-- Blitz: the "still to confirm" list at the end of BLITZ.md, and the rollover threshold.
-- Shootout's daily limits.
-- The design of the payout wallet that sends prizes at day close.
+- The week's start and end, and when the Draft opens and locks: one question, because the
+  three leagues' calendars differ. The owner is coming back to it.
+- The 50 / 25 / 12 / 8 / 5 split.

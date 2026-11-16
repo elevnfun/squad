@@ -9,6 +9,10 @@ mandatory in every squad. Wherever the text below says USDC, read SOL while on d
 The weekly $500 is paid from the team's own wallet. The 72-hour hold does not apply to the daily
 prize, only to the weekly prize. A wallet gets one entry (3 squads) a matchday however much it
 holds, and can play the moment it holds the tokens. Notifications are a feature for the future.
+The daily board and the weekly $500 each pay the top 5, not the top 10. Ties: more captain points
+wins, then the prize is split; there is no "saved earlier" step. A pot with fewer than 3 entrants
+rolls forward. The edge cases in section 5, one squad per fixture, line-ups shown and the match
+bonus are confirmed. A review switch lets the owner approve prizes before they are sent.
 
 **For:** the main build agent working on elevn 2.0
 **From:** the owner, 2026-11-14

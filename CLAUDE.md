@@ -33,8 +33,14 @@ Owner's decisions (2026-11-14):
 - The $500 weekly prize is paid from the team's own wallet, not from creator fees.
 - Draft: a club's two matches in a week both count; a player whose match is postponed or cancelled
   is swapped out, automatically if the manager doesn't do it.
+- Every prize board pays the top 5 (Blitz daily, Blitz weekly $500, Draft weekly), on a steep split.
+  Ties: more captain points wins, else the prize is split. A pot with fewer than 3 entrants rolls
+  forward. Minimum pots: 0.5 SOL per Blitz matchday, 1 SOL per Draft week.
+- Prizes are sent from a separate payout wallet, never the fee wallet. A review switch, on at the
+  start, lets the owner approve a result before prizes are sent.
+- Draft swaps: the highest-valued unused player in the same position from the manager's own 15.
 - Penalty Shootout stays as a side mini-game with no prize and no holding requirement; its
-  leaderboard gets its own section.
+  leaderboard gets its own section; 10 ranked games a day, unlimited practice.
 - Chat: any connected wallet holding the tokens can post. Info pages stay in the side menu.
   Notifications are a feature for the future.
 - Section 2 design goes through the Higgsfield MCP, with the references.
