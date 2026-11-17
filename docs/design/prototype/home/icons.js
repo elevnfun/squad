@@ -209,7 +209,11 @@ function buildPack(row, i, reduced) {
     body.style.setProperty('--shape', 'none');
     body.style.setProperty('--mask', `url("${img.src}")`);
   };
+  // one shared design: art/pack.png is used when there is no art/pack-N.png
+  img.onerror = () => { img.onerror = null; img.src = `${ART}pack.png`; };
   img.src = `${ART}pack-${i + 1}.png`;
+  const num = document.createElement('span'); num.className = 'pack-num'; num.textContent = `PACK ${i + 1}`;
+  body.append(num);
 
   // hover video: looked for the first time the pack is hovered
   let video = null;
@@ -219,10 +223,10 @@ function buildPack(row, i, reduced) {
     Object.assign(video, { muted: true, loop: true, playsInline: true, preload: 'auto' });
     video.setAttribute('muted', ''); video.setAttribute('playsinline', ''); video.setAttribute('aria-hidden', 'true');
     let failed = 0;
-    for (const [ext, type] of [['webm', 'video/webm'], ['mp4', 'video/mp4']]) {
+    for (const [name, ext, type] of [[`pack-${i + 1}-hover`, 'webm', 'video/webm'], [`pack-${i + 1}-hover`, 'mp4', 'video/mp4'], ['pack-hover', 'webm', 'video/webm'], ['pack-hover', 'mp4', 'video/mp4']]) {
       const src = document.createElement('source');
-      src.src = `${ART}pack-${i + 1}-hover.${ext}`; src.type = type;
-      src.addEventListener('error', () => { if (++failed === 2) { video.remove(); video = false; } });
+      src.src = `${ART}${name}.${ext}`; src.type = type;
+      src.addEventListener('error', () => { if (++failed === 4) { video.remove(); video = false; } });
       video.append(src);
     }
     video.addEventListener('canplay', () => { pack.classList.add('has-video'); if (pack.classList.contains('hot')) video.play().catch(() => {}); }, { once: true });

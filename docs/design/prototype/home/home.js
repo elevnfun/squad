@@ -19,7 +19,7 @@ const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) 
 // ---------------------------------------------------------------- the story
 // Where each beat sits on the scrollbar (the spec's marks).
 const MARKS = [0, 0.2, 0.4, 0.56, 0.72, 0.88, 1];
-const TITLES = ['ELEVN', 'FULL TIME', 'TWO', 'BLITZ', 'DRAFT', 'HOLD', 'ELEVN'];
+const TITLES = ['ELEVN', 'FULL TIME', 'MODES', 'BLITZ', 'DRAFT', 'HOLD', 'ELEVN'];
 
 // One pose per beat. All numbers are in mm and degrees.
 //   fit    mm that fill the height of the screen (smaller is closer)
@@ -113,7 +113,7 @@ try {
 const TITLE = {
   'ELEVN':     { place: 'above',  poses: ['hero', 'end'] },
   'FULL TIME': { place: 'above',  poses: ['close', 'close2'] },
-  'TWO':       { place: 'beside', poses: ['apart', 'apart2'] },
+  'MODES':      { place: 'beside', poses: ['apart', 'apart2'] },
   'BLITZ':     { place: 'beside', poses: ['blitz', 'blitz2'] },
   'DRAFT':     { place: 'beside', poses: ['draft', 'draft2'] },
   'HOLD':      { place: 'above',  poses: ['access'] },

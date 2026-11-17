@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 8772;
 const BASE = `http://127.0.0.1:${PORT}/home/index.html`;
 const SHOTS = path.join(__dirname, 'shots');
 const ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
-const BEATS = [['1-hero', 0], ['2-full-time', 0.2], ['3-two', 0.4], ['4-blitz', 0.56], ['5-draft', 0.72], ['6-access', 0.88], ['7-end', 1]];
+const BEATS = [['1-hero', 0], ['2-full-time', 0.2], ['3-modes', 0.4], ['4-blitz', 0.56], ['5-draft', 0.72], ['6-access', 0.88], ['7-end', 1]];
 
 async function open(browser, query, w, h, opts = {}) {
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1, ...opts });
@@ -27,6 +27,10 @@ async function open(browser, query, w, h, opts = {}) {
   await page.waitForFunction('window.__homeReady === true || window.__homeError', null, { timeout: 240000 });
   const err = await page.evaluate('window.__homeError || null');
   if (err) throw new Error(err);
+  // pack artwork loads after the page is ready (pack-N.png, then the shared pack.png)
+  await page.waitForTimeout(600);
+  await page.waitForFunction(() => [...document.images].every((i) => i.complete), null, { timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(300);
   return page;
 }
 

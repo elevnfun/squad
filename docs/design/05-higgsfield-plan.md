@@ -4,6 +4,8 @@
 > builder or local Blender are dropped (ball look-development stills, the Tokyo-style night scene,
 > the local turntable). What stays: the motion-graphics piece in Higgsfield's editor and the Katana
 > promo, both fed with stills rendered from our own three.js ball.
+>
+> **Owner's decisions, 2026-11-17:** the Katana promo is postponed until the platform is fully ready (live rate checked: 7 credits per second at 720p; cap discussed: 200). The Tokyo video is not a reference. Draft pack artwork (0.25 credits per image) and one shared 4-second hover video (28 credits) were approved and generated; files are in `docs/design/prototype/home/art/`.
 
 Written 2026-11-17 from Higgsfield's own instructions and model catalogue. Nothing was generated,
 rendered, uploaded or created, and no credits were spent. Balance: 1,162.53 credits, Plus plan.

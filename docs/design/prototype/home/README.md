@@ -93,6 +93,8 @@ lifts, tilts in 3D towards the cursor, a sheen sweeps across it once, its rim gl
 other four dim. Keyboard focus (Tab) gives the same lifted state. Under reduced motion there is
 no lift, tilt or sweep, only the gold rim.
 
+**Current artwork (2026-11-17).** `art/pack.png` is one shared design generated with Higgsfield (GPT Image, cut out locally, 800x1200 transparent PNG) and used for all five packs; the page tries `art/pack-N.png` first and falls back to `art/pack.png`. The "PACK N" label is drawn in code over the artwork (`.pack-num`). The hover video is likewise shared: `art/pack-N-hover.webm|mp4` first, then `art/pack-hover.webm|mp4`; it is masked by the PNG's alpha.
+
 **Swapping in artwork.** Put files in `docs/design/prototype/home/art/`. Nothing else changes;
 the page looks for them when it loads and uses whichever exist, pack by pack.
 
@@ -121,7 +123,7 @@ set works. The hover video is only looked for the first time a pack is hovered.
   pose each time the window is sized (`layoutTitles`), not by fixed numbers: centred over the
   closed ball (ELEVN, FULL TIME, HOLD), and the ball is moved down by whatever is needed for its
   top to clear the word; or to the left of the part of the ball that reaches into the band
-  (TWO, BLITZ, DRAFT). The word never overlaps the ball at rest; it can cross it briefly while
+  (MODES, BLITZ, DRAFT). The word never overlaps the ball at rest; it can cross it briefly while
   the camera travels between beats.
 - The mode notes are HTML, in a row under each icon.
 - Hold to open: the gold ring fills in 900 ms (on the wall clock), the seam cracks a little

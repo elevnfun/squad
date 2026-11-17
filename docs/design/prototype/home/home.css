@@ -196,3 +196,9 @@ ul, ol { list-style: none; }
   .boards { grid-template-columns: 1fr; }
   .band { padding: 64px 0; }
 }
+
+/* the pack's number, drawn over shared artwork (art/pack.png) and its hover video */
+.pack-num { position: absolute; left: 0; right: 0; top: 86.2%; display: none; text-align: center; pointer-events: none;
+  font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: clamp(9px, 0.82vw, 14px); letter-spacing: .22em;
+  color: #F2C14E; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+.pack.has-art .pack-num { display: block; }

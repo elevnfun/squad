@@ -59,7 +59,11 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
 - Desktop first: the desktop website gets much the bigger focus. The phone view must work but is
   adapted from the desktop design.
 - Home page (2026-11-17): the glass ball is the hero object. The end "Connect wallet" button is not gold.
-  Title-card words sit behind the ball but offset so they can be read.
+  Title-card words are drawn in front of the scene and placed clear of the ball, so every letter is
+  visible (the owner's issue was the word being hidden behind the ball). The "apart" beat's word is MODES.
+- Higgsfield (2026-11-17): the Draft pack artwork and its hover animation are generated with Higgsfield
+  (one shared design, numbered 1 to 5 in code). Always report the price and get a yes before spending
+  credits. The Katana promo video waits until the platform is fully ready.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 
 Background: `docs/blueprint/reference/six-formats.md`. Every game number lives in `config.toml`.
