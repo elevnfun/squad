@@ -175,10 +175,12 @@ set works. The hover video is only looked for the first time a pack is hovered.
   at 2400x1080; it is shown at the window's height and slid sideways so the ball lands where
   the live ball will be (compared with the live canvas at 1440x900 and 1728x1000: no offset),
   so the cross-fade does not jump. Without JavaScript the poster simply stays behind the words.
-- **Quality tiers** (`BallEngine.setQuality`). The page starts at `high` and times the frames it
-  draws for the first second and a half. If the middle frame took longer than 28 ms (under
-  about 35 frames a second) it steps down one tier and times once more.
-  `?quality=high|low|min` fixes the tier and switches the timing off.
+- **Quality tiers** (`BallEngine.setQuality`). The page starts at `high` and times six of the
+  first frames it draws (every sixth frame, about the first second): the frame is drawn and one
+  pixel is read back, which waits for the graphics card, so the time is the frame's real cost.
+  If the middle one of the six took longer than 22 ms (it cannot hold 45 frames a second) the
+  page steps down one tier and times once more. `?quality=high|low|min` fixes the tier and
+  switches the timing off. The tier is not remembered between visits.
 
   | Tier | Buffer pixels per CSS pixel | Bloom | Glass refraction | Multisampling |
   |---|---|---|---|---|
@@ -236,8 +238,9 @@ All earlier setters and URL parameters still work.
 
 - **Nothing here has been seen on a real GPU.** Everything was checked in headless Chromium on
   software WebGL (about one frame a second). That matters most for this round's quality tiers:
-  the 28 ms threshold, and how much each tier really saves, are reasoned, not measured. The
-  timing itself was only seen to work in the sense that the software renderer steps down. The
+  the 22 ms threshold, and how much each tier really saves on a real graphics card, are
+  reasoned, not measured. The timing was seen to work on the software renderer, which stepped
+  from high to low to min by itself (about 1.7 s a frame at low and 0.5 s at min). The
   hover's easing and 900 ms sweep, the lock's snap and the poster cross-fade were checked as
   stills and by state, not by eye at speed.
 - **Blitz, Draft and Access now show nearly the same ball**: panels on, halves apart, core lit.

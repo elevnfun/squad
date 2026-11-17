@@ -108,32 +108,36 @@ try {
 }
 
 // ---------------------------------------------------------------- quality
-// Three tiers: high, low, min (see BallEngine.setQuality). The page starts high and times the
-// first frames it draws, for a second and a half: if the middle one of them took longer than
-// 28 ms (under about 35 frames a second) it steps down one tier and times again.
-// ?quality=high, low or min fixes the tier.
+// Three tiers: high, low, min (see BallEngine.setQuality). The page starts high and times some
+// of the first frames it draws: the frame is drawn and one pixel is read back, which waits for
+// the graphics card to finish, so the time is the real cost of the frame and not the time it
+// took to queue it. If the middle one of six took longer than 22 ms (it cannot hold 45 frames
+// a second) the page steps down one tier and times again. ?quality=high, low or min fixes the tier.
 const TIERS = ['high', 'low', 'min'];
+const SLOW = 22;                              // ms
 const FORCED = TIERS.includes(q.get('quality')) ? q.get('quality') : null;
-const probe = { times: [], skip: 6, drew: false, done: !!FORCED || STILL || !engine };
+const probe = { times: [], n: 0, last: 0, warm: false, done: !!FORCED || STILL || !engine, px: new Uint8Array(4) };
 function setQuality(tier) {
   if (!engine || engine.quality === tier) return;
   engine.setQuality(tier);
   state.dirty = true;
 }
-function probeFrame(drew, wall) {
-  if (probe.done) return;
-  // only a frame that follows a drawn frame says how long drawing takes
-  const counts = drew && probe.drew;
-  probe.drew = drew;
-  if (!counts || probe.skip-- > 0) return;
-  probe.times.push(wall);
-  if (probe.times.length < 90 && probe.times.reduce((a, b) => a + b, 0) < 1.5) return;
-  const mid = [...probe.times].sort((a, b) => a - b)[probe.times.length >> 1];
+// Draws the frame; while the probe runs, every sixth frame (or one every 300 ms) is timed.
+function draw() {
+  const now = performance.now();
+  if (probe.done || (probe.n++ % 6 && now - probe.last < 300)) { engine.render(); return; }
+  probe.last = now;
+  engine.render();
+  const gl = engine.renderer.getContext();
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, probe.px);
+  if (!probe.warm) { probe.warm = true; return; }          // the first one pays for compiling the shaders
+  probe.times.push(performance.now() - now);
+  if (probe.times.length < 6) return;
+  const mid = [...probe.times].sort((a, b) => a - b)[3];
   const next = TIERS[TIERS.indexOf(engine.quality) + 1];
-  if (mid > 0.028 && next) setQuality(next);
-  // time the new tier too, unless this one is fast enough or there is nothing lower
-  probe.done = mid <= 0.028 || next === 'min' || !next;
-  probe.times = []; probe.skip = 6;
+  probe.done = mid <= SLOW || !next;
+  probe.times = [];
+  if (mid > SLOW && next) { setQuality(next); probe.warm = false; }   // the first frame of a tier pays for its new buffers
 }
 
 // ---------------------------------------------------------------- title words
@@ -349,9 +353,8 @@ function frame(dt, wall = dt) {
   setBeat(beat);
   drawIcons(s.p);
   if (changed || s.holding || s.hold > 0) drawRing();
-  if (changed) { engine.render(); s.dirty = false; }
+  if (changed) { draw(); s.dirty = false; }
   canvas.classList.toggle('can-hold', canHold());
-  return changed;
 }
 
 function drawRing() {
@@ -427,7 +430,7 @@ function loop(now) {
   state.last = now;
   // rendering stops in a hidden tab and once the prizes band has covered the stage
   if (stills.on) return;
-  if (document.hidden || window.scrollY > story.offsetHeight + 40) { probe.drew = false; return; }
+  if (document.hidden || window.scrollY > story.offsetHeight + 40) return;
   if (REDUCED && !narrow()) {
     // crossfade between the stills when the beat changes
     const b = beatAt(storyProgress());
@@ -435,7 +438,7 @@ function loop(now) {
     lastBeatShown = b;
     if (canvas.classList.contains('swap')) return;
   }
-  probeFrame(frame(dt, wall), wall);
+  frame(dt, wall);
 }
 
 // ---------------------------------------------------------------- stills
@@ -499,7 +502,7 @@ async function start() {
 
 // For captures: set the story position (and the hold) and draw that frame now.
 window.home = {
-  engine, state, POSE, CUES, MARKS, TITLE, ICON_SPAN, STILL_SIZE, layoutTitles, titleReport, setQuality,
+  engine, state, POSE, CUES, MARKS, TITLE, ICON_SPAN, STILL_SIZE, layoutTitles, titleReport, setQuality, probe,
   get quality() { return engine ? engine.quality : 'stills'; },
   set(p, hold = 0, open = null) {
     if (!engine) return;
