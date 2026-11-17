@@ -10,7 +10,7 @@ The project runs in four sections, in this order:
 2. Design: read `docs/design/DESIGN_BRIEF.md` first. It lists the owner's tools (Higgsfield MCP and
    Katana, ECC skills for design and for delegating the work to agents, camofox-browser for
    scraping, rea for reverse engineering) and references (elevn.fun, rive.app, two 3D website
-   guides, two reference videos). The site's visuals are built in code, with no generative AI
+   guides, two reference videos; the Tokyo video is not a reference, it was only a tester, so take nothing from it). The site's visuals are built in code, with no generative AI
    models. Design sits on top of `web/DESIGN.md`.
 3. Functionality confirmed: build and test each mode.
 4. Trial and error.
@@ -58,6 +58,8 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
   it, and can be skipped. Not a PDF. Built last, after the rest of the website is complete.
 - Desktop first: the desktop website gets much the bigger focus. The phone view must work but is
   adapted from the desktop design.
+- Home page (2026-11-17): the glass ball is the hero object. The end "Connect wallet" button is not gold.
+  Title-card words sit behind the ball but offset so they can be read.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 
 Background: `docs/blueprint/reference/six-formats.md`. Every game number lives in `config.toml`.

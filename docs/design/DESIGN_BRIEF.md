@@ -35,6 +35,7 @@ needs the owner's yes before it is spent.
 - **3D website guide 1** (designedby.russ, 16 pages): one hero object, the scrollbar as a
   timeline, words over the canvas. Summarised in the blueprint, section 6.
 - **3D website guide 2** (uijonah, "Build 3D websites that run live", 14 pages): section 3 below.
+- **Owner's decision, 2026-11-17: the Tokyo video is not a design reference.** It was only a test of a code-based Higgsfield video. Take nothing from it: no rain, lanterns, wet ground, bokeh or Tokyo-style lighting. Anything in 02, 03 and 05 that cites Tokyo is withdrawn.
 - **Video: Tokyo** (15 s). Made from the prompt "Make me a code-based video about Tokyo. Use
   Higgsfield MCP skills, use no generative AI models." The owner likes its general style and art:
   a rainy night alley, paper lanterns and neon signs, wet ground with long reflections, shallow
