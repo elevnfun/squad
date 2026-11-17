@@ -188,7 +188,7 @@ h1.word { font-weight: 700; letter-spacing: .02em; line-height: .84; }
 .mode .top { display: flex; align-items: center; justify-content: space-between; }
 .mode .name { font-size: 32px; }
 .mode .status { margin-top: 4px; color: var(--muted); font-size: 14px; }
-.mode .nums { display: flex; gap: 56px; margin: 24px 0 24px; padding: 20px 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--sheen), var(--row); align-items: flex-end; }
+.mode .nums { display: flex; gap: 56px; margin: 24px 0 24px; padding: 20px 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--sheen), var(--row); box-shadow: inset 0 1px 0 rgba(255,255,255,.10); align-items: flex-end; }
 .mode .nums .lbl { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 .mode .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; }
 .sq-row { display: grid; grid-template-columns: 24px 1fr auto auto; gap: 16px; align-items: center; font-size: 14px; }
@@ -200,11 +200,11 @@ h1.word { font-weight: 700; letter-spacing: .02em; line-height: .84; }
 .sq-row .fx small { display: block; font-size: 13px; color: var(--muted); font-weight: 400; }
 
 /* crest placeholder (steel disc with club code, not a real badge) */
-.crest { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--steel-edge); background: var(--row); font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--steel); letter-spacing: .02em; flex: none; }
+.crest { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid transparent; background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.03)) padding-box, linear-gradient(#0e1014, #0e1014) padding-box, linear-gradient(180deg, #f4f4f1, #858b95 50%, #c9ccd1) border-box; font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--steel); letter-spacing: .02em; flex: none; }
 .crest.lg { width: 40px; height: 40px; font-size: 14px; }
 
 /* countdown */
-.cd { font-family: var(--font-display); font-weight: 700; font-size: 56px; line-height: 1; letter-spacing: .01em; display: inline-block; padding: 14px 18px; border-radius: 10px; border: 1px solid var(--line); background: var(--sheen), var(--row); }
+.cd { font-family: var(--font-display); font-weight: 700; font-size: 56px; line-height: 1; letter-spacing: .01em; display: inline-block; padding: 14px 18px; border-radius: 10px; border: 1px solid var(--steel-edge); background: var(--sheen), var(--row); box-shadow: inset 0 1px 0 rgba(255,255,255,.14); }
 .cd.sm { font-size: 32px; padding: 8px 12px; }
 .cd small { font-size: 18px; color: var(--muted); margin: 0 10px 0 3px; letter-spacing: .04em; }
 
@@ -241,27 +241,43 @@ h1.word { font-weight: 700; letter-spacing: .02em; line-height: .84; }
 .fxr .m { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .fxr .m span.v { color: var(--steel-2); font-weight: 500; font-size: 12px; }
 .fxr .s { text-align: right; font-size: 12px; color: var(--muted); }
-.fxr.sel { background: var(--row-2); border-radius: 12px; border-top-color: transparent; box-shadow: inset 0 0 0 1px var(--edge-control); }
+.fxr { transition: background 150ms var(--ease); }
+.fxr:hover { background: var(--row-2); }
+.fxr.sel { background: var(--row-2); border-radius: 12px; border-top-color: transparent; box-shadow: inset 0 0 0 1px var(--steel), 0 0 18px -6px rgba(242,193,78,.35); }
 .fxr.dim .m, .fxr.dim .t { color: var(--steel-2); }
 .slot { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 12px; font-weight: 800; }
-.flist { padding: 4px 12px 12px; }
+.flist { padding: 4px 12px 12px; border-radius: 20px; }
 .flist .fx-group { margin-top: 16px; } .flist .fx-group:first-child { margin-top: 8px; }
 .flist .fx-group > .eyebrow { padding: 0 4px 10px; }
 .flist .fxr:first-of-type { border-top-color: transparent; }
 
-.squad { border: 1px solid var(--steel-edge); border-radius: 12px; background: var(--row); padding: 16px 20px; }
-.squad.open-sq { border-color: var(--edge-control); background: var(--row-2); }
+.squad { border-radius: 16px; padding: var(--s4) 20px; }
+.squad.open-sq { }
 .squad .hd { display: flex; align-items: center; gap: 12px; }
 .squad .hd .ttl { font-weight: 600; font-size: 15px; }
 .squad .hd .r { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
 .squad .picks { display: flex; gap: 8px; margin-top: 14px; }
-.chip { flex: 1; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 8px; background: rgba(255,255,255,.04); border: 1px solid var(--steel-edge); font-size: 13px; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip { flex: 1; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 8px; background: var(--row); border: 1px solid var(--steel-edge); font-size: 13px; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chip.empty { background: transparent; border: 1px dashed var(--edge-control); color: var(--steel); font-weight: 500; }
 .chip .pt { margin-left: auto; color: var(--steel); }
-.cap { position: relative; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 12px; font-weight: 800; flex: none; }
-.cap::after { content: ""; position: absolute; inset: -10px; }   /* 40px hit area around the 20px ring */
-.cap.unset { background: transparent; border: 1.5px dashed var(--steel-2); color: transparent; }
-.cap.ring { background: transparent; border: 1.5px solid var(--edge-control); color: var(--steel); }
+.cap { position: relative; display: inline-grid; place-items: center; min-width: 30px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); border: 1.5px solid #0a0b0d; box-shadow: 0 0 0 1px rgba(242,193,78,.5); color: var(--accent-ink); font-size: 12px; font-weight: 800; line-height: 1; flex: none; }
+.cap::after { content: ""; position: absolute; inset: -10px; }   /* 40px hit area */
+.cap.unset { background: rgba(10,11,13,.6); border: 1.5px dashed var(--steel-2); box-shadow: none; color: transparent; min-width: 20px; padding: 0; border-radius: 50%; }
+.cap.ring { background: rgba(10,11,13,.6); border: 1.5px solid var(--edge-control); box-shadow: none; color: var(--steel); min-width: 20px; padding: 0; border-radius: 50%; transition: border-color 150ms var(--ease), color 150ms var(--ease); }
+.cap.ring:hover { border-color: var(--accent); color: var(--accent); }
+
+/* player token: steel rim, glass fill, head and shoulders; the gold face is the captain (home page icons) */
+.tok { --t: 44px; position: relative; flex: none; width: var(--t); height: var(--t); border-radius: 50%; border: 1.5px solid transparent;
+  background: var(--person) 50% 52% / 58% no-repeat padding-box, linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.04)) padding-box, linear-gradient(#0e1014, #0e1014) padding-box, linear-gradient(180deg, #f4f4f1, #858b95 50%, #c9ccd1) border-box;
+  box-shadow: 0 6px 14px -4px rgba(0,0,0,.7); }
+.tok.sm { --t: 32px; }
+.tok.lg { --t: 56px; }
+.tok.gold { background: var(--person-ink) 50% 52% / 58% no-repeat padding-box, var(--accent) padding-box, var(--accent) border-box; box-shadow: 0 0 0 1px rgba(10,11,13,.6), 0 0 20px -2px rgba(242,193,78,.45), 0 6px 14px -4px rgba(0,0,0,.7); }
+.tok.empty { background: transparent; border: 1.5px dashed var(--edge-control); box-shadow: none; }
+.tok .cap { position: absolute; top: -7px; right: -14px; }
+.lock { display: inline-block; flex: none; width: 24px; height: 24px; background: var(--lock-shut) center / contain no-repeat; vertical-align: middle; }
+.lock.open { background-image: var(--lock-open); }
+
 .sq-empty { text-align: center; color: var(--muted); font-size: 14px; padding: 8px 0; }
 
 .picks-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
