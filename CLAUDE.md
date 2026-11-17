@@ -7,9 +7,11 @@ It is the plan of record. Do not build anything in it until the owner has approv
 
 The project runs in four sections, in this order:
 1. Blueprint and planning: `docs/blueprint/BLUEPRINT.md`, debate record in `docs/blueprint/DEBATE.md`.
-2. Design: design and motion on top of `web/DESIGN.md`. References: elevn.fun, rive.app (motion,
-   layout, how sections connect), and the 3D website guide summarised in the blueprint, section 6.
-   Crucial visuals are built in code, with no AI-generated imagery.
+2. Design: read `docs/design/DESIGN_BRIEF.md` first. It lists the owner's tools (Higgsfield MCP and
+   Katana, ECC skills for design and for delegating the work to agents, camofox-browser for
+   scraping, rea for reverse engineering) and references (elevn.fun, rive.app, two 3D website
+   guides, two reference videos). The site's visuals are built in code, with no generative AI
+   models. Design sits on top of `web/DESIGN.md`.
 3. Functionality confirmed: build and test each mode.
 4. Trial and error.
 
