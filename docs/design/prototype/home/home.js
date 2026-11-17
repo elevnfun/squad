@@ -38,10 +38,10 @@ const POSE = {
   close2: { fit: 172, az: 20, el: 15, x: 0.17, y: 0.19, tear: 0.04, gap: 0, turn: 30,  focus: 0,     near: 1, scrim: 1,    idle: 0 },
   apart:  { fit: 500, az: 23, el: 18, x: 0.12, y: 0.02, tear: 1,    gap: 0, turn: 52,  focus: 0,     near: 0, scrim: 0.6,  idle: 0 },
   apart2: { fit: 500, az: 23, el: 18, x: 0.12, y: 0.02, tear: 1,    gap: 0, turn: 58,  focus: 0,     near: 0, scrim: 0.6,  idle: 0 },
-  blitz:  { fit: 540, az: 23, el: 18, x: 0.12, y: 0.0, tear: 1,    gap: 0, turn: 84,  focus: 0.3,   near: 0, scrim: 0.7,  idle: 0 },
-  blitz2: { fit: 540, az: 23, el: 18, x: 0.12, y: 0.0, tear: 1,    gap: 0, turn: 98,  focus: 0.3,   near: 0, scrim: 0.7,  idle: 0 },
-  draft:  { fit: 560, az: 23, el: 18, x: 0.12, y: 0.0, tear: 1,   gap: 0, turn: 124, focus: -0.1,  near: 0, scrim: 0.7,  idle: 0 },
-  draft2: { fit: 560, az: 23, el: 18, x: 0.12, y: 0.0, tear: 1,   gap: 0, turn: 138, focus: -0.1,  near: 0, scrim: 0.7,  idle: 0 },
+  blitz: { fit: 740, az: 23, el: 18, x: 0.19, y: -0.1, tear: 1, gap: 0, turn: 84, focus: 0.3, near: 0, scrim: 0.7, idle: 0 },
+  blitz2: { fit: 740, az: 23, el: 18, x: 0.19, y: -0.1, tear: 1, gap: 0, turn: 98, focus: 0.3, near: 0, scrim: 0.7, idle: 0 },
+  draft: { fit: 740, az: 23, el: 18, x: 0.19, y: -0.1, tear: 1, gap: 0, turn: 124, focus: -0.1, near: 0, scrim: 0.7, idle: 0 },
+  draft2: { fit: 740, az: 23, el: 18, x: 0.19, y: -0.1, tear: 1, gap: 0, turn: 138, focus: -0.1, near: 0, scrim: 0.7, idle: 0 },
   access: { fit: 400, az: 23, el: 18, x: 0.13, y: 0.02, tear: 0,    gap: 1, turn: 196, focus: 0,     near: 0, scrim: 0.55, idle: 0 },
   end:    { fit: 350, az: 0,  el: 9,  x: 0.13, y: 0.04, tear: 0,    gap: 0, turn: 216, focus: 0,     near: 0, scrim: 0.55, idle: 1 },
   // what a completed hold blends towards: "the one frame"
@@ -58,6 +58,7 @@ const CUES = [
   [0.875, 'access'], [0.90, 'access'],
   [0.985, 'end'], [1.00, 'end'],
 ];
+for (const k in POSE) POSE[k].dy = 0;        // set by layoutTitles: how far the ball moves down to clear its title word
 const KEYS = Object.keys(POSE.hero);
 // The teardown at its fullest: how far the panels lift (1 is 30 mm) and how far the halves
 // part (1 is 60 mm between them).
@@ -100,124 +101,100 @@ try {
   throw e;
 }
 
-// ---------------------------------------------------------------- title cards
-// One outlined word behind the ball, drawn to a texture and laid on the back of the scene,
-// so the glass refracts it. Decoration only: the real words are HTML.
-// Each word sits to one side of the ball, so most of its letters are clear and the last
-// one or two pass behind the glass. Offsets are from the point the camera aims at, in
-// screen heights (the ball's size on screen follows the height, not the width).
-//   size  cap height; x, y  the word's left edge (its middle, when centre: true) and its top
-const CARD = {
-  'ELEVN':     { size: 0.17, x: 0,     y: -0.398, centre: true },
-  'FULL TIME': { size: 0.14, x: -0.37, y: -0.398 },
-  'TWO':       { size: 0.17, x: -0.51, y: -0.398 },
-  'BLITZ':     { size: 0.17, x: -0.51, y: -0.398 },
-  'DRAFT':     { size: 0.17, x: -0.56, y: -0.398 },
-  'HOLD':      { size: 0.17, x: 0,     y: -0.398, centre: true },
+// ---------------------------------------------------------------- title words
+// One outlined word per beat. It is HTML, above the canvas and above the dark wash, so every
+// letter is drawn at the same strength: nothing in the 3D scene (the wash behind the copy,
+// the vignette, the glass) can dim or hide part of it. Decoration only: the real words are
+// the copy on the left.
+// The word lives in a band under the bar. It is placed against the ball's outline on screen,
+// measured at the beat's resting pose, never by fixed numbers:
+//   above   centred over the ball; the ball is moved down until its top clears the word
+//   beside  to the left of the part of the ball that reaches into the band
+const TITLE = {
+  'ELEVN':     { place: 'above',  poses: ['hero', 'end'] },
+  'FULL TIME': { place: 'above',  poses: ['close', 'close2'] },
+  'TWO':       { place: 'beside', poses: ['apart', 'apart2'] },
+  'BLITZ':     { place: 'beside', poses: ['blitz', 'blitz2'] },
+  'DRAFT':     { place: 'beside', poses: ['draft', 'draft2'] },
+  'HOLD':      { place: 'above',  poses: ['access'] },
 };
-const cards = [];
-function buildCards() {
-  const W = window.innerWidth, H = window.innerHeight, dpr = engine.renderer.getPixelRatio();
-  for (const c of cards) { c.mesh.material.uniforms.uMap.value.dispose(); }
-  Object.keys(CARD).forEach((word, n) => {
-    const spec = CARD[word];
-    const cv = document.createElement('canvas');
-    const ctx = cv.getContext('2d');
-    const px = spec.size * H / 0.7;                         // Barlow Condensed capitals are 0.7 em tall
-    const font = `700 ${px}px "Barlow Condensed", "Arial Narrow", sans-serif`;
-    ctx.font = font;
-    const spaced = word.split('').join('\u200a');
-    const w = ctx.measureText(spaced).width;
-    const cw = Math.ceil(w + 24), ch = Math.ceil(px * 0.92);
-    cv.width = Math.ceil(cw * dpr); cv.height = Math.ceil(ch * dpr);
-    ctx.scale(dpr, dpr);
-    ctx.font = font;
-    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'center';
-    ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.strokeStyle = '#f4f4f1';
-    ctx.strokeText(spaced, cw / 2, ch * 0.86);
-    const tex = new THREE.CanvasTexture(cv);
-    tex.colorSpace = THREE.SRGBColorSpace; tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false;
-    let card = cards[n];
-    if (!card) {
-      const mat = new THREE.ShaderMaterial({
-        depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending, transparent: false,
-        uniforms: { uMap: { value: null }, uRect: { value: new THREE.Vector4() }, uAlpha: { value: 0 } },
-        vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.9999, 1.0); }',
-        fragmentShader: `
-          varying vec2 vUv; uniform sampler2D uMap; uniform vec4 uRect; uniform float uAlpha;
-          void main(){
-            vec2 t = (vUv - uRect.xy) / uRect.zw;
-            if (t.x < 0.0 || t.x > 1.0 || t.y < 0.0 || t.y > 1.0) discard;
-            float a = texture2D(uMap, t).a * uAlpha;
-            a *= smoothstep(0.26, 0.32, vUv.x);        // thins out towards the left edge
-            gl_FragColor = vec4(vec3(0.957, 0.957, 0.945) * a, 1.0);
-          }`,
-      });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
-      mesh.frustumCulled = false; mesh.renderOrder = -999; mesh.visible = false;
-      engine.scene.add(mesh);
-      card = cards[n] = { word, mesh, alpha: 0 };
+const titleBox = document.getElementById('titles');
+const titles = Object.keys(TITLE).map((word) => {
+  const el = document.createElement('span');
+  el.textContent = word;
+  titleBox.append(el);
+  return { word, el, rect: null };
+});
+const measure = document.createElement('canvas').getContext('2d');
+// The ball's outline on screen at a pose: points on a shell just outside each half.
+function ballPoints(P) {
+  applyPose(P, 0, 0);
+  const ex = engine.state.explode, r = R + 6 + 48 * ex;      // lifted panels and their panes
+  const pts = [];
+  for (const half of ['blitz', 'draft']) {
+    const sign = half === 'blitz' ? 1 : -1;
+    for (let lat = -12; lat <= 90; lat += 6) for (let lon = 0; lon < 360; lon += 10) {
+      const cl = Math.cos(rad(lat));
+      pts.push(engine.project([r * cl * Math.cos(rad(lon)), sign * r * Math.sin(rad(lat)), r * cl * Math.sin(rad(lon))], engine.halves[half]));
     }
-    const u = card.mesh.material.uniforms;
-    u.uMap.value = tex;
-    // the camera aims at 63% across, the middle of the height (the POSE x of every beat)
-    const ax = 0.63 * W + spec.x * H, top = 0.5 * H + spec.y * H - (ch * 0.86 - px * 0.7);
-    const left = spec.centre ? ax - cw / 2 : ax - 12;
-    u.uRect.value.set(left / W, 1 - (top + ch) / H, cw / W, ch / H);
-  });
+  }
+  return pts;
 }
-const CARD_STRENGTH = num('card', 0.6);
-
-// ---------------------------------------------------------------- callouts and leader lines
-const leaders = [];
-const NS = 'http://www.w3.org/2000/svg';
-const R = SPEC.radius;
-function anchorCandidates(kind, sign) {
-  // points in the space of one half (its rim is the plane y = 0)
-  if (kind === 'pole') return [[0, sign * (R + 34), 0]];
-  const rr = kind === 'stud' ? (SPEC.flangeInner + SPEC.linerRadius) / 2 : SPEC.linerRadius;
-  const n = kind === 'stud' ? (sign > 0 ? 3 : 5) : 24;
-  return Array.from({ length: n }, (_, i) => {
-    const a = (i / n) * Math.PI * 2 + (kind === 'stud' ? 0.3 : 0);
-    // the Draft half's inner parts are turned over (a rotation about x), which flips z
-    return [rr * Math.cos(a), 0, sign * rr * Math.sin(a)];
-  });
-}
-// One leader line per mode, from its icon to a gold stud on its half of the ball.
-function buildLeaders() {
-  const g = document.getElementById('leaders');
-  document.querySelectorAll('.mode').forEach((mode) => {
-    const half = mode.dataset.half, sign = half === 'blitz' ? 1 : -1;
-    const beat = +mode.closest('.beat').dataset.beat;
-    const box = mode.querySelector('.icon');
-    // choose the stud once, at the beat's own pose, so the line does not hop while the ball turns
-    applyPose(POSE[half === 'blitz' ? 'blitz2' : 'draft2'], 0, 0);
-    const b = box.getBoundingClientRect();
-    const cands = anchorCandidates('stud', sign).map((pt) => ({ pt, s: engine.project(pt, engine.halves[half]) }));
-    const d = (c) => Math.hypot(c.s.x - (b.left + b.width / 2), c.s.y - (b.top + b.height / 2));
-    cands.sort((a, c) => d(a) - d(c));
-    const grp = document.createElementNS(NS, 'g'); grp.setAttribute('class', 'leader');
-    const line = document.createElementNS(NS, 'line');
-    const dot = document.createElementNS(NS, 'circle'); dot.setAttribute('r', 2.5); dot.setAttribute('class', 'dot');
-    grp.append(line, dot); g.append(grp);
-    leaders.push({ box, half, beat, pt: cands[0].pt, grp, line, dot });
-  });
-}
-function placeLeaders(activeBeat) {
-  for (const L of leaders) {
-    const on = L.beat === activeBeat;
-    L.grp.classList.toggle('on', on);
-    if (!on && !L.wasOn) continue;
-    L.wasOn = on;
-    const s = engine.project(L.pt, engine.halves[L.half]);
-    // from the nearest point of the icon's box, less the rise the box may still be animating
-    const b = L.box.getBoundingClientRect();
-    const x1 = Math.min(b.right, Math.max(b.left, s.x)), y1 = Math.min(b.bottom, Math.max(b.top, s.y));
-    L.line.setAttribute('x1', x1); L.line.setAttribute('y1', y1);
-    L.line.setAttribute('x2', s.x); L.line.setAttribute('y2', s.y);
-    L.dot.setAttribute('cx', s.x); L.dot.setAttribute('cy', s.y);
+function layoutTitles() {
+  for (const k in POSE) POSE[k].dy = 0;
+  if (narrow()) return;
+  const W = window.innerWidth, H = window.innerHeight;
+  const edge = Math.max(80, (W - 1440) / 2);                 // the content edge
+  const cap = Math.round(0.125 * H), px = cap / 0.7;          // Barlow Condensed capitals are 0.7 em tall
+  const top = 64 + Math.round(0.028 * H), bottom = top + cap; // the band, under the 64 px bar
+  const gap = Math.round(0.022 * H);
+  for (const t of titles) {
+    const spec = TITLE[t.word];
+    const font = `700 ${px}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+    measure.font = font;
+    const m = measure.measureText(t.word);
+    const track = 0.03 * px, w = m.width + track * (t.word.length - 1);
+    const sets = spec.poses.map((k) => ballPoints(POSE[k]));
+    const all = sets.flat();
+    let left;
+    if (spec.place === 'above') {
+      const xs = all.map((p) => p.x);
+      left = (Math.min(...xs) + Math.max(...xs)) / 2 - w / 2;
+    } else {
+      const inBand = all.filter((p) => p.y > top - gap && p.y < bottom + gap).map((p) => p.x);
+      left = (inBand.length ? Math.min(...inBand) : Math.min(...all.map((p) => p.x))) - gap - w;
+    }
+    left = Math.round(Math.min(Math.max(left, edge), W - edge - 44 - w));   // 44: the beat rail
+    // how far the ball must come down so that no part of it is inside the word's box
+    let dy = 0;
+    for (const p of all) if (p.x > left - gap && p.x < left + w + gap && p.y < bottom + gap) dy = Math.max(dy, bottom + gap - p.y);
+    for (const k of spec.poses) POSE[k].dy = dy / H;
+    // CSS: the line box is 1 em tall; put the capitals' top edge on the band's top edge
+    const asc = m.fontBoundingBoxAscent, desc = m.fontBoundingBoxDescent;
+    const capTop = (px - (asc + desc)) / 2 + asc - cap;
+    Object.assign(t.el.style, { left: `${left}px`, top: `${(top - capTop).toFixed(1)}px`, fontSize: `${px.toFixed(2)}px`, letterSpacing: `${track.toFixed(2)}px` });
+    t.rect = { left, top, right: left + w, bottom, gap };
   }
 }
+// For the captures: at each beat's mark, the word's box and how near the ball comes to it.
+function titleReport() {
+  const W = window.innerWidth;
+  return MARKS.map((mk, i) => {
+    const t = titles.find((x) => x.word === TITLES[i]), r = t.rect;
+    if (!r) return null;
+    let near = Infinity;
+    for (const p of ballPoints(poseAt(mk))) {
+      const dx = Math.max(r.left - p.x, 0, p.x - r.right), dyy = Math.max(r.top - p.y, 0, p.y - r.bottom);
+      near = Math.min(near, Math.hypot(dx, dyy));
+    }
+    const b = t.el.getBoundingClientRect();
+    const words = beats[i].querySelector('.words').getBoundingClientRect();
+    return { word: t.word, left: r.left, right: Math.round(r.right), top: r.top, bottom: r.bottom, domRight: Math.round(b.right),
+      ballGap: Math.round(near), insideView: r.left >= 0 && b.right <= W, belowNav: r.top >= 64, clearOfCopy: r.bottom < words.top || r.left > words.right };
+  });
+}
+
+const R = SPEC.radius;
 
 // ---------------------------------------------------------------- mode icons
 // Each icon runs from 0 to 1 over the first part of its beat and rests on its last frame
@@ -268,13 +245,14 @@ function applyPose(P, open, idleDeg) {
   const n = (P.near || 0) * R;
   const target = [tmp.x + dir[0] * n, tmp.y + dir[1] * n, tmp.z + dir[2] * n];
   const compact = narrow();
-  engine.setCamera({ fit: compact ? fit * 1.25 : fit, dir, target, shift: compact ? [0, -0.17] : [P.x, P.y] });
+  engine.setCamera({ fit: compact ? fit * 1.25 : fit, dir, target, shift: compact ? [0, -0.17] : [P.x, P.y + (P.dy || 0)] });
 }
 
 function setBeat(b) {
   if (b === state.beat) return;
   state.beat = b;
   beats.forEach((el, i) => el.classList.toggle('on', i === b));
+  titles.forEach((t) => t.el.classList.toggle('on', t.word === TITLES[b]));
   railDots.forEach((el, i) => { el.classList.toggle('on', i === b); if (i === b) el.setAttribute('aria-current', 'true'); else el.removeAttribute('aria-current'); });
 }
 
@@ -318,20 +296,8 @@ function frame(dt, wall = dt) {
   const st = s.studio;
   if (!REDUCED && !STILL) { st.yaw += (st.tYaw - st.yaw) * 0.06; st.pitch += (st.tPitch - st.pitch) * 0.06; }
 
-  // title cards fade over time, not with scroll: once in, 700 ms
-  let cardMoving = false;
-  cards.forEach((c) => {
-    const want = c.word === TITLES[beat] && !narrow() ? 1 : 0;
-    const before = c.alpha;
-    if (STILL || REDUCED) c.alpha = want;
-    else c.alpha = want > c.alpha ? Math.min(want, c.alpha + dt / 0.7) : Math.max(want, c.alpha - dt / 0.3);
-    if (c.alpha !== before) cardMoving = true;
-    c.mesh.visible = c.alpha > 0.002;
-    c.mesh.material.uniforms.uAlpha.value = c.alpha * CARD_STRENGTH;
-  });
-
   const key = [s.p, s.open, idle, st.yaw.toFixed(4), st.pitch.toFixed(4), beat, window.innerWidth, window.innerHeight].join('|');
-  const changed = key !== s.key || cardMoving || s.dirty;
+  const changed = key !== s.key || s.dirty;
   s.key = key;
   if (changed) {
     applyPose(P, s.open, idle);
@@ -341,7 +307,7 @@ function frame(dt, wall = dt) {
   setBeat(beat);
   drawIcons(s.p);
   if (changed || s.holding || s.hold > 0) drawRing();
-  if (changed) { placeLeaders(beat); engine.render(); s.dirty = false; }
+  if (changed) { engine.render(); s.dirty = false; }
   canvas.classList.toggle('can-hold', canHold());
 }
 
@@ -353,6 +319,8 @@ function drawRing() {
   ring.setAttribute('transform', `rotate(-90 ${c.x} ${c.y})`);
   ring.setAttribute('stroke-dasharray', `${len * state.hold} ${len}`);
   overlay.classList.toggle('holding', state.hold > 0.001);
+  // the title word steps back while the ball is held open, so the ring and the open ball do not cross it
+  titleBox.style.opacity = (1 - clamp01(Math.max(state.hold * 2.5, state.open * 4))).toFixed(3);
   holdBtn.setAttribute('aria-pressed', String(state.opened || (REDUCED && state.open > 0.5)));
 }
 
@@ -362,7 +330,7 @@ function onScroll() {
   root.classList.toggle('past-story', window.scrollY > story.offsetHeight - window.innerHeight * 0.55);
 }
 window.addEventListener('scroll', onScroll, { passive: true });
-window.addEventListener('resize', () => { buildCards(); onScroll(); state.dirty = true; });
+window.addEventListener('resize', () => { layoutTitles(); onScroll(); state.dirty = true; });
 
 // rail and logo: jump to a beat's mark
 function goTo(i) {
@@ -428,8 +396,7 @@ function loop(now) {
 
 async function start() {
   try { await Promise.all([document.fonts.load('700 100px "Barlow Condensed"'), document.fonts.load('800 60px "Sora"'), document.fonts.ready]); } catch (e) { /* fall back to system fonts */ }
-  buildCards();
-  buildLeaders();
+  layoutTitles();
   if (q.has('p')) state.pTarget = clamp01(num('p', 0)); else onScroll();
   state.p = state.pTarget;
   if (q.has('hold')) { state.hold = clamp01(num('hold', 0)); state.open = 0.1 * state.hold; }
@@ -445,7 +412,7 @@ async function start() {
 
 // For captures: set the story position (and the hold) and draw that frame now.
 window.home = {
-  engine, state, POSE, CUES, MARKS, CARD, ICON_SPAN, buildCards,
+  engine, state, POSE, CUES, MARKS, TITLE, ICON_SPAN, layoutTitles, titleReport,
   set(p, hold = 0, open = null) {
     state.pTarget = state.p = clamp01(p);
     state.hold = clamp01(hold); state.opened = open !== null; state.open = open !== null ? open : 0.1 * state.hold;

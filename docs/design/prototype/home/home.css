@@ -56,11 +56,12 @@ ul, ol { list-style: none; }
 #stage.can-hold { cursor: pointer; }
 #scrim { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: var(--scrim, .6);
   background: linear-gradient(90deg, rgba(10,11,13,.94) 0%, rgba(10,11,13,.86) 26%, rgba(10,11,13,.45) 44%, rgba(10,11,13,0) 60%); }
+/* the beat's title word: outlined, above the wash, so every letter has the same strength */
+#titles { position: fixed; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+#titles span { position: absolute; white-space: nowrap; line-height: 1; font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 700;
+  color: transparent; -webkit-text-stroke: 1.5px rgba(244,244,241,.62); opacity: 0; transition: opacity 300ms linear; }
+#titles span.on { opacity: 1; transition: opacity 700ms var(--ease) 80ms; }
 #overlay { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 2; pointer-events: none; overflow: visible; }
-#overlay line { stroke: rgba(255,255,255,.28); stroke-width: 1; }
-#overlay .dot { fill: var(--text); }
-#overlay g.leader { opacity: 0; transition: opacity 250ms linear; }
-#overlay g.leader.on { opacity: 1; transition: opacity 700ms var(--ease) 250ms; }
 #ring, #ring-track { fill: none; stroke-width: 2; }
 #ring-track { stroke: rgba(255,255,255,.14); opacity: 0; transition: opacity 180ms linear; }
 #ring { stroke: var(--accent); stroke-linecap: round; opacity: 0; }
@@ -88,17 +89,46 @@ ul, ol { list-style: none; }
 .js .beat.on .words { opacity: 1; visibility: visible; transform: translateY(-50%);
   transition: opacity 700ms var(--ease) 80ms, transform 700ms var(--ease) 80ms, visibility 0s; }
 
-/* the mode icon and its three notes, bottom right; one leader line to the ball is drawn in #overlay */
+/* the mode icon and its three notes, lower right, standing in front of the ball */
 .mode { display: none; }
-.js .mode { display: block; position: fixed; z-index: 3; right: max(80px, calc((100vw - 1440px) / 2)); bottom: 6vh; width: clamp(270px, 34vh, 400px);
-  opacity: 0; transform: translateY(8px); transition: opacity 220ms linear, transform 0s linear 220ms; }
-.js .beat.on .mode { opacity: 1; transform: none; transition: opacity 700ms var(--ease) 200ms, transform 700ms var(--ease) 200ms; }
+.js .mode { display: block; position: fixed; z-index: 3; right: calc(max(80px, (100vw - 1440px) / 2) + 36px); bottom: 5vh;
+  width: min(80vh, calc(min(1440px, 100vw - 160px) - 576px));
+  opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity 220ms linear, transform 0s linear 220ms, visibility 0s linear 220ms; }
+.js .beat.on .mode { opacity: 1; visibility: visible; transform: none; transition: opacity 700ms var(--ease) 200ms, transform 700ms var(--ease) 200ms, visibility 0s; }
 .icon svg { display: block; width: 100%; height: auto; overflow: visible; font-family: "Sora", system-ui, sans-serif; }
-.callouts { margin-top: 18px; }
+.callouts { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px 32px; }
 .callouts li { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--steel); line-height: 1.35; padding: 5px 0 5px 14px; border-left: 1px solid rgba(255,255,255,.28);
   opacity: .38; transition: opacity 300ms linear, border-color 300ms linear; }
-.callouts li + li { margin-top: 8px; }
 .callouts li.lit { opacity: 1; border-left-color: var(--accent); }
+
+/* ---------- the Draft packs ----------
+   .pack is placed by the scroll (--tx, --ty, --rot, --open); .pack-body carries the hover. */
+.draft-icon { position: relative; container-type: inline-size; aspect-ratio: 760 / 350; }
+.draft-icon > svg { position: absolute; inset: 0; height: 100%; z-index: 2; pointer-events: none; }
+.packs { position: absolute; inset: 0; z-index: 1; }
+.pack { position: absolute; aspect-ratio: 2 / 3; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--rot, 0deg)); border-radius: 4px; outline-offset: 6px; }
+.packs.live .pack { pointer-events: auto; cursor: pointer; }
+.pack-body { position: absolute; inset: 0; transform-origin: 50% 60%;
+  transform: perspective(620px) translateY(var(--lift, 0)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(calc(1 - .04 * var(--open, 0)));
+  filter: drop-shadow(0 14px 16px rgba(0,0,0,.55)) brightness(calc(1 - .62 * var(--open, 0))) saturate(calc(1 - .5 * var(--open, 0)));
+  transition: transform 220ms var(--ease), filter 220ms linear; }
+.pack-art, .pack-art svg, .pack-art img, .pack video { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pack-art img, .pack video { object-fit: contain; }
+.pack video { opacity: 0; transition: opacity 280ms linear; pointer-events: none; clip-path: var(--shape, none); -webkit-mask: var(--mask, none) center / 100% 100% no-repeat; mask: var(--mask, none) center / 100% 100% no-repeat; }
+.pack.hot.has-video video { opacity: 1; }
+/* the foil sheen: a bright diagonal band, parked off the pack until it is hovered */
+.pack-sheen { position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: screen;
+  clip-path: var(--shape, none); -webkit-mask: var(--mask, none) center / 100% 100% no-repeat; mask: var(--mask, none) center / 100% 100% no-repeat;
+  background: linear-gradient(112deg, rgba(255,255,255,0) 38%, rgba(255,255,255,.5) 47%, rgba(255,244,214,.75) 50%, rgba(255,255,255,.5) 53%, rgba(255,255,255,0) 62%) no-repeat;
+  background-size: 260% 100%; background-position: 135% 0; }
+.pack.hot .pack-body { --lift: -7%;
+  filter: drop-shadow(0 22px 22px rgba(0,0,0,.6)) drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 14px rgba(242,193,78,.5)); }
+.pack.hot .pack-sheen { opacity: 1; animation: sheen 900ms var(--ease) both; }
+.packs.hovering .pack:not(.hot) .pack-body { filter: drop-shadow(0 14px 16px rgba(0,0,0,.55)) brightness(.62); }
+.pack:focus-visible { outline: 2px solid var(--accent); }
+@keyframes sheen { from { background-position: 135% 0; } to { background-position: -35% 0; } }
+/* capture mode: the sheen is held half way across */
+.still .pack.hot .pack-sheen { animation: none; background-position: 42% 0; }
 
 /* hold to open */
 .hold { display: none; }
@@ -139,8 +169,12 @@ ul, ol { list-style: none; }
 @media (prefers-reduced-motion: reduce) {
   /* no rise, 200 ms fades only */
   .js .words, .js .beat.on .words { transform: translateY(-50%); transition: opacity 200ms linear, visibility 0s; }
-  .js .mode, .js .beat.on .mode { transform: none; transition: opacity 200ms linear; }
-  #overlay g.leader, #overlay g.leader.on, .js .hold, .js .beat.on .hold { transition: opacity 200ms linear, visibility 0s; }
+  .js .mode, .js .beat.on .mode { transform: none; transition: opacity 200ms linear, visibility 0s; }
+  /* packs: no tilt, no lift, no sweep; the gold rim only */
+  .pack-body { transition: filter 200ms linear; }
+  .pack.hot .pack-body { --lift: 0; --rx: 0deg !important; --ry: 0deg !important; }
+  .pack.hot .pack-sheen { opacity: 0; animation: none; }
+  .js .hold, .js .beat.on .hold { transition: opacity 200ms linear, visibility 0s; }
   .btn { transition: none; }
 }
 
@@ -153,7 +187,8 @@ ul, ol { list-style: none; }
   #scrim { background: linear-gradient(180deg, rgba(10,11,13,0) 30%, rgba(10,11,13,.8) 62%); opacity: 1; }
   .beat, #hero, #full-time, #two, #blitz, #draft, #access, #end { height: auto; min-height: 92vh; display: flex; align-items: flex-end; padding-bottom: 12vh; }
   .js .words, .js .beat.on .words { position: static; opacity: 1; visibility: visible; transform: none; margin: 0; width: 100%; }
-  .js .mode, .js .beat.on .mode { position: static; opacity: 1; transform: none; width: min(300px, 100%); margin: 28px 24px 0; }
+  .js .mode, .js .beat.on .mode { position: static; opacity: 1; visibility: visible; transform: none; width: auto; margin: 28px 24px 0; }
+  #titles { display: none; }
   .beat { flex-direction: column; justify-content: flex-end; align-items: stretch; }
   .js .rail, .js .hold, #overlay { display: none; }
   .lead { font-size: 18px; }

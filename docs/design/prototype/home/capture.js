@@ -1,6 +1,9 @@
 // Captures the home prototype through Playwright (software WebGL, still mode).
 //   node capture.js beats [width height]   -> shots/beat-1-hero.png ... beat-7-end.png, hold-mid.png, hold-open.png,
 //                                             blitz-step-1..4.png, draft-step-1..4.png
+//   node capture.js sizes                  -> beat-1-hero, beat-4-blitz, beat-5-draft at 1512x860 and 1728x1000
+//   node capture.js hover [width height]   -> shots/draft-pack-hover.png (the pointer on a pack)
+//   node capture.js titles                 -> prints each title word's box and its gap to the ball at four sizes
 //   node capture.js one "<query>" out.png [width height]
 //   node capture.js video                  -> shots/scroll.mp4 (1280x720, 30 fps)
 // Needs the prototype folder served:  cd docs/design/prototype && python3 -m http.server 8772
@@ -17,7 +20,8 @@ const BEATS = [['1-hero', 0], ['2-full-time', 0.2], ['3-two', 0.4], ['4-blitz', 
 
 async function open(browser, query, w, h, opts = {}) {
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1, ...opts });
-  page.on('console', (m) => { if (m.type() === 'error') console.log('  [page]', m.text().slice(0, 300)); });
+  // a missing art/pack-N file is expected (the page looks for optional artwork), so 404s are not printed
+  page.on('console', (m) => { if (m.type() === 'error' && !/status of 404/.test(m.text())) console.log('  [page]', m.text().slice(0, 300)); });
   page.on('pageerror', (e) => console.log('  [pageerror]', String(e).slice(0, 400)));
   await page.goto(`${BASE}?still=1&${query}`);
   await page.waitForFunction('window.__homeReady === true || window.__homeError', null, { timeout: 240000 });
@@ -36,6 +40,36 @@ async function open(browser, query, w, h, opts = {}) {
       const page = await open(browser, query, +w, +h, query.includes('reduced=1') ? { reducedMotion: 'reduce' } : {});
       await page.screenshot({ path: out });
       console.log(out);
+    } else if (mode === 'sizes') {
+      // hero, Blitz and Draft at two common Mac window sizes
+      for (const [w, h] of [[1512, 860], [1728, 1000]]) {
+        const page = await open(browser, 'p=0', w, h);
+        for (const [name, p] of [BEATS[0], BEATS[3], BEATS[4]]) {
+          await page.evaluate((a) => window.home.set(a), p);
+          await page.screenshot({ path: path.join(SHOTS, `beat-${name}-${w}x${h}.png`) });
+          console.log(`beat-${name}-${w}x${h}.png`);
+        }
+        await page.close();
+      }
+    } else if (mode === 'hover') {
+      // the Draft beat at rest with the pointer on the fourth pack
+      const w = +(process.argv[3] || 1440), h = +(process.argv[4] || 900);
+      const page = await open(browser, 'p=0.72', w, h);
+      const b = await page.locator('.pack').nth(3).boundingBox();
+      await page.mouse.move(b.x + b.width * 0.5, b.y + b.height * 0.5);
+      await page.mouse.move(b.x + b.width * 0.72, b.y + b.height * 0.3, { steps: 4 });
+      await page.waitForTimeout(400);
+      await page.evaluate(() => { window.home.state.dirty = true; });
+      await page.screenshot({ path: path.join(SHOTS, w === 1440 ? 'draft-pack-hover.png' : `draft-pack-hover-${w}.png`) });
+      console.log('draft-pack-hover');
+    } else if (mode === 'titles') {
+      // every title word at four window sizes: its box, and how near the ball comes to it
+      for (const [w, h] of [[1440, 900], [1920, 1080], [1512, 860], [1728, 1000]]) {
+        const page = await open(browser, 'p=0', w, h);
+        console.log(`${w}x${h}`);
+        for (const r of await page.evaluate(() => window.home.titleReport())) console.log('  ', JSON.stringify(r));
+        await page.close();
+      }
     } else if (mode === 'beats') {
       const w = +(process.argv[3] || 1440), h = +(process.argv[4] || 900);
       const suffix = w === 1440 ? '' : `-${w}`;
@@ -54,7 +88,7 @@ async function open(browser, query, w, h, opts = {}) {
       const span = await page.evaluate(() => window.home.ICON_SPAN);
       for (const half of ['blitz', 'draft']) {
         const [s, e] = span[half];
-        const steps = half === 'blitz' ? [0.14, 0.36, 0.56, 0.8] : [0.12, 0.3, 0.46, 0.68];
+        const steps = half === 'blitz' ? [0.14, 0.36, 0.56, 0.8] : [0.17, 0.34, 0.47, 0.64];
         for (let i = 0; i < steps.length; i++) await snap(`${half}-step-${i + 1}`, s + (e - s) * steps[i]);
       }
     } else if (mode === 'video') {
