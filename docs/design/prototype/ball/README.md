@@ -75,8 +75,7 @@ new BallEngine(canvas, { pointer: false })     // leave drag and cursor to the p
 
 The gold core and the rim studs are now dark while the ball is closed and ignite as it opens, so
 the glass variant's opening is a reveal. The glass variant's rim rings are satin steel. The glass
-stills in `shots/` were retaken after this change; `turntable-glass.mp4` predates it and still
-shows a gold core in the closed ball.
+stills and `turntable-glass.mp4` in `shots/` were retaken after this change.
 
 All setters return the engine, so they chain. Scene graph, for the animation step:
 `root` (pointer drag) > `tilt` (fixed tilt) > `spin` (`setTurn`) > `halves.blitz`,
@@ -115,7 +114,7 @@ cameras are in `VIEWS`.
 | Liner `#131519`, metalness 0.9 | `#3A3E46`, metalness 0.5, roughness 0.42 | A near-black metal showed nothing of the gold light in the gap |
 | Liner is a plain hemisphere | Hemisphere plus a flat rim 86 to 103 mm | The studs need a face that is visible when the ball is open |
 | Three light panels | Five | A second back strip so both sides of the silhouette get a rim, and a dim low fill |
-| Wet ground as a reflecting floor | In the environment only | The reference floats on black; the ground shows as ripples in the lower reflections. No ground reflection pass, rain or bokeh |
+| Wet ground as a reflecting floor | In the environment only | The reference floats on black; the ground shows as ripples in the lower reflections. No ground reflection pass. Rain and bokeh are dropped by the owner |
 | Glass lit by the environment only | Kept: the core's point light is removed from every glass material in the shader | Avoids the hot spot on glass |
 | Bloom threshold 1.0, strength 0.35 | Threshold 2.6, strength 0.18 | At 1.0 every lit steel panel bloomed and the ball washed out |
 | Vignette to black | Vignette, then the floor is lifted to `#0A0B0D` | The canvas edge matches the page colour exactly (measured 10, 11, 13 in the corner) |
@@ -132,7 +131,8 @@ cameras are in `VIEWS`.
 - The brushed finish is one 1024 px texture stretched over each panel. Very close up the streaks
   go soft.
 - The wet ground reflects the studio as if it were infinitely far away.
-- No depth of field, no ground, no rain, no labels, no blueprint mode, no sound, no scroll.
+- Rain, a reflecting ground, lanterns and bokeh are dropped by the owner (the video they came from
+  is no longer a reference). No depth of field, no labels, no blueprint mode, no sound, no scroll.
 - No quality tiers, no adaptive resolution, no context-loss handling, no poster or fallback stills.
 - The phone view is untested. Touch drag works through pointer events, tilt is not wired.
 - Geometry is not instanced or merged.

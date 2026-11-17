@@ -112,7 +112,7 @@ const CARD = {
   'FULL TIME': { size: 0.14, x: -0.37, y: -0.398 },
   'TWO':       { size: 0.17, x: -0.51, y: -0.398 },
   'BLITZ':     { size: 0.17, x: -0.51, y: -0.398 },
-  'DRAFT':     { size: 0.17, x: -0.51, y: -0.398 },
+  'DRAFT':     { size: 0.17, x: -0.56, y: -0.398 },
   'HOLD':      { size: 0.17, x: 0,     y: -0.398, centre: true },
 };
 const cards = [];
