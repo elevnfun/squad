@@ -184,8 +184,9 @@ All earlier setters and URL parameters still work.
 - **Packs "close again"** once the five are picked, so that the beat rests on five bright packs
   that can be hovered. It is a small liberty with what happens to an opened pack.
 - **Hover has not been seen at real speed.** The lift, tilt and sweep were checked as stills in
-  headless Chromium; the easing and the 900 ms sweep need a look on a real GPU. The hover video
-  path was exercised only with no file present (it falls back cleanly).
+  headless Chromium; the easing and the 900 ms sweep need a look on a real GPU. The image and
+  hover-video paths were tried once with throwaway test files (both swapped in correctly), not
+  with real artwork.
 - **Missing `art/` files show as 404s in the browser console** (five on load, two more the first
   time a pack is hovered). Harmless, but noisy; a build step for the real site would remove them.
 - **The close-up is not very close.** To leave the title word clear the camera stops further out
