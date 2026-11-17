@@ -34,14 +34,18 @@ const TITLES = ['ELEVN', 'FULL TIME', 'MODES', 'BLITZ', 'DRAFT', 'HOLD', 'ELEVN'
 //   idle   1 lets the ball turn on its own (6 degrees a second)
 const POSE = {
   hero:   { fit: 350, az: 0,  el: 9,  x: 0.13, y: 0.04, tear: 0,    gap: 0, turn: 0,   focus: 0,     near: 0, scrim: 0.55, idle: 1 },
-  close:  { fit: 180, az: 17, el: 14, x: 0.17, y: 0.18, tear: 0.03, gap: 0, turn: 22,  focus: 0,     near: 1, scrim: 1,    idle: 0 },
-  close2: { fit: 172, az: 20, el: 15, x: 0.17, y: 0.19, tear: 0.04, gap: 0, turn: 30,  focus: 0,     near: 1, scrim: 1,    idle: 0 },
+  // the macro: the ball is about two screens tall and fills the lower right; its limb runs from
+  // the top right corner down to the bottom edge, which leaves the top left dark for the title word
+  close:  { fit: 80,  az: 17, el: 14, x: 0.45, y: 0.42, tear: 0.03, gap: 0, turn: 22,  focus: 0,     near: 1, scrim: 1,    idle: 0 },
+  close2: { fit: 76,  az: 20, el: 15, x: 0.45, y: 0.43, tear: 0.04, gap: 0, turn: 30,  focus: 0,     near: 1, scrim: 1,    idle: 0 },
   apart:  { fit: 500, az: 23, el: 18, x: 0.12, y: 0.02, tear: 1,    gap: 0, turn: 52,  focus: 0,     near: 0, scrim: 0.6,  idle: 0 },
   apart2: { fit: 500, az: 23, el: 18, x: 0.12, y: 0.02, tear: 1,    gap: 0, turn: 58,  focus: 0,     near: 0, scrim: 0.6,  idle: 0 },
-  blitz: { fit: 740, az: 23, el: 18, x: 0.19, y: -0.1, tear: 1, gap: 0, turn: 84, focus: 0.3, near: 0, scrim: 0.7, idle: 0 },
-  blitz2: { fit: 740, az: 23, el: 18, x: 0.19, y: -0.1, tear: 1, gap: 0, turn: 98, focus: 0.3, near: 0, scrim: 0.7, idle: 0 },
-  draft: { fit: 740, az: 23, el: 18, x: 0.19, y: -0.1, tear: 1, gap: 0, turn: 124, focus: -0.1, near: 0, scrim: 0.7, idle: 0 },
-  draft2: { fit: 740, az: 23, el: 18, x: 0.19, y: -0.1, tear: 1, gap: 0, turn: 138, focus: -0.1, near: 0, scrim: 0.7, idle: 0 },
+  // Blitz and Draft: the panels are back on and the two halves stand 84 mm apart, upper right,
+  // above the cards. x is set by layoutTitles so the ball stays over the right end of the cards.
+  blitz:  { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 84,  focus: 0.06,  near: 0, scrim: 0.7,  idle: 0 },
+  blitz2: { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 98,  focus: 0.06,  near: 0, scrim: 0.7,  idle: 0 },
+  draft:  { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 124, focus: -0.06, near: 0, scrim: 0.7,  idle: 0 },
+  draft2: { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 138, focus: -0.06, near: 0, scrim: 0.7,  idle: 0 },
   access: { fit: 400, az: 23, el: 18, x: 0.13, y: 0.02, tear: 0,    gap: 1, turn: 196, focus: 0,     near: 0, scrim: 0.55, idle: 0 },
   end:    { fit: 350, az: 0,  el: 9,  x: 0.13, y: 0.04, tear: 0,    gap: 0, turn: 216, focus: 0,     near: 0, scrim: 0.55, idle: 1 },
   // what a completed hold blends towards: "the one frame"
@@ -63,6 +67,7 @@ const KEYS = Object.keys(POSE.hero);
 // The teardown at its fullest: how far the panels lift (1 is 30 mm) and how far the halves
 // part (1 is 60 mm between them).
 const TEAR = { explode: num('ex', 0.7), split: num('sp', 2.4) };
+const MODE_BALL = 0.24;                       // Blitz and Draft: the ball's centre, in window heights from the cards' right end
 
 function poseAt(p) {
   let i = 0;
@@ -110,9 +115,11 @@ try {
 // measured at the beat's resting pose, never by fixed numbers:
 //   above   centred over the ball; the ball is moved down until its top clears the word
 //   beside  to the left of the part of the ball that reaches into the band
+//   left    at the left content edge, over the dark area (the close-up, where the ball is
+//           too large to stand clear of: the word goes where the ball is not)
 const TITLE = {
   'ELEVN':     { place: 'above',  poses: ['hero', 'end'] },
-  'FULL TIME': { place: 'above',  poses: ['close', 'close2'] },
+  'FULL TIME': { place: 'left',   poses: ['close', 'close2'] },
   'MODES':      { place: 'beside', poses: ['apart', 'apart2'] },
   'BLITZ':     { place: 'beside', poses: ['blitz', 'blitz2'] },
   'DRAFT':     { place: 'beside', poses: ['draft', 'draft2'] },
@@ -142,9 +149,12 @@ function ballPoints(P) {
 }
 function layoutTitles() {
   for (const k in POSE) POSE[k].dy = 0;
-  if (narrow()) return;
+  if (!engine || narrow()) return;
   const W = window.innerWidth, H = window.innerHeight;
   const edge = Math.max(80, (W - 1440) / 2);                 // the content edge
+  // Blitz and Draft: the ball's centre stands a fixed part of the window height in from the
+  // right end of the cards, whatever the window's shape
+  for (const k of ['blitz', 'blitz2', 'draft', 'draft2']) POSE[k].x = (W - edge - 36 - MODE_BALL * H) / W - 0.5;
   const cap = Math.round(0.125 * H), px = cap / 0.7;          // Barlow Condensed capitals are 0.7 em tall
   const top = 64 + Math.round(0.028 * H), bottom = top + cap; // the band, under the 64 px bar
   const gap = Math.round(0.022 * H);
@@ -160,6 +170,8 @@ function layoutTitles() {
     if (spec.place === 'above') {
       const xs = all.map((p) => p.x);
       left = (Math.min(...xs) + Math.max(...xs)) / 2 - w / 2;
+    } else if (spec.place === 'left') {
+      left = edge;
     } else {
       const inBand = all.filter((p) => p.y > top - gap && p.y < bottom + gap).map((p) => p.x);
       left = (inBand.length ? Math.min(...inBand) : Math.min(...all.map((p) => p.x))) - gap - w;

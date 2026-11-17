@@ -1,7 +1,9 @@
 // The two mode icons: flat SVG, steel rims, glass fill, one gold accent. Each is a function
 // of one number, t from 0 to 1, so the scrollbar scrubs it forwards and backwards.
-//   Blitz: nine players appear, group into three squads of three, a captain is marked in
-//          each, then the squads lock one after the other (each at its own kickoff).
+//   Blitz: three fixture cards appear and spread into a row, three players drop into each,
+//          a captain is marked in each, then each card's kickoff bar runs out and its lock
+//          snaps shut, one card after the other. The cards are HTML like the packs, and
+//          share their hover.
 //   Draft: five foil packs appear and spread into a row, each opens on three players, five
 //          are chosen and settle into a five-a-side while the packs close again, the captain
 //          is marked, the team locks. The packs are HTML (see packs below), so their artwork
@@ -69,46 +71,156 @@ function label(parent, x, y, text, size = 8.5) {
   return t;
 }
 
-export function blitzIcon(host) {
-  const id = 'ib', s = svg(host, id, 300, 150);
-  const boxes = el('g', {}, s), toks = el('g', {}, s), top = el('g', {}, s);
-  const groups = [0, 1, 2].map((g) => {
-    const cx = 52 + g * 98;
-    return {
-      cx,
-      back: el('rect', { x: cx - 43, y: 14, width: 86, height: 96, rx: 14, fill: '#0a0b0d', opacity: 0 }, boxes),   // the ball is behind the icon
-      dash: el('rect', { x: cx - 43, y: 14, width: 86, height: 96, rx: 14, fill: 'none', stroke: '#858b95', 'stroke-width': 1, 'stroke-dasharray': '3 4' }, boxes),
-      solid: el('rect', { x: cx - 43, y: 14, width: 86, height: 96, rx: 14, fill: 'rgba(255,255,255,.04)', stroke: `url(#${id}-steel)`, 'stroke-width': 1.4, opacity: 0 }, boxes),
-      label: label(top, cx, 134, `FIXTURE ${g + 1}`, 6),
-    };
+// ---------------------------------------------------------------- hover, shared by the packs and the fixture cards
+// card: the element placed by the scroll; body: the element that lifts and tilts. The row
+// carries .live (hover allowed) and .hovering (one card is hot, the others dim).
+function hoverable(row, card, body, reduced, onHeat = () => {}) {
+  const heat = (on) => {
+    if (on && !row.classList.contains('live')) return;
+    card.classList.toggle('hot', on);
+    row.classList.toggle('hovering', !!row.querySelector('.pack.hot'));
+    if (!on) { body.style.removeProperty('--rx'); body.style.removeProperty('--ry'); }
+    onHeat(on);
+  };
+  card.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'touch') heat(true); });
+  card.addEventListener('pointerleave', () => { if (document.activeElement !== card) heat(false); });
+  card.addEventListener('focus', () => heat(true));
+  card.addEventListener('blur', () => heat(false));
+  card.addEventListener('pointermove', (e) => {
+    if (reduced || !card.classList.contains('hot') || e.pointerType === 'touch') return;
+    const b = card.getBoundingClientRect();
+    const x = (e.clientX - b.left) / b.width - 0.5, y = (e.clientY - b.top) / b.height - 0.5;
+    body.style.setProperty('--ry', `${(x * 36).toFixed(2)}deg`);
+    body.style.setProperty('--rx', `${(-y * 24).toFixed(2)}deg`);
   });
-  // nine players: column = squad, row = place in the squad (0 is the captain)
-  const slots = [[0, 42], [-20, 80], [20, 80]];
-  const players = [];
-  for (let row = 0; row < 3; row++) for (let col = 0; col < 3; col++) {
-    const t = token(toks, id);
-    players.push({ ...t, col, row, from: [150 + (col - 1) * 34, 62 + (row - 1) * 34], to: [groups[col].cx + slots[row][0], slots[row][1]] });
-  }
-  groups.forEach((g) => { g.badge = badge(top); g.lock = padlock(top); });
+  return () => heat(false);
+}
+const isReduced = () => new URLSearchParams(location.search).get('reduced') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+const div = (cls) => { const d = document.createElement('div'); d.className = cls; return d; };
+
+// ---------------------------------------------------------------- the Blitz fixture cards
+// Three tall glass cards with a steel rim, the same family as the packs and built the same way:
+//   .pack.fx         position in the row, driven by the scroll
+//     .pack-body     the hover state (shared with the packs)
+//       .pack-art    the card, one SVG: fixture header, kickoff bar, three players, the lock
+//       .pack-sheen  the sheen that sweeps across on hover
+// Placeholder fixtures only: no club names, no crests.
+const KICKOFFS = ['12:30', '15:00', '17:30'];
+const FW = 216, FH = 302;                       // the card's own units
+function fixtureCard(host, i) {
+  const id = `fx${i}`, s = svg(host, id, FW, FH);
+  const d = s.querySelector('defs');
+  const grad = (name, x2, y2, stops) => {
+    const g = el('linearGradient', { id: `${id}-${name}`, x1: 0, y1: 0, x2, y2 }, d);
+    stops.forEach(([o, c, a = 1]) => el('stop', { offset: o, 'stop-color': c, 'stop-opacity': a }, g));
+  };
+  grad('face', 0, 1, [[0, '#23272e'], [0.34, '#14161a'], [1, '#0b0c0f']]);
+  grad('streak', 1, 0, [[0, '#ffffff', 0], [0.5, '#ffffff', 0.1], [1, '#ffffff', 0]]);
+  grad('head', 0, 1, [[0, '#ffffff', 0.1], [1, '#ffffff', 0]]);
+  el('rect', { width: FW, height: FH, rx: 18 }, el('clipPath', { id: `${id}-clip` }, d));
+  // the glass: a dark face, a lit header, one diagonal streak
+  const face = el('g', { 'clip-path': `url(#${id}-clip)` }, s);
+  el('rect', { width: FW, height: FH, fill: `url(#${id}-face)` }, face);
+  el('rect', { width: FW, height: 108, fill: `url(#${id}-head)` }, face);
+  el('path', { d: 'M96 0H150L26 302H-28Z', fill: `url(#${id}-streak)` }, face);
+  el('path', { d: 'M168 0H184L60 302H44Z', fill: `url(#${id}-streak)`, opacity: 0.6 }, face);
+  // the pitch behind the squad: halfway line and centre circle, very faint
+  const pitch = el('g', { fill: 'none', stroke: '#ffffff', 'stroke-opacity': 0.09, 'stroke-width': 1 }, face);
+  el('path', { d: 'M0 200H216' }, pitch);
+  el('circle', { cx: 108, cy: 200, r: 56 }, pitch);
+  el('circle', { cx: 108, cy: 200, r: 2, fill: '#ffffff', 'fill-opacity': 0.14, stroke: 'none' }, pitch);
+  // the rim: steel, with a bright copy faded in when the card locks
+  el('rect', { x: 5.5, y: 5.5, width: FW - 11, height: FH - 11, rx: 13, fill: 'none', stroke: '#ffffff', 'stroke-opacity': 0.07 }, s);
+  el('rect', { x: 1, y: 1, width: FW - 2, height: FH - 2, rx: 17, fill: 'none', stroke: `url(#${id}-steel)`, 'stroke-width': 2, 'stroke-opacity': 0.8 }, s);
+  const rim = el('rect', { x: 1, y: 1, width: FW - 2, height: FH - 2, rx: 17, fill: 'none', stroke: '#f4f4f1', 'stroke-width': 2.4, opacity: 0 }, s);
+  // header: FIXTURE N, the status chip, HOME v AWAY, the kickoff time and its bar
+  const text = (x, y, size, str, o = {}) => { const t = el('text', { x, y, 'font-size': size, 'font-weight': 600, fill: '#a4a8af', ...o }, s); t.textContent = str; return t; };
+  text(18, 32, 10.5, `FIXTURE ${i + 1}`, { 'letter-spacing': 1.6 });
+  const chip = el('rect', { x: 140, y: 17.5, width: 58, height: 21, rx: 10.5, fill: '#f4f4f1', 'fill-opacity': 0, stroke: '#858b95', 'stroke-width': 1 }, s);
+  const open = text(169, 31.6, 9.5, 'OPEN', { 'text-anchor': 'middle', 'letter-spacing': 1.3, fill: '#c9ccd1' });
+  const shut = text(169, 31.6, 9.5, 'LOCKED', { 'text-anchor': 'middle', 'letter-spacing': 0.8, fill: '#0a0b0d', 'font-weight': 700, opacity: 0 });
+  const teams = el('text', { x: 18, y: 75, 'font-family': '"Barlow Condensed", "Arial Narrow", sans-serif', 'font-weight': 700, 'font-size': 38, 'letter-spacing': 0.6, fill: '#f4f4f1' }, s);
+  teams.append('HOME ');
+  const v = el('tspan', { fill: '#858b95', 'font-size': 25 }, teams); v.textContent = 'v';
+  teams.append(' AWAY');
+  text(18, 96, 10.5, 'KICKOFF', { 'letter-spacing': 1.6 });
+  text(198, 96, 13, KICKOFFS[i], { 'text-anchor': 'end', fill: '#f4f4f1', 'letter-spacing': 0.6 });
+  el('rect', { x: 18, y: 106, width: 180, height: 2.4, rx: 1.2, fill: '#ffffff', 'fill-opacity': 0.12 }, s);
+  const bar = el('rect', { x: 18, y: 106, width: 180, height: 2.4, rx: 1.2, fill: '#f4f4f1' }, s);
+  // the squad: captain on top, two below
+  const toks = el('g', {}, s), top = el('g', {}, s);
+  const players = [[108, 158, 2.25], [58, 240, 1.9], [158, 240, 1.9]].map(([x, y, sc]) => ({ ...token(toks, id), x, y, sc }));
+  const cap = badge(top);
+  // the lock, on the card's bottom edge: its shackle stands open until kickoff
+  const flash = el('circle', { cx: 108, cy: FH, r: 16, fill: 'none', stroke: '#f4f4f1', 'stroke-width': 1.6, opacity: 0 }, top);
+  const lock = el('g', {}, top);
+  const disc = el('circle', { r: 9, fill: '#0e1014', stroke: '#c9ccd1', 'stroke-width': 1 }, lock);
+  const shackle = el('path', { d: 'M-2.6 -1v-1.8a2.6 2.6 0 0 1 5.2 0v1.8', fill: 'none', stroke: '#f4f4f1', 'stroke-width': 1.3, 'stroke-linecap': 'round' }, lock);
+  const block = el('rect', { x: -4, y: -1, width: 8, height: 6, rx: 1.4, fill: '#f4f4f1' }, lock);
+  return { rim, chip, open, shut, bar, players, cap, flash, lock, disc, shackle, block };
+}
+
+export function blitzIcon(host) {
+  const W = 760, H = 350, CY = 14, reduced = isReduced();
+  host.classList.add('blitz-icon');
+  const row = div('packs'); host.append(row);
+  const cards = [0, 1, 2].map((i) => {
+    const cx = 380 + (i - 1) * 250;
+    const card = div('pack fx'), body = div('pack-body'), art = div('pack-art'), sheen = div('pack-sheen');
+    card.tabIndex = -1;
+    card.setAttribute('role', 'img'); card.setAttribute('aria-label', `Fixture ${i + 1} of 3: a squad of three with a captain, locked at its ${KICKOFFS[i]} kickoff`);
+    const parts = fixtureCard(art, i);
+    body.append(art, sheen); card.append(body); row.append(card);
+    Object.assign(card.style, { left: `${((cx - FW / 2) / W) * 100}%`, top: `${(CY / H) * 100}%`, width: `${(FW / W) * 100}%` });
+    return { ...parts, el: card, cx, cool: hoverable(row, card, body, reduced) };
+  });
 
   return function draw(t) {
-    const grouped = seg(t, 0.2, 0.42);
-    players.forEach((p, i) => {
-      const a = seg(t, 0.02 + i * 0.012, 0.1 + i * 0.012);
-      set(p.g, lerp(p.from[0], p.to[0], grouped), lerp(p.from[1], p.to[1], grouped), 0.6 + 0.4 * a, a);
-      p.cap.setAttribute('opacity', p.row === 0 ? seg(t, 0.46 + p.col * 0.03, 0.54 + p.col * 0.03) : 0);
+    const spread = seg(t, 0.03, 0.15);
+    let live = spread > 0.999;
+    cards.forEach((c, i) => {
+      const a = seg(t, 0.0 + i * 0.015, 0.08 + i * 0.015);
+      const st = c.el.style;
+      st.setProperty('--tx', `${(((lerp(W / 2, c.cx, spread) - c.cx) / W) * 100).toFixed(3)}cqw`);
+      st.setProperty('--ty', `${((14 * (1 - a) / W) * 100).toFixed(3)}cqw`);
+      st.setProperty('--rot', `${((i - 1) * 9 * (1 - spread)).toFixed(2)}deg`);
+      st.opacity = a.toFixed(3);
+      if (a < 0.999) live = false;
+      // three players drop in, the captain first
+      c.players.forEach((p, j) => {
+        const at = 0.18 + i * 0.05 + j * 0.03, o = seg(t, at, at + 0.09);
+        set(p.g, p.x, p.y - 16 * (1 - o), p.sc * (0.6 + 0.4 * o), o);
+        p.cap.setAttribute('opacity', j === 0 ? seg(t, 0.44 + i * 0.03, 0.52 + i * 0.03) : 0);
+      });
+      const b = seg(t, 0.48 + i * 0.03, 0.56 + i * 0.03);
+      set(c.cap, 108 + 27, 158 - 24, 1.5 * (0.5 + 0.5 * b), b);
+      // kickoff: the bar runs out, then the lock snaps shut
+      const k0 = 0.64 + i * 0.11, k1 = k0 + 0.045;
+      const left = 1 - clamp01((t - 0.52) / (k0 - 0.52));
+      const locked = seg(t, k0, k1), snap = clamp01((t - k1) / 0.05);
+      c.bar.setAttribute('width', (180 * left).toFixed(2));
+      c.rim.setAttribute('opacity', locked.toFixed(3));
+      c.chip.setAttribute('fill-opacity', locked.toFixed(3));
+      c.chip.setAttribute('stroke', locked > 0.5 ? '#f4f4f1' : '#858b95');
+      c.open.setAttribute('opacity', (1 - locked).toFixed(3));
+      c.shut.setAttribute('opacity', locked.toFixed(3));
+      const up = 1 - locked;
+      c.shackle.setAttribute('transform', `rotate(${(-34 * up).toFixed(2)} 2.6 -1) translate(0 ${(-1.9 * up).toFixed(2)})`);
+      const on = locked > 0.5;
+      c.disc.setAttribute('fill', on ? '#f4f4f1' : '#0e1014');
+      c.shackle.setAttribute('stroke', on ? '#0a0b0d' : '#f4f4f1');
+      c.block.setAttribute('fill', on ? '#0a0b0d' : '#f4f4f1');
+      const pop = 1 + 0.22 * Math.sin(Math.PI * locked);
+      const show = seg(t, 0.1 + i * 0.015, 0.16 + i * 0.015);
+      set(c.lock, 108, FH, 1.75 * pop * (0.6 + 0.4 * show), show);
+      c.flash.setAttribute('r', (16 + 16 * snap).toFixed(2));
+      c.flash.setAttribute('opacity', (locked > 0.999 && snap < 1 ? 0.9 * (1 - snap) : 0).toFixed(3));
     });
-    groups.forEach((g, i) => {
-      const locked = seg(t, 0.64 + i * 0.11, 0.72 + i * 0.11);
-      g.back.setAttribute('opacity', 0.78 * seg(t, 0.3, 0.42));
-      g.dash.setAttribute('opacity', seg(t, 0.3, 0.42) * (1 - locked));
-      g.solid.setAttribute('opacity', locked);
-      g.label.setAttribute('opacity', seg(t, 0.32, 0.44));
-      g.label.setAttribute('fill', locked > 0.5 ? '#f4f4f1' : '#a4a8af');
-      const b = seg(t, 0.5 + i * 0.03, 0.58 + i * 0.03);
-      set(g.badge, g.cx + 14, 31, 0.5 + 0.5 * b, b);
-      set(g.lock, g.cx, 110, 0.5 + 0.5 * locked, locked);
-    });
+    // hover once the cards stand in their row
+    if (live !== row.classList.contains('live')) {
+      row.classList.toggle('live', live);
+      cards.forEach((c) => { c.el.tabIndex = live ? 0 : -1; if (!live) c.cool(); });
+    }
   };
 }
 
@@ -191,12 +303,9 @@ function packArt(host, i) {
 }
 
 function buildPack(row, i, reduced) {
-  const pack = document.createElement('div');
-  pack.className = 'pack'; pack.tabIndex = -1;
+  const pack = div('pack'); pack.tabIndex = -1;
   pack.setAttribute('role', 'img'); pack.setAttribute('aria-label', `Draft pack ${i + 1} of 5: three players`);
-  const body = document.createElement('div'); body.className = 'pack-body';
-  const art = document.createElement('div'); art.className = 'pack-art';
-  const sheen = document.createElement('div'); sheen.className = 'pack-sheen';
+  const body = div('pack-body'), art = div('pack-art'), sheen = div('pack-sheen');
   body.style.setProperty('--shape', CRIMP_CSS);
   packArt(art, i);
   body.append(art, sheen); pack.append(body); row.append(pack);
@@ -232,35 +341,17 @@ function buildPack(row, i, reduced) {
     video.addEventListener('canplay', () => { pack.classList.add('has-video'); if (pack.classList.contains('hot')) video.play().catch(() => {}); }, { once: true });
     body.insertBefore(video, sheen);
   };
-  const heat = (on) => {
-    if (on && !row.classList.contains('live')) return;
-    pack.classList.toggle('hot', on);
-    row.classList.toggle('hovering', !!row.querySelector('.pack.hot'));
+  const cool = hoverable(row, pack, body, reduced, (on) => {
     if (on) { wantVideo(); if (video && pack.classList.contains('has-video')) video.play().catch(() => {}); }
-    else {
-      body.style.removeProperty('--rx'); body.style.removeProperty('--ry');
-      if (video) { const v = video; setTimeout(() => { if (!pack.classList.contains('hot')) v.pause(); }, 320); }
-    }
-  };
-  pack.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'touch') heat(true); });
-  pack.addEventListener('pointerleave', () => { if (document.activeElement !== pack) heat(false); });
-  pack.addEventListener('focus', () => heat(true));
-  pack.addEventListener('blur', () => heat(false));
-  pack.addEventListener('pointermove', (e) => {
-    if (reduced || !pack.classList.contains('hot') || e.pointerType === 'touch') return;
-    const b = pack.getBoundingClientRect();
-    const x = (e.clientX - b.left) / b.width - 0.5, y = (e.clientY - b.top) / b.height - 0.5;
-    body.style.setProperty('--ry', `${(x * 36).toFixed(2)}deg`);
-    body.style.setProperty('--rx', `${(-y * 24).toFixed(2)}deg`);
+    else if (video) { const v = video; setTimeout(() => { if (!pack.classList.contains('hot')) v.pause(); }, 320); }
   });
-  return { el: pack, cool: () => heat(false) };
+  return { el: pack, cool };
 }
 
 export function draftIcon(host) {
-  const id = 'id', W = 760, H = 350;
-  const reduced = new URLSearchParams(location.search).get('reduced') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const id = 'id', W = 760, H = 350, reduced = isReduced();
   host.classList.add('draft-icon');
-  const row = document.createElement('div'); row.className = 'packs';
+  const row = div('packs');
   host.append(row);
   const s = svg(host, id, W, H);
   const pitch = el('g', {}, s), toks = el('g', {}, s), top = el('g', {}, s);

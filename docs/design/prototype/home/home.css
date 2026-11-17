@@ -13,6 +13,10 @@
   --line: rgba(255,255,255,.08); --edge-glass: rgba(255,255,255,.14); --edge-control: rgba(255,255,255,.28);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --nav: 64px;
+  /* the headline size, and a copy column that grows with it (9.4 em), so a headline wraps the
+     same way at every window width: three lines at most */
+  --h1: clamp(40px, 3.6vw, 64px);
+  --copy: max(480px, calc(var(--h1) * 9.4));
 }
 * { box-sizing: border-box; }
 html { background: var(--bg); }
@@ -28,7 +32,7 @@ ul, ol { list-style: none; }
 /* ---------- type ---------- */
 .display { font-size: clamp(56px, 5.6vw, 104px); font-weight: 800; letter-spacing: -.035em; line-height: 1; }
 .display i, .logo i { display: inline-block; width: .17em; height: .17em; margin-left: .04em; border-radius: 50%; background: var(--accent); }
-.h1 { font-size: clamp(40px, 3.6vw, 64px); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; text-wrap: balance; }
+.h1 { font-size: var(--h1); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; text-wrap: balance; }
 .h2 { font-size: clamp(30px, 2.6vw, 44px); font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
 .lead { font-size: 20px; line-height: 1.5; max-width: 52ch; color: var(--muted); }
 .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--steel); }
@@ -76,7 +80,7 @@ ul, ol { list-style: none; }
 #access { height: 86.4vh; }
 #end { height: 100vh; }
 
-.words { padding-top: calc(var(--nav) + 20vh); width: min(480px, 100%); }
+.words { padding-top: calc(var(--nav) + 20vh); width: min(var(--copy), 100%); }
 .words .eyebrow { display: block; margin-bottom: 20px; }
 .words .lead { margin-top: 24px; max-width: 400px; }
 .words .btns { margin-top: 32px; display: flex; gap: 12px; }
@@ -92,7 +96,7 @@ ul, ol { list-style: none; }
 /* the mode icon and its three notes, lower right, standing in front of the ball */
 .mode { display: none; }
 .js .mode { display: block; position: fixed; z-index: 3; right: calc(max(80px, (100vw - 1440px) / 2) + 36px); bottom: 5vh;
-  width: min(80vh, calc(min(1440px, 100vw - 160px) - 576px));
+  width: min(80vh, calc(min(1440px, 100vw - 160px) - var(--copy) - 72px));
   opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity 220ms linear, transform 0s linear 220ms, visibility 0s linear 220ms; }
 .js .beat.on .mode { opacity: 1; visibility: visible; transform: none; transition: opacity 700ms var(--ease) 200ms, transform 700ms var(--ease) 200ms, visibility 0s; }
 .icon svg { display: block; width: 100%; height: auto; overflow: visible; font-family: "Sora", system-ui, sans-serif; }
@@ -103,7 +107,7 @@ ul, ol { list-style: none; }
 
 /* ---------- the Draft packs ----------
    .pack is placed by the scroll (--tx, --ty, --rot, --open); .pack-body carries the hover. */
-.draft-icon { position: relative; container-type: inline-size; aspect-ratio: 760 / 350; }
+.draft-icon, .blitz-icon { position: relative; container-type: inline-size; aspect-ratio: 760 / 350; }
 .draft-icon > svg { position: absolute; inset: 0; height: 100%; z-index: 2; pointer-events: none; }
 .packs { position: absolute; inset: 0; z-index: 1; }
 .pack { position: absolute; aspect-ratio: 2 / 3; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--rot, 0deg)); border-radius: 4px; outline-offset: 6px; }
@@ -127,6 +131,11 @@ ul, ol { list-style: none; }
 .packs.hovering .pack:not(.hot) .pack-body { filter: drop-shadow(0 14px 16px rgba(0,0,0,.55)) brightness(.62); }
 .pack:focus-visible { outline: 2px solid var(--accent); }
 @keyframes sheen { from { background-position: 135% 0; } to { background-position: -35% 0; } }
+/* the Blitz fixture cards: the same parts as a pack, with a rounded glass card as the artwork */
+.pack.fx { aspect-ratio: 216 / 302; border-radius: 8.3% / 6%; }
+.fx .pack-art svg { overflow: visible; }
+.fx .pack-sheen { border-radius: 8.3% / 6%; }
+.fx.hot .pack-sheen { opacity: .7; }
 /* capture mode: the sheen is held half way across */
 .still .pack.hot .pack-sheen { animation: none; background-position: 42% 0; }
 
