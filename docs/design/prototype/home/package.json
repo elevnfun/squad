@@ -1,0 +1,10 @@
+{
+  "name": "elevn-home-prototype",
+  "private": true,
+  "description": "Animated home page prototype: the glass match ball driven by scroll",
+  "dependencies": {
+    "@fontsource/barlow-condensed": "^5.0.0",
+    "@fontsource/sora": "^5.0.0",
+    "three": "^0.187.0"
+  }
+}

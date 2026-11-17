@@ -419,7 +419,9 @@ const LOOK = {
   grain: 0.03,
   vignette: 0.35,
   glow: { color: 0x5c616b, radius: 0.6 },   // the soft pool of light behind the ball
-  coreLight: { intensity: 40000, steel: { closed: 0, open: 1 }, glass: { closed: 0.02, open: 0.07 } },
+  coreLight: { intensity: 40000, steel: { closed: 0, open: 1 }, glass: { closed: 0, open: 0.07 } },
+  // The core while the ball is closed (a dark bead with one glint) and once it is open.
+  ignite: { dark: 0x15130f, darkRough: 0.34, emissive: 0.6, studEmissive: 0.45 },
   tilt: { x: -14, z: -34 },                   // degrees: puts the split on a diagonal
 };
 
@@ -443,8 +445,15 @@ function makeMaterials(env) {
   m.clearEdge = P({ color: 0xffffff, metalness: 0, roughness: 0.3, transmission: 1, thickness: 3.5, ior: 1.7, attenuationColor: 0x9fb0c4, attenuationDistance: 5 });
   m.tintFace = P({ color: 0xffffff, metalness: 0, roughness: 0.04, transmission: 1, thickness: 3.5, ior: 1.7, attenuationColor: 0x2a3038, attenuationDistance: 3.2 });
   m.tintEdge = P({ color: 0xffffff, metalness: 0, roughness: 0.3, transmission: 1, thickness: 3.5, ior: 1.7, attenuationColor: 0x2a3038, attenuationDistance: 2.4 });
+  // The core and the studs have their own copies: they are dark while the ball is closed
+  // and ignite to full gold as it opens (see _applyPose).
+  m.core = m.gold.clone();
+  m.stud = m.gold.clone();
   // shared inner parts
   m.rod = P({ color: 0x6f747c, metalness: 1, roughness: 0.3 });
+  // glass variant: the rim ring of each half. Satin, so it reads as a steel ring and not as a black band.
+  m.rimFace = P({ color: 0x8f949c, metalness: 0.55, roughness: 0.4, roughnessMap: brushed });
+  m.rimEdge = P({ color: 0xe8eaed, metalness: 1, roughness: 0.08 });
   m.tube = P({ color: 0xd8dbe0, metalness: 1, roughness: 0.1 });
   // Glass is lit by the studio only: the core's point light is taken out of every
   // glass material, so it cannot leave a hot spot on a pane (one of the guide's five bugs).
@@ -470,7 +479,8 @@ const VIEWS = {
 export class BallEngine {
   constructor(canvas, opts = {}) {
     this.canvas = canvas;
-    this.state = { split: 0, explode: 0, turn: 0, variant: 'steel', view: 'hero' };
+    this.state = { split: 0, explode: 0, turn: 0, variant: 'steel', view: 'hero', ignite: null };
+    this._cam = null;                        // set by setCamera; null means a named view
     this.still = !!opts.still;
     this.reducedMotion = !!opts.reducedMotion;
     this.autoTurn = !this.still && !this.reducedMotion;
@@ -502,13 +512,16 @@ export class BallEngine {
     this.resize();
     this.setVariant(opts.variant || 'steel');
     this.setView(opts.view || 'hero');
-    this._bindPointer();
+    if (opts.pointer !== false) this._bindPointer();
     window.addEventListener('resize', () => this.resize());
   }
 
   // ---- public API --------------------------------------------------------
-  /** 0 closed to 1 open: the two halves part along the axis, 60 mm apart at 1. */
-  setSplit(t) { this.state.split = clamp01(+t || 0); this._applyPose(); return this; }
+  /**
+   * 0 closed to 1 open: the two halves part along the axis, 60 mm apart at 1.
+   * Values up to 4 carry on at the same rate (the scroll story parts them further).
+   */
+  setSplit(t) { this.state.split = Math.min(4, Math.max(0, +t || 0)); this._applyPose(); return this; }
   /** 0 to 1: every panel lifts along its own normal, pole first, equator last. */
   setExplode(t) { this.state.explode = clamp01(+t || 0); this._applyPose(); return this; }
   /** Turntable angle in radians, about the ball's own (tilted) axis. */
@@ -523,7 +536,35 @@ export class BallEngine {
     return this;
   }
   /** 'hero', 'three-quarter' or 'macro'. Framed by size in mm, not by distance. */
-  setView(name) { this.state.view = VIEWS[name] ? name : 'hero'; this._applyView(); return this; }
+  setView(name) { this._cam = null; this.state.view = VIEWS[name] ? name : 'hero'; this._applyView(); return this; }
+  /**
+   * A free camera for the scroll story, replacing the named view until setView is called.
+   * fit: mm that fill the short side; dir: direction from the target to the camera;
+   * target: world point looked at; shift: where the target sits on screen, as a fraction
+   * of the viewport from the centre (0.12 puts it at 62% across).
+   */
+  setCamera({ fit = 330, dir = [0, 0.16, 1], target = [0, 0, 0], shift = [0, 0] } = {}) {
+    this._cam = { fit, dir, target, shift };
+    this._applyView();
+    return this;
+  }
+  /** How lit the gold core is, 0 dark to 1 full gold. null (the default) follows the opening. */
+  setIgnite(t) { this.state.ignite = t === null || t === undefined ? null : clamp01(+t || 0); this._applyPose(); return this; }
+  /** Screen position in CSS pixels of a point given in the space of `object` (default: the turning ball). */
+  project(point, object = this.spin) {
+    this.scene.updateMatrixWorld();
+    const v = new THREE.Vector3(point[0], point[1], point[2]);
+    object.localToWorld(v);
+    const depth = v.distanceTo(this.camera.position);
+    v.project(this.camera);
+    const w = this.canvas.clientWidth || window.innerWidth, h = this.canvas.clientHeight || window.innerHeight;
+    return { x: (v.x * 0.5 + 0.5) * w, y: (0.5 - v.y * 0.5) * h, depth };
+  }
+  /** CSS pixels per mm at the camera target. */
+  pxPerMm() {
+    const h = this.canvas.clientHeight || window.innerHeight;
+    return h / (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * this._dist);
+  }
   /** Studio yaw and pitch in radians (the cursor drives this, eased). */
   setStudio(yaw, pitch, immediate = false) {
     this.studio.tYaw = yaw; this.studio.tPitch = pitch;
@@ -643,12 +684,12 @@ export class BallEngine {
       const inner = new THREE.Group();
       if (name === 'draft') inner.rotation.x = Math.PI;      // a turn, not a mirror, so normals stay outward
       const ls = new THREE.Mesh(geo.linerSteel, [M.liner, M.linerRim]);
-      const lg = new THREE.Mesh(geo.linerGlass, [M.frameFace, M.frameEdge]);
+      const lg = new THREE.Mesh(geo.linerGlass, [M.rimFace, M.rimEdge]);
       this.variantParts.steel.push(ls); this.variantParts.glass.push(lg);
       inner.add(ls, lg);
       for (let i = 0; i < studCount[name]; i++) {
         const a = (i / studCount[name]) * TAU + 0.3;
-        const st = new THREE.Mesh(geo.stud, M.gold);
+        const st = new THREE.Mesh(geo.stud, M.stud);
         st.rotation.x = Math.PI;                              // dome points at the other half
         st.position.set(studR * Math.cos(a), 0, studR * Math.sin(a));
         inner.add(st);
@@ -663,8 +704,9 @@ export class BallEngine {
 
     // the core: still while the halves travel, turns with the ball
     this.coreGroup = new THREE.Group();
-    this.core = new THREE.Mesh(geo.core, M.gold);
+    this.core = new THREE.Mesh(geo.core, M.core);
     const rod = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 198, 24), M.rod);
+    this.rod = rod;
     this.coreGroup.add(this.core, rod);
     for (const s of [1, -1]) {
       const c = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 5.2, 4, 32), M.tube);
@@ -717,7 +759,7 @@ export class BallEngine {
   // ---- pose ---------------------------------------------------------------
   _applyPose() {
     const { split, explode, turn, variant } = this.state;
-    const s = ease(split) * SPEC.splitTravel;
+    const s = (ease(Math.min(split, 1)) + Math.max(0, split - 1)) * SPEC.splitTravel;
     this.halves.blitz.position.y = s;
     this.halves.draft.position.y = -s;
     this.spin.rotation.y = turn;
@@ -728,18 +770,29 @@ export class BallEngine {
       p.group.position.copy(p.normal).multiplyScalar(lift);
       p.glass.position.z = 9 * t;          // glass variant: the pane lifts clear of its bezel
     }
-    const L = LOOK.coreLight;
-    const k = Math.max(ease(split), explode * 0.6);
+    const L = LOOK.coreLight, I = LOOK.ignite;
+    const k = this.state.ignite === null ? Math.max(ease(Math.min(split, 1)), explode * 0.6) : this.state.ignite;
     this.coreLight.intensity = L.intensity * (L[variant].closed + (L[variant].open - L[variant].closed) * k);
-    if (this.state.view === 'macro') this._applyView();
+    // The core is a dark bead while closed and full gold once open, so opening is a reveal.
+    const kk = k * k * (3 - 2 * k);
+    const M = this.mats, base = M.gold;
+    M.core.color.set(I.dark).lerp(base.color, kk);
+    M.core.roughness = I.darkRough + (base.roughness - I.darkRough) * kk;
+    M.core.clearcoat = base.clearcoat * kk;
+    M.core.emissiveIntensity = I.emissive * kk * kk;
+    M.stud.color.set(I.dark).lerp(base.color, kk);
+    M.stud.emissiveIntensity = I.studEmissive * kk * kk;
+    if (!this._cam && this.state.view === 'macro') this._applyView();
     this._dirty = true;
   }
 
   _applyView() {
-    const v = VIEWS[this.state.view];
+    const free = this._cam;
+    const v = free || VIEWS[this.state.view];
     const cam = this.camera;
     const dir = new THREE.Vector3(...v.dir).normalize();
     const target = new THREE.Vector3();
+    if (free) target.set(...free.target);
     if (v.target === 'seam') {
       // the panel corner (hexagon, hexagon, pentagon) that faces the camera most
       this.scene.updateMatrixWorld(true);
@@ -754,8 +807,13 @@ export class BallEngine {
     const fitV = v.fit, fitH = v.fit * 1.02;
     const half = THREE.MathUtils.degToRad(cam.fov / 2);
     const dist = Math.max(fitV / 2 / Math.tan(half), fitH / 2 / (Math.tan(half) * cam.aspect));
+    this._dist = dist;
     cam.position.copy(target).addScaledVector(dir, dist);
     cam.lookAt(target);
+    // Slide the picture sideways without changing the perspective (the ball at 62% across).
+    const w = this.canvas.clientWidth || window.innerWidth, h = this.canvas.clientHeight || window.innerHeight;
+    if (free && (free.shift[0] || free.shift[1])) cam.setViewOffset(w, h, -free.shift[0] * w, -free.shift[1] * h, w, h);
+    else if (cam.view) cam.clearViewOffset();
     cam.updateMatrixWorld();
     // keep the glow pool behind the ball
     const c = new THREE.Vector3(0, 0, 0).project(cam);

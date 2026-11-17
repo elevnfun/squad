@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>elevn: home page prototype</title>
+<link rel="stylesheet" href="home.css">
+<script type="importmap">
+{ "imports": { "three": "./node_modules/three/build/three.module.js", "three/addons/": "./node_modules/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#hero">elevn<i></i></a>
+    <nav class="links" aria-label="Main"><a href="#">Today</a><a href="#">Ranks</a><a href="#">Chat</a></nav>
+    <div class="right"><a class="btn btn-gold btn-sm" href="#">Connect wallet</a><a class="menu" href="#">Menu +</a></div>
+  </div>
+</header>
+
+<!-- The single pinned stage. Everything the visitor reads is HTML above it. -->
+<canvas id="stage" aria-hidden="true"></canvas>
+<div id="scrim" aria-hidden="true"></div>
+<svg id="overlay" aria-hidden="true">
+  <g id="leaders"></g>
+  <circle id="ring-track" r="10" />
+  <circle id="ring" r="10" />
+</svg>
+
+<main id="story">
+
+  <section class="beat" id="hero" data-beat="0">
+    <div class="wrap"><div class="words">
+      <span class="eyebrow">Fantasy football</span>
+      <h1 class="display">elevn<i></i></h1>
+      <p class="lead">Fantasy football with a result at full time.</p>
+      <div class="btns"><a class="btn btn-line" href="#">Connect wallet</a></div>
+    </div></div>
+    <button id="hold" class="hold" type="button" aria-pressed="false">
+      <span class="hold-dot" aria-hidden="true"></span><span class="hold-text">Press and hold the ball to open it</span>
+    </button>
+  </section>
+
+  <section class="beat" id="full-time" data-beat="1">
+    <div class="wrap"><div class="words">
+      <span class="eyebrow">Full time</span>
+      <h2 class="h1">A week is too long to wait.</h2>
+      <p class="lead">Your points are banked at the final whistle.</p>
+    </div></div>
+  </section>
+
+  <section class="beat" id="two" data-beat="2">
+    <div class="wrap"><div class="words">
+      <span class="eyebrow">Two modes</span>
+      <h2 class="h1">Two ways to play.</h2>
+      <p class="lead">One ball, two halves: Matchday Blitz and Draft.</p>
+    </div></div>
+  </section>
+
+  <section class="beat" id="blitz" data-beat="3">
+    <div class="wrap"><div class="words">
+      <span class="eyebrow">Matchday Blitz</span>
+      <h2 class="h1">Three squads of three, on any three fixtures.</h2>
+      <p class="lead">Your captain scores double. A prize every matchday.</p>
+    </div></div>
+    <ul class="callouts" data-half="blitz">
+      <li data-anchor="stud">3 squads × 3 players</li>
+      <li data-anchor="rim">Locks at kickoff</li>
+      <li data-anchor="pole">Daily prize, top 5</li>
+    </ul>
+  </section>
+
+  <section class="beat" id="draft" data-beat="4">
+    <div class="wrap"><div class="words">
+      <span class="eyebrow">Draft</span>
+      <h2 class="h1">Open five packs of three and build a five-a-side.</h2>
+      <p class="lead">Your captain scores double. Paid weekly.</p>
+    </div></div>
+    <ul class="callouts" data-half="draft">
+      <li data-anchor="stud">5 packs × 3 players</li>
+      <li data-anchor="rim">Five-a-side</li>
+      <li data-anchor="pole">Weekly prize, top 5</li>
+    </ul>
+  </section>
+
+  <section class="beat" id="access" data-beat="5">
+    <div class="wrap"><div class="words">
+      <span class="eyebrow">Access</span>
+      <h2 class="h1">Hold 150,000 $ELEVN to play Blitz.</h2>
+      <p class="lead">300,000 adds Draft. Play free.</p>
+    </div></div>
+  </section>
+
+  <section class="beat" id="end" data-beat="6">
+    <div class="wrap"><div class="words">
+      <span class="eyebrow">elevn.</span>
+      <h2 class="h1">Fantasy football with a result at full time.</h2>
+      <div class="btns"><a class="btn btn-line" href="#">Connect wallet</a></div>
+    </div></div>
+  </section>
+
+  <nav class="rail" aria-label="Sections">
+    <a href="#hero" aria-label="Start"></a>
+    <a href="#full-time" aria-label="Full time"></a>
+    <a href="#two" aria-label="Two ways to play"></a>
+    <a href="#blitz" aria-label="Matchday Blitz"></a>
+    <a href="#draft" aria-label="Draft"></a>
+    <a href="#access" aria-label="Access"></a>
+    <a href="#end" aria-label="Connect"></a>
+  </nav>
+</main>
+
+<section class="band" id="prizes">
+  <div class="wrap">
+    <div class="sh">
+      <div class="l"><span class="eyebrow">Prizes</span><h2 class="h2">Top 5 are paid, on every board.</h2></div>
+      <div class="r"><p class="lead">Blitz pays its daily board at the last whistle and a fixed $500 each week. Draft pays its weekly board. All three split 50 / 25 / 12 / 8 / 5 percent.</p></div>
+    </div>
+    <div class="boards">
+      <div class="card"><span class="eyebrow">Blitz daily</span><p class="note">Every matchday, at the last whistle</p>
+        <ol><li><b>1st</b><span>50%</span></li><li><b>2nd</b><span>25%</span></li><li><b>3rd</b><span>12%</span></li><li><b>4th</b><span>8%</span></li><li><b>5th</b><span>5%</span></li></ol></div>
+      <div class="card"><span class="eyebrow">Blitz weekly</span><p class="note">Fixed $500, Tuesday to Monday</p>
+        <ol><li><b>1st</b><span>$250</span></li><li><b>2nd</b><span>$125</span></li><li><b>3rd</b><span>$60</span></li><li><b>4th</b><span>$40</span></li><li><b>5th</b><span>$25</span></li></ol></div>
+      <div class="card"><span class="eyebrow">Draft weekly</span><p class="note">Scores Friday to Monday</p>
+        <ol><li><b>1st</b><span>50%</span></li><li><b>2nd</b><span>25%</span></li><li><b>3rd</b><span>12%</span></li><li><b>4th</b><span>8%</span></li><li><b>5th</b><span>5%</span></li></ol></div>
+    </div>
+    <p class="foot">Prototype of the home page motion. Prizes are paid in test SOL while on devnet.</p>
+  </div>
+</section>
+
+<div id="err"></div>
+<script type="module" src="home.js"></script>
+</body>
+</html>

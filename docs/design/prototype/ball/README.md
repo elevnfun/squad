@@ -62,6 +62,22 @@ ball.stats()            // draw calls and triangles
 ball.state              // { split, explode, turn, variant, view }
 ```
 
+Added for the home page prototype (`../home/`), which drives this engine from scroll:
+
+```js
+ball.setCamera({ fit, dir, target, shift })   // free camera; setView() goes back to a named view
+ball.setIgnite(t)       // 0 dark core to 1 full gold; null (default) follows the opening
+ball.setSplit(t)        // now accepts up to 4; 1 is still 60 mm apart
+ball.project(point, object)   // screen position in CSS pixels of a point on the ball
+ball.pxPerMm()          // scale at the camera target
+new BallEngine(canvas, { pointer: false })     // leave drag and cursor to the page
+```
+
+The gold core and the rim studs are now dark while the ball is closed and ignite as it opens, so
+the glass variant's opening is a reveal. The glass variant's rim rings are satin steel. The glass
+stills in `shots/` were retaken after this change; `turntable-glass.mp4` predates it and still
+shows a gold core in the closed ball.
+
 All setters return the engine, so they chain. Scene graph, for the animation step:
 `root` (pointer drag) > `tilt` (fixed tilt) > `spin` (`setTurn`) > `halves.blitz`,
 `halves.draft`, `coreGroup`. `ball.panels` lists the 32 panels with their group, normal, half
