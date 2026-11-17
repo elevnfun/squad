@@ -92,3 +92,20 @@ Delegated to a small team of agents, each briefed with the matching ECC skill:
 6. Review: accessibility and phone performance.
 
 The owner sees the design and approves or changes it before anything is built.
+
+## 5. Owner's design decisions (2026-11-17)
+
+On the motion and hero spec (`docs/design/03-motion-and-hero.md`):
+
+- The ball is steel and smoked glass with a gold core, not white and gold.
+- three.js is added to the site for the live 3D.
+- The wording is "Play free", not "No entry fee".
+- All seven changes to `web/DESIGN.md` are approved:
+  1. Cursor or phone tilt may turn the studio light, on the home canvas only.
+  2. The home page is one continuous scroll, not snapping slides.
+  3. The intro video is retired.
+  4. SideRays, grid-pulse and the floodlight pool are off on the home page.
+  5. Barlow Condensed is allowed for the one-word title cards.
+  6. Sound is allowed in the hero only, off until asked for.
+  7. Durations become named tokens.
+
