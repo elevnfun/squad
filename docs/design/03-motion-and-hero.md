@@ -67,7 +67,7 @@ right); on portrait it is vertical.
 | 40% | Apart | 460 | 1 | 1 | TWO | Two ways to play. | Teardown: panels lift, the halves part |
 | 56% | Blitz | 260 | 1 | 1 | BLITZ | Matchday Blitz. Three squads of three, on any three fixtures. A prize every matchday. | Orbit, first 40° |
 | 72% | Draft | 260 | 1 | 1 | DRAFT | Draft. Open five packs of three and build a five-a-side. Paid weekly. | Orbit, next 40° |
-| 88% | Access | 300 | 1 to 0 | 1 | HOLD | Hold 150,000 $ELEVN to play Blitz. 300,000 adds Draft. No entry fee. | The teardown in reverse |
+| 88% | Access | 300 | 1 to 0 | 1 | HOLD | Hold 150,000 $ELEVN to play Blitz. 300,000 adds Draft. Play free. | The teardown in reverse |
 | 100% | End | 300 | 0 | 1 | ELEVN | [Connect wallet] | None: the hero frame again |
 
 Cues blend and ease every frame from scroll position, never from observers. Explode 0 to 0.35
@@ -181,5 +181,5 @@ prizes are under legal review, so no slot-machine suspense.
    phones get opaque windows. Approve the material change?
 3. three.js is a new dependency, loaded on the home page only. Approve it?
 4. Retiring the intro video and the home side rays (changes 3 and 4): agreed?
-5. The pack opening is deliberately plain, and the last beat says "No entry fee" where the
+5. The pack opening is deliberately plain, and the last beat says "Play free" where the
    blueprint says "Play free". Which wording, and is plain right?
