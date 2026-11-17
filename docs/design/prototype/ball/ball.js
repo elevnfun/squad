@@ -494,7 +494,9 @@ export class BallEngine {
     this._last = performance.now();
 
     const r = this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(opts.pixelRatio || window.devicePixelRatio || 1, 2));
+    this._dpr = Math.min(opts.pixelRatio || window.devicePixelRatio || 1, 2);
+    this.quality = 'high';
+    r.setPixelRatio(this._dpr);
     r.setClearColor(SPEC.bg, 1);
     r.toneMapping = THREE.NoToneMapping;     // ACES is applied once, in the output pass
     r.info.autoReset = false;
@@ -546,6 +548,24 @@ export class BallEngine {
   setCamera({ fit = 330, dir = [0, 0.16, 1], target = [0, 0, 0], shift = [0, 0] } = {}) {
     this._cam = { fit, dir, target, shift };
     this._applyView();
+    return this;
+  }
+  /**
+   * 'high' (the default), 'low' or 'min', for slower computers.
+   *   low  one buffer pixel per CSS pixel at most, the glass refracts a half-size copy of the
+   *        scene, the bloom is worked out at half its size, 2x multisampling instead of 4x
+   *   min  three quarters of that buffer, no bloom (the highlights lose their glow), no multisampling
+   */
+  setQuality(tier) {
+    const q = this.quality = tier === 'low' || tier === 'min' ? tier : 'high';
+    const pr = q === 'high' ? this._dpr : Math.min(this._dpr, 1) * (q === 'min' ? 0.75 : 1);
+    this.renderer.setPixelRatio(pr);
+    this.composer.setPixelRatio(pr);
+    this.bloom.enabled = q !== 'min';
+    this.renderer.transmissionResolutionScale = q === 'high' ? 1 : 0.5;
+    const samples = q === 'high' ? 4 : q === 'low' ? 2 : 0;
+    for (const rt of [this.composer.renderTarget1, this.composer.renderTarget2]) { rt.samples = samples; rt.dispose(); }
+    this.resize();
     return this;
   }
   /** How lit the gold core is, 0 dark to 1 full gold. null (the default) follows the opening. */
@@ -600,6 +620,7 @@ export class BallEngine {
     const w = this.canvas.clientWidth || window.innerWidth, h = this.canvas.clientHeight || window.innerHeight;
     this.renderer.setSize(w, h, false);
     this.composer.setSize(w, h);
+    if (this.quality === 'low') { const pr = this.renderer.getPixelRatio(); this.bloom.setSize(w * pr / 2, h * pr / 2); }
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.backdrop.material.uniforms.uAspect.value = w / h;

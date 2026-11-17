@@ -56,6 +56,16 @@ ul, ol { list-style: none; }
 /* ---------- the stage ---------- */
 #stage { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; z-index: 0; opacity: 0; transition: opacity 600ms var(--ease); touch-action: pan-y; }
 #stage.ready { opacity: 1; }
+/* the stills: the hero poster under the canvas, and one per beat when there is no WebGL.
+   Each is the canvas alone at 2400 x 1080, shown at the window's height and slid sideways so
+   its ball (at --fx of the picture) lands where the live ball would be (--cx in the window). */
+#stills { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+#stills img { position: absolute; top: 0; height: 100vh; width: auto; max-width: none; left: calc(var(--cx) - 100vh * 2400 / 1080 * var(--fx));
+  opacity: 0; transition: opacity 400ms linear; }
+#stills img.on { opacity: 1; }
+/* the hero still was taken before the ball is moved down to clear its title word: the same move, in CSS */
+#stills img:first-child { top: max(0px, calc(67px - 3.31vh)); }
+.nogl #stage, .nogl #titles, .nogl #overlay, .nogl .hold { display: none !important; }
 #stage.swap { opacity: 0; transition-duration: 200ms; }
 #stage.can-hold { cursor: pointer; }
 #scrim { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: var(--scrim, .6);
@@ -193,6 +203,9 @@ ul, ol { list-style: none; }
   .links { display: none; }
   .menu { display: none; }
   #stage { opacity: .55 !important; }
+  /* the hero still, placed like the narrow canvas: the ball half the width, centred, a third of the way down */
+  #stills img, #stills img:first-child { height: 78vw; left: -59vw; top: calc(33vh - 42vw); opacity: 0; }
+  #stills img:first-child { opacity: .55; }
   #scrim { background: linear-gradient(180deg, rgba(10,11,13,0) 30%, rgba(10,11,13,.8) 62%); opacity: 1; }
   .beat, #hero, #full-time, #two, #blitz, #draft, #access, #end { height: auto; min-height: 92vh; display: flex; align-items: flex-end; padding-bottom: 12vh; }
   .js .words, .js .beat.on .words { position: static; opacity: 1; visibility: visible; transform: none; margin: 0; width: 100%; }

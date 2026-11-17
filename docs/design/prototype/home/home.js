@@ -67,7 +67,8 @@ const KEYS = Object.keys(POSE.hero);
 // The teardown at its fullest: how far the panels lift (1 is 30 mm) and how far the halves
 // part (1 is 60 mm between them).
 const TEAR = { explode: num('ex', 0.7), split: num('sp', 2.4) };
-const MODE_BALL = 0.24;                       // Blitz and Draft: the ball's centre, in window heights from the cards' right end
+// Blitz and Draft: where the ball's centre stands, 0.24 window heights in from the cards' right end
+const modeX = (W, H) => (W - Math.max(80, (W - 1440) / 2) - 36 - 0.24 * H) / W - 0.5;
 
 function poseAt(p) {
   let i = 0;
@@ -97,13 +98,42 @@ const railDots = [...document.querySelectorAll('.rail a')];
 root.classList.add('js');
 if (STILL) root.classList.add('still');
 
-let engine;
+// No WebGL (or ?nogl=1): engine stays null and the page shows a still per beat instead (see "stills").
+let engine = null;
 try {
+  if (q.get('nogl') === '1') throw new Error('WebGL switched off by ?nogl=1');
   engine = new BallEngine(canvas, { variant: 'glass', still: STILL, reducedMotion: REDUCED, pointer: false, pixelRatio: q.has('dpr') ? num('dpr', 1) : undefined });
 } catch (e) {
-  document.getElementById('err').textContent = String((e && e.stack) || e);
-  window.__homeError = String(e);
-  throw e;
+  console.warn('elevn: no WebGL, showing stills.', e);
+}
+
+// ---------------------------------------------------------------- quality
+// Three tiers: high, low, min (see BallEngine.setQuality). The page starts high and times the
+// first frames it draws, for a second and a half: if the middle one of them took longer than
+// 28 ms (under about 35 frames a second) it steps down one tier and times again.
+// ?quality=high, low or min fixes the tier.
+const TIERS = ['high', 'low', 'min'];
+const FORCED = TIERS.includes(q.get('quality')) ? q.get('quality') : null;
+const probe = { times: [], skip: 6, drew: false, done: !!FORCED || STILL || !engine };
+function setQuality(tier) {
+  if (!engine || engine.quality === tier) return;
+  engine.setQuality(tier);
+  state.dirty = true;
+}
+function probeFrame(drew, wall) {
+  if (probe.done) return;
+  // only a frame that follows a drawn frame says how long drawing takes
+  const counts = drew && probe.drew;
+  probe.drew = drew;
+  if (!counts || probe.skip-- > 0) return;
+  probe.times.push(wall);
+  if (probe.times.length < 90 && probe.times.reduce((a, b) => a + b, 0) < 1.5) return;
+  const mid = [...probe.times].sort((a, b) => a - b)[probe.times.length >> 1];
+  const next = TIERS[TIERS.indexOf(engine.quality) + 1];
+  if (mid > 0.028 && next) setQuality(next);
+  // time the new tier too, unless this one is fast enough or there is nothing lower
+  probe.done = mid <= 0.028 || next === 'min' || !next;
+  probe.times = []; probe.skip = 6;
 }
 
 // ---------------------------------------------------------------- title words
@@ -154,7 +184,7 @@ function layoutTitles() {
   const edge = Math.max(80, (W - 1440) / 2);                 // the content edge
   // Blitz and Draft: the ball's centre stands a fixed part of the window height in from the
   // right end of the cards, whatever the window's shape
-  for (const k of ['blitz', 'blitz2', 'draft', 'draft2']) POSE[k].x = (W - edge - 36 - MODE_BALL * H) / W - 0.5;
+  for (const k of ['blitz', 'blitz2', 'draft', 'draft2']) POSE[k].x = modeX(W, H);
   const cap = Math.round(0.125 * H), px = cap / 0.7;          // Barlow Condensed capitals are 0.7 em tall
   const top = 64 + Math.round(0.028 * H), bottom = top + cap; // the band, under the 64 px bar
   const gap = Math.round(0.022 * H);
@@ -321,6 +351,7 @@ function frame(dt, wall = dt) {
   if (changed || s.holding || s.hold > 0) drawRing();
   if (changed) { engine.render(); s.dirty = false; }
   canvas.classList.toggle('can-hold', canHold());
+  return changed;
 }
 
 function drawRing() {
@@ -395,7 +426,8 @@ function loop(now) {
   const dt = Math.min(wall, 0.1);
   state.last = now;
   // rendering stops in a hidden tab and once the prizes band has covered the stage
-  if (document.hidden || window.scrollY > story.offsetHeight + 40) return;
+  if (stills.on) return;
+  if (document.hidden || window.scrollY > story.offsetHeight + 40) { probe.drew = false; return; }
   if (REDUCED && !narrow()) {
     // crossfade between the stills when the beat changes
     const b = beatAt(storyProgress());
@@ -403,11 +435,52 @@ function loop(now) {
     lastBeatShown = b;
     if (canvas.classList.contains('swap')) return;
   }
-  frame(dt, wall);
+  probeFrame(frame(dt, wall), wall);
 }
+
+// ---------------------------------------------------------------- stills
+// poster/beat-1.jpg is in the HTML and is on screen before any script runs: the hero frame.
+// The canvas fades in over it once its first frame is drawn. If there is no WebGL (or the
+// context is lost) the canvas is never shown and each beat gets its own still instead.
+// A still is the canvas alone, 2400 x 1080. It is shown at the window's height and slid
+// sideways so that the ball lands where the live canvas would put it (--fx: where the ball
+// is in the picture, --cx: where it belongs in the window).
+const stillBox = document.getElementById('stills');
+const STILL_SIZE = [2400, 1080];
+const stills = { on: false, imgs: [stillBox.querySelector('img')] };
+function showStill() {
+  const p = storyProgress(), beat = beatAt(p);
+  const b = narrow() ? 0 : beat, i = b === 6 ? 0 : b;      // the end frame is the hero frame
+  if (!stills.imgs[i]) {
+    const im = new Image();
+    im.alt = ''; im.decoding = 'async'; im.src = `poster/beat-${i + 1}.jpg`;
+    stillBox.append(im); stills.imgs[i] = im;
+  }
+  const P = poseAt(MARKS[b]), mode = i === 3 || i === 4;
+  const st = stills.imgs[i].style;
+  st.setProperty('--fx', (0.5 + (mode ? modeX(...STILL_SIZE) : P.x)).toFixed(4));
+  st.setProperty('--cx', `${((0.5 + (mode ? modeX(window.innerWidth, window.innerHeight) : P.x)) * window.innerWidth).toFixed(1)}px`);
+  stills.imgs.forEach((im, k) => im && im.classList.toggle('on', k === i));
+  root.style.setProperty('--scrim', P.scrim.toFixed(3));
+  setBeat(beat);
+  drawIcons(p);
+}
+function useStills() {
+  if (stills.on) return;
+  stills.on = true;
+  root.classList.add('nogl');
+  stillBox.hidden = false;
+  window.addEventListener('scroll', showStill, { passive: true });
+  window.addEventListener('resize', showStill);
+  showStill();
+  window.__homeReady = true;
+}
+canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); useStills(); });
 
 async function start() {
   try { await Promise.all([document.fonts.load('700 100px "Barlow Condensed"'), document.fonts.load('800 60px "Sora"'), document.fonts.ready]); } catch (e) { /* fall back to system fonts */ }
+  if (!engine) { useStills(); return; }
+  if (FORCED) setQuality(FORCED);
   layoutTitles();
   if (q.has('p')) state.pTarget = clamp01(num('p', 0)); else onScroll();
   state.p = state.pTarget;
@@ -417,6 +490,8 @@ async function start() {
   requestAnimationFrame(() => {
     state.dirty = true; frame(0);
     canvas.classList.add('ready');
+    // the poster is under the canvas: take it away once the canvas has faded in over it
+    setTimeout(() => { if (!stills.on) stillBox.hidden = true; }, STILL ? 0 : 700);
     window.__homeReady = true;
     if (!STILL) { state.last = performance.now(); requestAnimationFrame(loop); }
   });
@@ -424,8 +499,10 @@ async function start() {
 
 // For captures: set the story position (and the hold) and draw that frame now.
 window.home = {
-  engine, state, POSE, CUES, MARKS, TITLE, ICON_SPAN, layoutTitles, titleReport,
+  engine, state, POSE, CUES, MARKS, TITLE, ICON_SPAN, STILL_SIZE, layoutTitles, titleReport, setQuality,
+  get quality() { return engine ? engine.quality : 'stills'; },
   set(p, hold = 0, open = null) {
+    if (!engine) return;
     state.pTarget = state.p = clamp01(p);
     state.hold = clamp01(hold); state.opened = open !== null; state.open = open !== null ? open : 0.1 * state.hold;
     state.dirty = true; frame(0);

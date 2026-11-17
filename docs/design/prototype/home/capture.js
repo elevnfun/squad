@@ -1,8 +1,10 @@
 // Captures the home prototype through Playwright (software WebGL, still mode).
 //   node capture.js beats [width height]   -> shots/beat-1-hero.png ... beat-7-end.png, hold-mid.png, hold-open.png,
 //                                             blitz-step-1..4.png, draft-step-1..4.png
-//   node capture.js sizes                  -> beat-1-hero, beat-4-blitz, beat-5-draft at 1512x860 and 1728x1000
-//   node capture.js hover [width height]   -> shots/draft-pack-hover.png (the pointer on a pack)
+//   node capture.js sizes                  -> beat-1-hero, beat-2-full-time, beat-4-blitz, beat-5-draft at 1512x860 and 1728x1000
+//   node capture.js hover [width height]   -> shots/blitz-card-hover.png, shots/draft-pack-hover.png (the pointer on a card, on a pack)
+//   node capture.js poster                 -> poster/beat-1.jpg ... beat-6.jpg: the canvas alone at 2400x1080 (the load poster and the no-WebGL stills)
+//   node capture.js modes                  -> shots/no-webgl-blitz.png (?nogl=1), shots/quality-low-hero.png (?quality=low)
 //   node capture.js titles                 -> prints each title word's box and its gap to the ball at four sizes
 //   node capture.js one "<query>" out.png [width height]
 //   node capture.js video                  -> shots/scroll.mp4 (1280x720, 30 fps)
@@ -48,7 +50,7 @@ async function open(browser, query, w, h, opts = {}) {
       // hero, Blitz and Draft at two common Mac window sizes
       for (const [w, h] of [[1512, 860], [1728, 1000]]) {
         const page = await open(browser, 'p=0', w, h);
-        for (const [name, p] of [BEATS[0], BEATS[3], BEATS[4]]) {
+        for (const [name, p] of [BEATS[0], BEATS[1], BEATS[3], BEATS[4]]) {
           await page.evaluate((a) => window.home.set(a), p);
           await page.screenshot({ path: path.join(SHOTS, `beat-${name}-${w}x${h}.png`) });
           console.log(`beat-${name}-${w}x${h}.png`);
@@ -56,16 +58,46 @@ async function open(browser, query, w, h, opts = {}) {
         await page.close();
       }
     } else if (mode === 'hover') {
-      // the Draft beat at rest with the pointer on the fourth pack
+      // each mode's beat at rest with the pointer on a card: the second fixture card, the fourth pack
       const w = +(process.argv[3] || 1440), h = +(process.argv[4] || 900);
-      const page = await open(browser, 'p=0.72', w, h);
-      const b = await page.locator('.pack').nth(3).boundingBox();
-      await page.mouse.move(b.x + b.width * 0.5, b.y + b.height * 0.5);
-      await page.mouse.move(b.x + b.width * 0.72, b.y + b.height * 0.3, { steps: 4 });
-      await page.waitForTimeout(400);
-      await page.evaluate(() => { window.home.state.dirty = true; });
-      await page.screenshot({ path: path.join(SHOTS, w === 1440 ? 'draft-pack-hover.png' : `draft-pack-hover-${w}.png`) });
-      console.log('draft-pack-hover');
+      const page = await open(browser, 'p=0', w, h);
+      for (const [name, p, sel, n] of [['blitz-card-hover', 0.56, '#blitz .pack', 1], ['draft-pack-hover', 0.72, '#draft .pack', 3]]) {
+        await page.mouse.move(2, 2);
+        await page.evaluate((a) => window.home.set(a), p);
+        const b = await page.locator(sel).nth(n).boundingBox();
+        await page.mouse.move(b.x + b.width * 0.5, b.y + b.height * 0.5);
+        await page.mouse.move(b.x + b.width * 0.72, b.y + b.height * 0.3, { steps: 4 });
+        await page.waitForTimeout(400);
+        await page.screenshot({ path: path.join(SHOTS, w === 1440 ? `${name}.png` : `${name}-${w}.png`) });
+        console.log(name);
+      }
+    } else if (mode === 'poster') {
+      // The canvas alone, one still per beat (the end frame is the hero frame again), as JPEG.
+      // beat-1 is the load poster; it is taken before the ball is moved down for its title word,
+      // because the page makes that move in CSS (home.css, #stills img:first-child).
+      const dir = path.join(__dirname, 'poster');
+      fs.mkdirSync(dir, { recursive: true });
+      const [w, h] = [2400, 1080];
+      const page = await open(browser, 'p=0', w, h);
+      await page.addStyleTag({ content: '.nav, #scrim, #titles, #overlay, #story, #stills, #err { opacity: 0 !important; }' });
+      for (let i = 0; i < 6; i++) {
+        await page.evaluate(([a, hero]) => { if (hero) { window.home.POSE.hero.dy = 0; window.home.POSE.end.dy = 0; } window.home.set(a); }, [BEATS[i][1], i === 0]);
+        await page.screenshot({ path: path.join(dir, `beat-${i + 1}.jpg`), type: 'jpeg', quality: 80 });
+        console.log(`poster/beat-${i + 1}.jpg`, fs.statSync(path.join(dir, `beat-${i + 1}.jpg`)).size);
+      }
+    } else if (mode === 'modes') {
+      // the two fallbacks: no WebGL (a still per beat), and the low quality tier
+      let page = await open(browser, 'nogl=1', 1440, 900);
+      await page.evaluate(() => { const s = document.getElementById('story'); window.scrollTo(0, 0.56 * (s.offsetHeight - innerHeight)); });
+      await page.waitForFunction(() => { const i = document.querySelector('#stills img.on'); return i && i.complete && /beat-4/.test(i.src); }, null, { timeout: 15000 });
+      await page.waitForTimeout(300);
+      await page.screenshot({ path: path.join(SHOTS, 'no-webgl-blitz.png') });
+      console.log('no-webgl-blitz.png');
+      await page.close();
+      page = await open(browser, 'p=0&quality=low', 1440, 900);
+      console.log('quality:', await page.evaluate(() => window.home.quality));
+      await page.screenshot({ path: path.join(SHOTS, 'quality-low-hero.png') });
+      console.log('quality-low-hero.png');
     } else if (mode === 'titles') {
       // every title word at four window sizes: its box, and how near the ball comes to it
       for (const [w, h] of [[1440, 900], [1920, 1080], [1512, 860], [1728, 1000]]) {
