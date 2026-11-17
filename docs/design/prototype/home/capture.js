@@ -1,5 +1,6 @@
 // Captures the home prototype through Playwright (software WebGL, still mode).
-//   node capture.js beats [width height]   -> shots/beat-1-hero.png ... beat-7-end.png, hold-mid.png, hold-open.png
+//   node capture.js beats [width height]   -> shots/beat-1-hero.png ... beat-7-end.png, hold-mid.png, hold-open.png,
+//                                             blitz-step-1..4.png, draft-step-1..4.png
 //   node capture.js one "<query>" out.png [width height]
 //   node capture.js video                  -> shots/scroll.mp4 (1280x720, 30 fps)
 // Needs the prototype folder served:  cd docs/design/prototype && python3 -m http.server 8772
@@ -49,6 +50,13 @@ async function open(browser, query, w, h, opts = {}) {
       for (const [name, p] of BEATS) await snap(`beat-${name}`, p);
       await snap('hold-mid', 0, 0.6);
       await snap('hold-open', 0, 1, 1);
+      // the mode icons part of the way through: four frames each
+      const span = await page.evaluate(() => window.home.ICON_SPAN);
+      for (const half of ['blitz', 'draft']) {
+        const [s, e] = span[half];
+        const steps = half === 'blitz' ? [0.14, 0.36, 0.56, 0.8] : [0.12, 0.3, 0.46, 0.68];
+        for (let i = 0; i < steps.length; i++) await snap(`${half}-step-${i + 1}`, s + (e - s) * steps[i]);
+      }
     } else if (mode === 'video') {
       // The scrollbar from top to bottom with a short rest on each beat, then the hold.
       const fps = 30, w = 1280, h = 720;
@@ -65,9 +73,19 @@ async function open(browser, query, w, h, opts = {}) {
       for (let i = 0; i < 24; i++) frames.push([0, 1, 1]);
       for (let i = 1; i <= 10; i++) frames.push([0, 1 - i / 10, 1 - i / 10]);
       for (let i = 0; i < 10; i++) frames.push([0, 0, null]);
+      const span = await page.evaluate(() => window.home.ICON_SPAN);
+      const run = (from, to, n) => { for (let i = 1; i <= n; i++) frames.push([from + (to - from) * ease(i / n), 0, null]); };
       for (let k = 0; k < marks.length - 1; k++) {
-        const n = Math.round((marks[k + 1] - marks[k]) * 2.4 * 5 * fps) / 1;   // about 2.4 s for a 20% step
-        for (let i = 1; i <= n; i++) frames.push([marks[k] + (marks[k + 1] - marks[k]) * ease(i / n), 0, null]);
+        // about 2.4 s for a 20% step; the stretch where a mode icon plays is taken slowly (3 s)
+        const icon = Object.values(span).find(([s, e]) => s > marks[k] && e <= marks[k + 1]);
+        let from = marks[k];
+        if (icon) {
+          run(from, icon[0], Math.round((icon[0] - from) * 2.4 * 5 * fps));
+          run(icon[0], icon[1], 3 * fps);
+          from = icon[1];
+        }
+        const n = Math.round((marks[k + 1] - from) * 2.4 * 5 * fps);
+        if (n > 0) run(from, marks[k + 1], n);
         for (let i = 0; i < 18; i++) frames.push([marks[k + 1], 0, null]);
       }
       console.log(frames.length, 'frames');

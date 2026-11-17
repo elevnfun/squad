@@ -88,17 +88,17 @@ ul, ol { list-style: none; }
 .js .beat.on .words { opacity: 1; visibility: visible; transform: translateY(-50%);
   transition: opacity 700ms var(--ease) 80ms, transform 700ms var(--ease) 80ms, visibility 0s; }
 
-/* callouts: eyebrow style, thin leader lines drawn in #overlay */
-.callouts { display: none; }
-.js .callouts { display: block; position: fixed; z-index: 3; right: max(112px, calc((100vw - 1440px) / 2 + 32px)); width: 200px; }
-.js .callouts[data-half="blitz"] { top: calc(var(--nav) + 9vh); }
-.js .callouts[data-half="draft"] { bottom: 9vh; }
-.callouts li { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--steel); line-height: 1.35; padding: 10px 0 10px 14px; border-left: 1px solid rgba(255,255,255,.28);
+/* the mode icon and its three notes, bottom right; one leader line to the ball is drawn in #overlay */
+.mode { display: none; }
+.js .mode { display: block; position: fixed; z-index: 3; right: max(80px, calc((100vw - 1440px) / 2)); bottom: 6vh; width: clamp(260px, 32vh, 380px);
   opacity: 0; transform: translateY(8px); transition: opacity 220ms linear, transform 0s linear 220ms; }
-.callouts li + li { margin-top: 22px; }
-.beat.on .callouts li { opacity: 1; transform: none; transition: opacity 700ms var(--ease) 300ms, transform 700ms var(--ease) 300ms; }
-.beat.on .callouts li:nth-child(2) { transition-delay: 400ms; }
-.beat.on .callouts li:nth-child(3) { transition-delay: 500ms; }
+.js .beat.on .mode { opacity: 1; transform: none; transition: opacity 700ms var(--ease) 200ms, transform 700ms var(--ease) 200ms; }
+.icon svg { display: block; width: 100%; height: auto; overflow: visible; font-family: "Sora", system-ui, sans-serif; }
+.callouts { margin-top: 18px; }
+.callouts li { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--steel); line-height: 1.35; padding: 5px 0 5px 14px; border-left: 1px solid rgba(255,255,255,.28);
+  opacity: .38; transition: opacity 300ms linear, border-color 300ms linear; }
+.callouts li + li { margin-top: 8px; }
+.callouts li.lit { opacity: 1; border-left-color: var(--accent); }
 
 /* hold to open */
 .hold { display: none; }
@@ -116,7 +116,7 @@ ul, ol { list-style: none; }
 .rail a { display: grid; place-items: center; width: 16px; height: 16px; }
 .rail a::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--steel-2); opacity: .55; transition: all 180ms ease-out; }
 .rail a.on::before { width: 8px; height: 8px; background: var(--accent); opacity: 1; }
-.past-story .rail, .past-story .words, .past-story .callouts, .past-story .hold { opacity: 0 !important; pointer-events: none; }
+.past-story .rail, .past-story .words, .past-story .mode, .past-story .hold { opacity: 0 !important; pointer-events: none; }
 
 /* ---------- prizes band: scrolls over the stage ---------- */
 .band { position: relative; z-index: 5; background: var(--bg-2); border-top: 1px solid var(--line); padding: 128px 0 96px; }
@@ -139,7 +139,7 @@ ul, ol { list-style: none; }
 @media (prefers-reduced-motion: reduce) {
   /* no rise, 200 ms fades only */
   .js .words, .js .beat.on .words { transform: translateY(-50%); transition: opacity 200ms linear, visibility 0s; }
-  .callouts li, .beat.on .callouts li { transform: none; transition: opacity 200ms linear; }
+  .js .mode, .js .beat.on .mode { transform: none; transition: opacity 200ms linear; }
   #overlay g.leader, #overlay g.leader.on, .js .hold, .js .beat.on .hold { transition: opacity 200ms linear, visibility 0s; }
   .btn { transition: none; }
 }
@@ -153,10 +153,8 @@ ul, ol { list-style: none; }
   #scrim { background: linear-gradient(180deg, rgba(10,11,13,0) 30%, rgba(10,11,13,.8) 62%); opacity: 1; }
   .beat, #hero, #full-time, #two, #blitz, #draft, #access, #end { height: auto; min-height: 92vh; display: flex; align-items: flex-end; padding-bottom: 12vh; }
   .js .words, .js .beat.on .words { position: static; opacity: 1; visibility: visible; transform: none; margin: 0; width: 100%; }
-  .js .callouts { position: static; display: block; width: auto; margin: 24px 24px 0; }
+  .js .mode, .js .beat.on .mode { position: static; opacity: 1; transform: none; width: min(300px, 100%); margin: 28px 24px 0; }
   .beat { flex-direction: column; justify-content: flex-end; align-items: stretch; }
-  .callouts li, .beat.on .callouts li { opacity: 1; transform: none; padding: 6px 0 6px 12px; }
-  .callouts li + li { margin-top: 8px; }
   .js .rail, .js .hold, #overlay { display: none; }
   .lead { font-size: 18px; }
   .sh { display: block; } .sh .r { margin-top: 24px; }
