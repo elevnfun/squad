@@ -23,6 +23,11 @@ instructions: skills `blueprint`, `frontend-design-direction`, `design-system`, 
 `multi-frontend`, `multi-workflow`; agent definitions such as `architect`, `planner`,
 `a11y-architect`, `performance-optimizer`, `react-reviewer`, `e2e-runner`.
 
+Owner's limits (2026-11-17): no Blender anywhere, hosted or local; it overcomplicates the
+project. From the object-build video only the motion graphics are wanted, not the 3D modelling
+pipeline. The generative-model ban is lifted for Katana videos only. Every Higgsfield credit
+needs the owner's yes before it is spent.
+
 ## 2. References
 
 - **elevn.fun**: the live site and the base to redesign from.

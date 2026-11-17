@@ -1,5 +1,10 @@
 # 05. Higgsfield: routes, costs and a plan (research only)
 
+> **Owner's decision, 2026-11-17: no Blender.** The explorations below that use the 3D scene
+> builder or local Blender are dropped (ball look-development stills, the Tokyo-style night scene,
+> the local turntable). What stays: the motion-graphics piece in Higgsfield's editor and the Katana
+> promo, both fed with stills rendered from our own three.js ball.
+
 Written 2026-11-17 from Higgsfield's own instructions and model catalogue. Nothing was generated,
 rendered, uploaded or created, and no credits were spent. Balance: 1,162.53 credits, Plus plan.
 
