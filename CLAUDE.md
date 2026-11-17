@@ -64,6 +64,12 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
 - Higgsfield (2026-11-17): the Draft pack artwork and its hover animation are generated with Higgsfield
   (one shared design, numbered 1 to 5 in code). Always report the price and get a yes before spending
   credits. The Katana promo video waits until the platform is fully ready.
+- Rules changed on 2026-11-17 (blueprint section 5.1; these replace older lines above):
+  the 72-hour hold is replaced by prize release (half of each prize withdrawable at once, the rest
+  joins a locked balance that unlocks by a daily share, about 15%; details still open). Prizes are
+  paid 15 minutes after full time. Buying, winning and selling the same day is allowed. Several
+  wallets per person are allowed, with no defence built. Draft is the luck mode, Blitz the skill
+  mode. Legal review comes last. Do not start section 3 (the build) until the owner says so.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 
 Background: `docs/blueprint/reference/six-formats.md`. Every game number lives in `config.toml`.

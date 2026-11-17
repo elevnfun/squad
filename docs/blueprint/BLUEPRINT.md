@@ -1,7 +1,7 @@
-# elevn 2.0 blueprint (v8, every rule settled by the owner, 2026-11-16)
+# elevn 2.0 blueprint (v9, owner's decisions to 2026-11-17)
 
-**Status: every rule is settled. Waiting for the owner's go-ahead to start section 2 (design).
-Nothing here is built yet.**
+**Status: section 2 (design) is under way. Section 3 (build) has not started and must not start
+until the owner says so. One rule is being reworked: how prizes are released (section 5.1).**
 Tags: [Owner] = stated by the owner, build as written. [Proposed] = recommended, needs a yes.
 [Open] = the owner must choose.
 
@@ -186,6 +186,27 @@ Three places:
   before any weekly prize is paid.
 - SOL prizes for Blitz and Draft stay on devnet until the legal review signs off in writing.
 
+### 5.1 Owner's decisions, 2026-11-17 (these replace anything above that disagrees)
+
+- **Prize release replaces the 72-hour hold.** [Owner] Prizes are credited to the winner's balance
+  on the site and withdrawn from there. Half of every prize can be withdrawn at once. The other
+  half joins the wallet's locked balance, and a share of that locked balance (about 15%, perhaps
+  20%) unlocks each day. Each new win adds its locked half to the same balance. Owner's example:
+  wins of 2, 2 and 3 SOL on three days give 1, 1 and 1.5 SOL at once, and 1 + 1 + 1.5 SOL into the
+  locked balance. The aim is to keep winners playing. [Open] the details listed under
+  "Still to confirm" below. The old lines above about the 72-hour hold are withdrawn.
+- **Prizes are paid 15 minutes after full time**, to allow for corrections from the data
+  provider. [Owner] [Open] whether this is per fixture or after the day's last fixture, and how
+  it sits with the review switch.
+- **Buying, winning and selling on the same day is allowed.** It is not treated as a problem;
+  people may buy, sell and play freely. [Owner]
+- **Several wallets per person are allowed.** More wallets mean more players and squads on the
+  boards. No defence is to be built. [Owner]
+- **Draft is the luck mode, Blitz is the skill mode.** Personal packs are random on purpose, as
+  in football card games. [Owner]
+- **Legal review comes last**, after everything else. [Owner]
+- **The payout wallet will be tested** before any real prize is sent. [Owner]
+
 ## 6. Home page scroll story
 
 From the 3D website guide, route 03 (built in code): one hero object, the scrollbar is the
@@ -268,4 +289,8 @@ Settled by the owner on 2026-11-14:
   leaderboard section; info pages stay in the side menu; notifications are for later.
 - Section 2 design work goes through the Higgsfield MCP together with the references.
 
-Still to confirm: nothing. Details of the payout wallet are worked out in the build section.
+Still to confirm (prize release, section 5.1): which prizes it covers; whether the daily unlock
+is a share of what is still locked or of the amount first locked; 15% or 20%; whether unlocking
+needs anything from the player; whether the wallet must still hold its tokens to withdraw; and
+whether the 15-minute payout is per fixture or per day. Details of the payout wallet are worked
+out in the build section.
