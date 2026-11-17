@@ -64,6 +64,9 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
 - Higgsfield (2026-11-17): the Draft pack artwork and its hover animation are generated with Higgsfield
   (one shared design, numbered 1 to 5 in code). Always report the price and get a yes before spending
   credits. The Katana promo video waits until the platform is fully ready.
+  The Blitz fixture cards also use one shared Higgsfield image (`art/card.png`); their hover effect is
+  built in code to match the pack's hover video (owner: no second video). The bigger ball on the Blitz
+  and Draft beats stays; the placeholder kickoff times stay.
 - Rules changed on 2026-11-17 (blueprint section 5.1; these replace older lines above):
   the 72-hour hold is replaced by prize release (half of each prize withdrawable at once, the rest
   joins a locked balance that unlocks by a daily share, about 15%; details still open). Prizes are
