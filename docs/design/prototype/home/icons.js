@@ -129,7 +129,7 @@ export function draftIcon(host) {
   const players = [];
   packs.forEach((p, i) => { for (let j = 0; j < 3; j++) {
     const k = chosen.findIndex((c) => c[0] === i && c[1] === j);
-    players.push({ ...token(toks, id), pack: p, k, open: [p.cx + (j - 1) * 14.5, 44 + (j === 1 ? -11 : 6)], row: k < 0 ? null : [46 + k * 52, 146] });
+    players.push({ ...token(toks, id), pack: p, k, open: [p.cx + (j === 0 ? 0 : j === 1 ? -11.5 : 11.5), 54 + (j === 0 ? -13 : 10)], row: k < 0 ? null : [46 + k * 52, 146] });
   } });
   const roleText = roles.map((r, k) => label(top, 46 + k * 52, 176, r));
   const cap = badge(top), lock = padlock(top);
@@ -146,7 +146,7 @@ export function draftIcon(host) {
     });
     players.forEach((p) => {
       const o = p.pack.opened;
-      let x = lerp(p.pack.cx, p.open[0], o), y = lerp(54, p.open[1], o), sc = 0.25 + 0.36 * o, op = o;
+      let x = lerp(p.pack.cx, p.open[0], o), y = lerp(54, p.open[1], o), sc = 0.25 + 0.45 * o, op = o;
       if (p.row) { x = lerp(x, p.row[0], down); y = lerp(y, p.row[1], down); sc = lerp(sc, 1, down); }
       else op *= lerp(1, 0.4, picked);
       set(p.g, x, y, sc * (p.row ? 1 + 0.12 * picked * (1 - down) : 1), op);

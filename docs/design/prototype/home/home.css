@@ -90,7 +90,7 @@ ul, ol { list-style: none; }
 
 /* the mode icon and its three notes, bottom right; one leader line to the ball is drawn in #overlay */
 .mode { display: none; }
-.js .mode { display: block; position: fixed; z-index: 3; right: max(80px, calc((100vw - 1440px) / 2)); bottom: 6vh; width: clamp(260px, 32vh, 380px);
+.js .mode { display: block; position: fixed; z-index: 3; right: max(80px, calc((100vw - 1440px) / 2)); bottom: 6vh; width: clamp(270px, 34vh, 400px);
   opacity: 0; transform: translateY(8px); transition: opacity 220ms linear, transform 0s linear 220ms; }
 .js .beat.on .mode { opacity: 1; transform: none; transition: opacity 700ms var(--ease) 200ms, transform 700ms var(--ease) 200ms; }
 .icon svg { display: block; width: 100%; height: auto; overflow: visible; font-family: "Sora", system-ui, sans-serif; }
