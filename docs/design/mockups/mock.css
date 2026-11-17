@@ -500,3 +500,11 @@ h1.word { font-weight: 700; letter-spacing: .02em; line-height: .84; }
   .pk-bd .card { padding-inline: 16px; }
 }
 @media (max-width: 700px) { .sq-row { grid-template-columns: 16px minmax(0, 1fr); row-gap: 8px; } .sq-row .badge { grid-column: 2; justify-self: start; } }
+
+/* builder: both club columns stay inside the panel; long names are cut with an ellipsis */
+.picks-wrap { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.picks-wrap > div { min-width: 0; }
+.picks-wrap .tile { min-width: 0; }
+.picks-wrap .tile > div { min-width: 0; }
+.picks-wrap .tile .nm { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+@media (max-width: 1200px) { .pk-bd .picks-wrap { grid-template-columns: minmax(0, 1fr); } }
