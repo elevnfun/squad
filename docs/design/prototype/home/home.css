@@ -141,11 +141,19 @@ ul, ol { list-style: none; }
 .packs.hovering .pack:not(.hot) .pack-body { filter: drop-shadow(0 14px 16px rgba(0,0,0,.55)) brightness(.62); }
 .pack:focus-visible { outline: 2px solid var(--accent); }
 @keyframes sheen { from { background-position: 135% 0; } to { background-position: -35% 0; } }
-/* the Blitz fixture cards: the same parts as a pack, with a rounded glass card as the artwork */
-.pack.fx { aspect-ratio: 216 / 302; border-radius: 8.3% / 6%; }
+/* the Blitz fixture cards: the same parts as a pack. art/card.png is the card, the SVG over it the content */
+.pack.fx { aspect-ratio: 216 / 327; border-radius: 8.6% / 5.7%; }
 .fx .pack-art svg { overflow: visible; }
-.fx .pack-sheen { border-radius: 8.3% / 6%; }
+.fx .pack-art img { object-fit: fill; }
+.fx.has-art .fx-drawn { display: none; }
+.fx .pack-sheen { border-radius: 8.6% / 5.7%; }
 .fx.hot .pack-sheen { opacity: .7; }
+.fx.has-art .pack-sheen { display: none; }
+/* the hover glint (icons.js): a canvas added to the card's own light and cut to its outline */
+.pack-glint { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; opacity: 0; transition: opacity 180ms linear;
+  mix-blend-mode: screen; mix-blend-mode: plus-lighter;
+  -webkit-mask: var(--mask, none) center / 100% 100% no-repeat; mask: var(--mask, none) center / 100% 100% no-repeat; }
+.pack.glinting .pack-glint { opacity: 1; transition-duration: 120ms; }
 /* capture mode: the sheen is held half way across */
 .still .pack.hot .pack-sheen { animation: none; background-position: 42% 0; }
 
@@ -193,6 +201,7 @@ ul, ol { list-style: none; }
   .pack-body { transition: filter 200ms linear; }
   .pack.hot .pack-body { --lift: 0; --rx: 0deg !important; --ry: 0deg !important; }
   .pack.hot .pack-sheen { opacity: 0; animation: none; }
+  .pack-glint { display: none; }
   .js .hold, .js .beat.on .hold { transition: opacity 200ms linear, visibility 0s; }
   .btn { transition: none; }
 }

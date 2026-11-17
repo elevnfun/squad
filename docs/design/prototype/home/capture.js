@@ -3,6 +3,7 @@
 //                                             blitz-step-1..4.png, draft-step-1..4.png
 //   node capture.js sizes                  -> beat-1-hero, beat-2-full-time, beat-4-blitz, beat-5-draft at 1512x860 and 1728x1000
 //   node capture.js hover [width height]   -> shots/blitz-card-hover.png, shots/draft-pack-hover.png (the pointer on a card, on a pack)
+//   node capture.js glint                  -> shots/blitz-card-glint-strip.png: one card with the hover glint at six points of its loop
 //   node capture.js poster                 -> poster/beat-1.jpg ... beat-6.jpg: the canvas alone at 2400x1080 (the load poster and the no-WebGL stills)
 //   node capture.js modes                  -> shots/no-webgl-blitz.png (?nogl=1), shots/quality-low-hero.png (?quality=low)
 //   node capture.js titles                 -> prints each title word's box and its gap to the ball at four sizes
@@ -32,7 +33,7 @@ async function open(browser, query, w, h, opts = {}) {
   // pack artwork loads after the page is ready (pack-N.png, then the shared pack.png)
   await page.waitForTimeout(600);
   await page.waitForFunction(() => [...document.images].every((i) => i.complete), null, { timeout: 15000 }).catch(() => {});
-  await page.waitForFunction(() => document.querySelectorAll('.pack.has-art').length === 5 || !document.querySelector('.pack-art img'), null, { timeout: 5000 }).catch(() => {});
+  await page.waitForFunction(() => document.querySelectorAll('.pack.has-art').length === 8 || !document.querySelector('.pack-art img'), null, { timeout: 5000 }).catch(() => {});
   await page.waitForTimeout(300);
   return page;
 }
@@ -73,6 +74,22 @@ async function open(browser, query, w, h, opts = {}) {
         await page.screenshot({ path: path.join(SHOTS, w === 1440 ? `${name}.png` : `${name}-${w}.png`) });
         console.log(name);
       }
+    } else if (mode === 'glint') {
+      // the hover glint frozen at six points of its 4 s loop (?demo=cardhover), one card each, side by side
+      const page = await open(browser, 'p=0.56&demo=cardhover', 1440, 900);
+      const dir = path.join(SHOTS, '_frames');
+      fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
+      const us = [0.14, 0.28, 0.42, 0.56, 0.7, 0.84];
+      for (let i = 0; i < us.length; i++) {
+        await page.evaluate((u) => window.homeCardGlint(1, u), us[i]);
+        await page.waitForTimeout(150);
+        const b = await page.locator('#blitz .pack').nth(1).boundingBox();
+        await page.screenshot({ path: path.join(dir, `g${i}.png`), clip: { x: Math.round(b.x - 14), y: Math.round(b.y - 34), width: Math.round(b.width + 28), height: Math.round(b.height + 62) } });
+      }
+      const out = path.join(SHOTS, 'blitz-card-glint-strip.png');
+      execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', path.join(dir, 'g%d.png'), '-vf', `tile=${us.length}x1`, '-frames:v', '1', out]);
+      fs.rmSync(dir, { recursive: true, force: true });
+      console.log('blitz-card-glint-strip.png');
     } else if (mode === 'poster') {
       // The canvas alone, one still per beat (the end frame is the hero frame again), as JPEG.
       // beat-1 is the load poster; it is taken before the ball is moved down for its title word,

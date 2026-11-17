@@ -2,9 +2,10 @@
 
 The glass match ball from `../ball/`, driven by scroll through the seven beats of
 `docs/design/03-motion-and-hero.md`. One continuous page, a fixed canvas behind real HTML words.
-Everything is made in code: no model files, no Blender. The one piece of generated artwork is
-the Draft pack (`art/`, below); the Blitz fixture cards, the ball and everything else are drawn
-in code. The stills in `poster/` are screenshots of the page's own canvas. It is a design
+Everything is made in code: no model files, no Blender. There are two pieces of generated
+artwork, both in `art/` (below): the Draft pack with its hover video, and the blank Blitz
+fixture card. What is written on the cards, the cards' hover glint, the ball and everything
+else are drawn in code. The stills in `poster/` are screenshots of the page's own canvas. It is a design
 prototype only; nothing in `web/` or the backend is touched.
 
 ## Run it
@@ -22,7 +23,9 @@ and hold the ball (or focus "Press and hold the ball to open it" and hold Space 
 URL parameters, for captures: `still=1` (no time-based motion, no fades), `p=0..1` (story
 position), `hold=0..1` (the ring), `open=1` (a completed hold), `reduced=1` (force the
 reduced-motion path), `dpr=`, `quality=high|low|min` (fix the quality tier), `nogl=1` (behave as
-if there were no WebGL). `window.home.set(p, hold, open)` draws any frame at once.
+if there were no WebGL), `demo=cardhover` (holds the hover on a fixture card once the cards
+stand in their row: `card=0..2`, the middle one unless given; `glint=0..1` freezes the glint at
+that point of its loop; use it with `p=0.56`). `window.home.set(p, hold, open)` draws any frame at once.
 
 ```
 node capture.js beats             # shots/beat-1-hero.png ... beat-7-end.png, hold-mid.png, hold-open.png,
@@ -30,6 +33,7 @@ node capture.js beats             # shots/beat-1-hero.png ... beat-7-end.png, ho
 node capture.js beats 1920 1080   # the same at 1920, saved with a -1920 suffix
 node capture.js sizes             # hero, full time, Blitz and Draft at 1512x860 and 1728x1000
 node capture.js hover             # shots/blitz-card-hover.png and draft-pack-hover.png: the pointer on a card, on a pack
+node capture.js glint             # shots/blitz-card-glint-strip.png: one card, the hover glint at six points of its loop
 node capture.js poster            # poster/beat-1.jpg to beat-6.jpg: the canvas alone, 2400x1080 (load poster, no-WebGL stills)
 node capture.js modes             # shots/no-webgl-blitz.png (?nogl=1) and shots/quality-low-hero.png (?quality=low)
 node capture.js titles            # prints every title word's box and its gap to the ball at four window sizes
@@ -74,22 +78,55 @@ Under reduced motion and on narrow screens the icons show their last frame.
 
 ## The Blitz fixture cards
 
-Three tall glass cards with a steel rim (about 205 x 286 px each at 1440x900), the same family
-as the packs and built the same way (`.pack.fx` > `.pack-body` > `.pack-art` + `.pack-sheen`),
-but drawn entirely in code: the artwork is one SVG per card. Top to bottom a card carries
-"FIXTURE 1" and an OPEN / LOCKED chip, "HOME v AWAY" in Barlow Condensed, "KICKOFF" and a time
-(12:30, 15:00, 17:30) over a thin bar that runs out as kickoff nears, a faint centre circle and
-halfway line, three player tokens (the captain on top, gold, with "×2"), and a padlock on the
-bottom edge whose shackle stands open until kickoff and then snaps shut with a ring. The fixtures
-are placeholders on purpose: no club names, no crests.
+Three tall cards (about 197 x 298 px each at 1440x900), the same family as the packs and built
+the same way:
 
-The two beats are told apart at a glance by shape and content: rounded glass cards with players
+```
+.pack.fx         its place in the row, driven by the scroll
+  .pack-body     the hover state: lift, 3D tilt, gold rim glow
+    .pack-art    art/card.png (the blank card), the glint canvas, then one SVG with the content
+    .pack-sheen  the sheen sweep, used only when there is no artwork
+```
+
+**The card** is `art/card.png`: a blank smoked-glass card in a polished steel frame, faint
+football panels and a centre circle embossed in it, one diagonal chrome stripe with a gold edge
+from lower left to upper right (generated with Higgsfield, 738 x 1116, transparent). All three
+cards use it. The image is decoded before it replaces the code-drawn card, so a card is never
+blank; if the file does not load, the code-drawn card stays (`.has-art` marks a card that has
+its artwork, as on the packs).
+
+**The content** is drawn over it in code, in the card's own units (216 x 327), inside the steel
+frame and to the left of the stripe: "FIXTURE 1" and an OPEN / LOCKED chip, "HOME v AWAY" in
+Barlow Condensed, "KICKOFF" with its time (12:30, 15:00, 17:30) over a thin bar that runs out
+as kickoff nears, three player tokens (the captain on top, gold, with "×2"), and a padlock on
+the bottom edge whose shackle stands open until kickoff and then snaps shut with a ring; the
+steel frame brightens when the card locks. The fixtures and kickoff times are placeholders on
+purpose: no club names, no crests. No scrim was needed behind the text.
+
+**Hover** keeps the packs' lift, 3D tilt towards the cursor, gold rim glow and dimming of the
+other two (one function, `hoverable`, serves both), and adds a glint that remakes the pack's
+hover video (`art/pack-hover.mp4`) in code, with no video:
+
+- the loop is 4 seconds, starts from the beginning on every hover and fades out in 180 ms on
+  leave; keyboard focus (Tab) starts it too;
+- a warm, star-shaped glint (white core, warm halo, one long level ray, one along the stripe,
+  short ones across) travels along the stripe's centre line, traced from `card.png` (`STRIPE`
+  in `icons.js`, 15 points), from lower left to upper right, between about 0.4 s and 3 s;
+- the stripe brightens where the glint is: the card's own bright pixels near the stripe are
+  kept as a warm white picture (made once from the PNG) and shown through a soft window that
+  moves with the glint;
+- three small warm sparkles twinkle just under the stripe behind the glint; the last second is
+  the card at rest.
+
+It is one small 2D canvas per card (no WebGL), drawn only while its card is hovered, added to
+the card's light (`mix-blend-mode: plus-lighter`, `screen` where that is missing) and cut to
+the card's outline with `mask-image: url(art/card.png)`. The canvas lies between the artwork
+and the content, so the glint passes behind the player tokens and never washes out the text.
+Under reduced motion there is no glint, lift or tilt, only the gold rim. In capture mode
+(`still=1`) the glint is held at 42% of its loop.
+
+The two beats are told apart at a glance by shape and content: framed glass cards with players
 on them against crimped foil packs with a five-a-side tray under them.
-
-**Hover** is the packs' own (one function, `hoverable`, serves both): the card lifts, tilts in 3D
-towards the cursor, a sheen sweeps across it once, its rim glows gold and the other two dim. It is
-live from the moment the cards stand in their row. Keyboard focus (Tab) gives the same lifted
-state. Under reduced motion there is no lift, tilt or sweep, only the gold rim.
 
 ## The Draft packs and the `art/` folder
 
@@ -124,6 +161,7 @@ the page looks for them when it loads and uses whichever exist, pack by pack.
 | File | What | Format |
 |---|---|---|
 | `pack-1.png` to `pack-5.png` | The pack, closed, straight on | PNG with a transparent background, portrait 2:3, 800 x 1200 px (600 x 900 at least). The pack should fill the frame edge to edge: the page fits the whole image inside the pack's 2:3 box, and the sheen and the gold glow follow the image's own outline |
+| `card.png` | The blank Blitz fixture card, straight on, shared by the three cards | PNG with a transparent background, 738 x 1116 (the card's box is 216:327). The card fills the frame edge to edge. The content is laid out for a steel frame about 4% of the width and one stripe from lower left to upper right; a new image with the stripe somewhere else needs its centre line traced again (`STRIPE` in `icons.js`) and the header checked against it |
 | `pack-1-hover.webm` to `pack-5-hover.webm`, or `.mp4` | Optional. A short loop cross-faded in over the pack while it is hovered | Same 2:3 frame and the same framing as the PNG, 2 to 4 seconds, loops cleanly, no sound needed (it is played muted). WebM (VP9) may carry transparency; MP4 (H.264) cannot, so it is cut to the PNG's outline. If both exist the browser takes the WebM when it can play it |
 
 Left to right the packs are 1 to 5. A pack with no PNG keeps its code-drawn foil, so a partial
@@ -246,9 +284,18 @@ All earlier setters and URL parameters still work.
 - **Blitz, Draft and Access now show nearly the same ball**: panels on, halves apart, core lit.
   Blitz and Draft differ by a small lean and the turn; Access is the same thing larger and
   centred. The full teardown is only seen on the MODES beat and on the way out of it.
-- **The fixture cards are flat.** They are clean and readable but they are SVG: no real glass,
-  and the ball's light does not fall on them. Next to the photographed-looking pack they are
-  the plainer of the two, though no longer by much.
+- **The card glint is a remake, not the video.** Its path, timing, warmth, rays and sparkles
+  match the pack video in stills (`shots/blitz-card-glint-strip.png`), but the card's stripe is
+  much thinner than the pack's, so the lit stretch of stripe is a line where the pack's is a
+  broad band, and the video's slight shimmer of the rays is not there. It has only been seen
+  as stills and as numbers on the software renderer, never at speed.
+- **The glint passes behind the player tokens**, so it is hidden for a moment as it crosses the
+  captain and the lower-left player (its halo shows around them). On the pack nothing is in
+  its way.
+- **The kickoff bar is short** (it stops before the stripe) and the header is a little smaller
+  than before, to keep every word clear of the stripe.
+- **The cards' content is still flat SVG** on photographed-looking artwork: the tokens do not
+  pick up the card's light.
 - **The cards do not show "at least one player from each club".** The three tokens are not
   marked home or away; at this size a mark was unreadable.
 - **The ball still passes behind the top edge of the cards and packs** (a few tens of pixels
@@ -279,13 +326,13 @@ All earlier setters and URL parameters still work.
 ## Files
 
 - `index.html`, `home.css`, `home.js`: the page
-- `icons.js`: the Blitz fixture cards, the Draft packs and their shared hover
-- `art/`: the Draft pack artwork and its hover video (see above)
+- `icons.js`: the Blitz fixture cards and their hover glint, the Draft packs, and the hover they share
+- `art/`: the Draft pack artwork and its hover video, and the Blitz card artwork `card.png` (see above)
 - `poster/`: `beat-1.jpg` to `beat-6.jpg`, the canvas alone at 2400x1080: the load poster and the
   no-WebGL stills
 - `capture.js`: stills, posters and the video through Playwright and ffmpeg
 - `shots/`: `beat-1-hero.png` to `beat-7-end.png`, `hold-mid.png`, `hold-open.png`,
   `blitz-step-1.png` to `-4`, `draft-step-1.png` to `-4` (1440x900); the same seventeen with
   `-1920` (1920x1080); `beat-1-hero`, `beat-2-full-time`, `beat-4-blitz` and `beat-5-draft` with
-  `-1512x860` and `-1728x1000`; `blitz-card-hover.png`, `draft-pack-hover.png`;
+  `-1512x860` and `-1728x1000`; `blitz-card-hover.png`, `blitz-card-glint-strip.png`, `draft-pack-hover.png`;
   `no-webgl-blitz.png`, `quality-low-hero.png`; `scroll.mp4`
