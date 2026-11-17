@@ -32,6 +32,7 @@ async function open(browser, query, w, h, opts = {}) {
   // pack artwork loads after the page is ready (pack-N.png, then the shared pack.png)
   await page.waitForTimeout(600);
   await page.waitForFunction(() => [...document.images].every((i) => i.complete), null, { timeout: 15000 }).catch(() => {});
+  await page.waitForFunction(() => document.querySelectorAll('.pack.has-art').length === 5 || !document.querySelector('.pack-art img'), null, { timeout: 5000 }).catch(() => {});
   await page.waitForTimeout(300);
   return page;
 }
@@ -52,6 +53,7 @@ async function open(browser, query, w, h, opts = {}) {
         const page = await open(browser, 'p=0', w, h);
         for (const [name, p] of [BEATS[0], BEATS[1], BEATS[3], BEATS[4]]) {
           await page.evaluate((a) => window.home.set(a), p);
+          await page.waitForTimeout(120);
           await page.screenshot({ path: path.join(SHOTS, `beat-${name}-${w}x${h}.png`) });
           console.log(`beat-${name}-${w}x${h}.png`);
         }
@@ -114,6 +116,7 @@ async function open(browser, query, w, h, opts = {}) {
       const snap = async (name, p, hold = 0, opened = null) => {
         if (only && !name.includes(only)) return;
         await page.evaluate(([a, b, c]) => window.home.set(a, b, c), [p, hold, opened]);
+        await page.waitForTimeout(120);
         await page.screenshot({ path: path.join(SHOTS, `${name}${suffix}.png`) });
         console.log(`${name}${suffix}.png`);
       };

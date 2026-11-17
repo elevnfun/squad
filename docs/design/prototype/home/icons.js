@@ -312,11 +312,15 @@ function buildPack(row, i, reduced) {
 
   // artwork: use art/pack-N.png when it is there
   const img = new Image();
-  img.alt = ''; img.decoding = 'async'; img.draggable = false;
+  img.alt = ''; img.decoding = 'sync'; img.draggable = false;
+  // decoded before it replaces the drawn pack, so the pack is never blank for a frame
   img.onload = () => {
-    art.replaceChildren(img); pack.classList.add('has-art');
-    body.style.setProperty('--shape', 'none');
-    body.style.setProperty('--mask', `url("${img.src}")`);
+    const swap = () => {
+      art.replaceChildren(img); pack.classList.add('has-art');
+      body.style.setProperty('--shape', 'none');
+      body.style.setProperty('--mask', `url("${img.src}")`);
+    };
+    img.decode().then(swap, swap);
   };
   // one shared design: art/pack.png is used when there is no art/pack-N.png
   img.onerror = () => { img.onerror = null; img.src = `${ART}pack.png`; };

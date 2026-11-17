@@ -44,8 +44,8 @@ const POSE = {
   // above the cards. x is set by layoutTitles so the ball stays over the right end of the cards.
   blitz:  { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 84,  focus: 0.06,  near: 0, scrim: 0.7,  idle: 0 },
   blitz2: { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 98,  focus: 0.06,  near: 0, scrim: 0.7,  idle: 0 },
-  draft:  { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 124, focus: -0.06, near: 0, scrim: 0.7,  idle: 0 },
-  draft2: { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 138, focus: -0.06, near: 0, scrim: 0.7,  idle: 0 },
+  draft:  { fit: 560, az: 23, el: 18, x: 0.27, y: -0.15, tear: 0,   gap: 1.4, turn: 124, focus: -0.06, near: 0, scrim: 0.7,  idle: 0 },
+  draft2: { fit: 560, az: 23, el: 18, x: 0.27, y: -0.15, tear: 0,   gap: 1.4, turn: 138, focus: -0.06, near: 0, scrim: 0.7,  idle: 0 },
   access: { fit: 400, az: 23, el: 18, x: 0.13, y: 0.02, tear: 0,    gap: 1, turn: 196, focus: 0,     near: 0, scrim: 0.55, idle: 0 },
   end:    { fit: 350, az: 0,  el: 9,  x: 0.13, y: 0.04, tear: 0,    gap: 0, turn: 216, focus: 0,     near: 0, scrim: 0.55, idle: 1 },
   // what a completed hold blends towards: "the one frame"

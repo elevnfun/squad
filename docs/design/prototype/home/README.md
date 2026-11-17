@@ -2,9 +2,10 @@
 
 The glass match ball from `../ball/`, driven by scroll through the seven beats of
 `docs/design/03-motion-and-hero.md`. One continuous page, a fixed canvas behind real HTML words.
-Everything is made in code: no model files, no images, no generated imagery, no Blender. The one
-place artwork can be dropped in is the five Draft packs (`art/`, below); until then they are drawn
-in code. It is a design prototype only; nothing in `web/` or the backend is touched.
+Everything is made in code: no model files, no Blender. The one piece of generated artwork is
+the Draft pack (`art/`, below); the Blitz fixture cards, the ball and everything else are drawn
+in code. The stills in `poster/` are screenshots of the page's own canvas. It is a design
+prototype only; nothing in `web/` or the backend is touched.
 
 ## Run it
 
@@ -20,14 +21,17 @@ and hold the ball (or focus "Press and hold the ball to open it" and hold Space 
 
 URL parameters, for captures: `still=1` (no time-based motion, no fades), `p=0..1` (story
 position), `hold=0..1` (the ring), `open=1` (a completed hold), `reduced=1` (force the
-reduced-motion path), `dpr=`. `window.home.set(p, hold, open)` draws any frame at once.
+reduced-motion path), `dpr=`, `quality=high|low|min` (fix the quality tier), `nogl=1` (behave as
+if there were no WebGL). `window.home.set(p, hold, open)` draws any frame at once.
 
 ```
 node capture.js beats             # shots/beat-1-hero.png ... beat-7-end.png, hold-mid.png, hold-open.png,
                                   # blitz-step-1..4.png, draft-step-1..4.png (1440x900)
 node capture.js beats 1920 1080   # the same at 1920, saved with a -1920 suffix
-node capture.js sizes             # hero, Blitz and Draft at 1512x860 and 1728x1000
-node capture.js hover             # shots/draft-pack-hover.png: the Draft beat with the pointer on a pack
+node capture.js sizes             # hero, full time, Blitz and Draft at 1512x860 and 1728x1000
+node capture.js hover             # shots/blitz-card-hover.png and draft-pack-hover.png: the pointer on a card, on a pack
+node capture.js poster            # poster/beat-1.jpg to beat-6.jpg: the canvas alone, 2400x1080 (load poster, no-WebGL stills)
+node capture.js modes             # shots/no-webgl-blitz.png (?nogl=1) and shots/quality-low-hero.png (?quality=low)
 node capture.js titles            # prints every title word's box and its gap to the ball at four window sizes
 node capture.js video             # shots/scroll.mp4, 1280x720, 30 fps (the two icon stretches are taken slowly)
 ```
@@ -40,38 +44,57 @@ artwork and falls back when it is not there.
 | Scroll | Beat | Words | What the ball does |
 |---|---|---|---|
 | 0% | Hero | elevn. Fantasy football with a result at full time. | Whole and closed, turning 6 degrees a second. The core is a dark bead. Hold to open |
-| 20% | Full time | A week is too long to wait. Your points are banked at the final whistle. | Camera pushes in until the ball fills the right of the screen, its top edge just under the title word |
+| 20% | Full time | A week is too long to wait. Your points are banked at the final whistle. | A macro: the camera pushes in until the ball is about two screens tall. Glass and steel fill the lower right; the title word stands top left, over the dark |
 | 40% | Two | Two ways to play. One ball, two halves: Matchday Blitz and Draft. | The teardown: panels lift from the poles, the halves part, the core ignites gold |
-| 56% | Blitz | Three squads of three, on any three fixtures. Your captain scores double. A prize every matchday. | The ball draws back to the upper right, both halves in frame, and turns; the Blitz icon plays in front of it (below) |
-| 72% | Draft | Open five packs of three and build a five-a-side. Your captain scores double. Paid weekly. | The same frame, leaning to the Draft half; the ball turns on; the five packs stand in front of it and play (below) |
-| 88% | Access | Hold 150,000 $ELEVN to play Blitz. 300,000 adds Draft. Play free. | The teardown in reverse, stopping at "the one frame": panels back, halves 60 mm apart, core lit |
+| 56% | Blitz | Three squads of three, on any three fixtures. Your captain scores double. A prize every matchday. | The panels close back on, the two halves stay 84 mm apart with the core lit, and the ball draws back to the upper right and turns. The three fixture cards play below it (below) |
+| 72% | Draft | Open five packs of three and build a five-a-side. Your captain scores double. Paid weekly. | The same frame, leaning a little to the Draft half; the ball turns on; the five packs play below it (below) |
+| 88% | Access | Hold 150,000 $ELEVN to play Blitz. 300,000 adds Draft. Play free. | The ball comes back to the centre and grows: "the one frame", halves 60 mm apart, core lit |
 | 100% | End | Fantasy football with a result at full time. [Connect wallet] | The halves close, the core goes dark: the hero frame again |
 
 After the story a plain prizes band scrolls up over the stage (top 5, 50 / 25 / 12 / 8 / 5).
 
 ## The two mode icons (`icons.js`)
 
-Steel rims, glass fill, one gold accent. Each icon is a wide panel at the lower right, in front of
-the ball, with its three notes in a row under it. Each is a function of one number, so the
-scrollbar scrubs it both ways. It plays over the first part of its beat (48.4 to 55.6% for Blitz,
-64.4 to 71.6% for Draft) and rests on its last frame from the beat's mark on. The notes light up
-as their step arrives.
+Each mode has a row of cards at the lower right with its three notes under it; the ball stands
+above the row, upper right, and only its lowest part is behind the cards' top edge. Each icon is
+a function of one number, so the scrollbar scrubs it both ways. It plays over the first part of
+its beat (48.4 to 55.6% for Blitz, 64.4 to 71.6% for Draft) and rests on its last frame from the
+beat's mark on. The notes light up as their step arrives.
 
 | Step | Blitz | Draft |
 |---|---|---|
-| 1 | Nine player tokens appear | Five foil packs appear, fanned, and spread into a row |
-| 2 | They group into three squads of three, one box per fixture | Each pack opens on three players (the pack dims behind them) |
+| 1 | Three fixture cards appear, fanned, and spread into a row | Five foil packs appear, fanned, and spread into a row |
+| 2 | Three players drop into each card, the captain's place first | Each pack opens on three players (the pack dims behind them) |
 | 3 | One captain per squad turns gold with a "×2" | Five of the fifteen are picked, the rest dim |
-| 4 | Squad 1 locks (its box goes solid, a padlock) | The five settle into a five-a-side row, DEF DEF MID ATT ATT, and the packs close again |
-| 5 | Squad 2 locks | The captain turns gold with a "×2" |
-| 6 | Squad 3 locks | The team locks |
+| 4 | Fixture 1's kickoff bar runs out and its lock snaps shut: OPEN becomes LOCKED, the rim goes bright | The five settle into a five-a-side row, DEF DEF MID ATT ATT, and the packs close again |
+| 5 | Fixture 2 locks at its own kickoff | The captain turns gold with a "×2" |
+| 6 | Fixture 3 locks | The team locks |
 
 Under reduced motion and on narrow screens the icons show their last frame.
+
+## The Blitz fixture cards
+
+Three tall glass cards with a steel rim (about 205 x 286 px each at 1440x900), the same family
+as the packs and built the same way (`.pack.fx` > `.pack-body` > `.pack-art` + `.pack-sheen`),
+but drawn entirely in code: the artwork is one SVG per card. Top to bottom a card carries
+"FIXTURE 1" and an OPEN / LOCKED chip, "HOME v AWAY" in Barlow Condensed, "KICKOFF" and a time
+(12:30, 15:00, 17:30) over a thin bar that runs out as kickoff nears, a faint centre circle and
+halfway line, three player tokens (the captain on top, gold, with "×2"), and a padlock on the
+bottom edge whose shackle stands open until kickoff and then snaps shut with a ring. The fixtures
+are placeholders on purpose: no club names, no crests.
+
+The two beats are told apart at a glance by shape and content: rounded glass cards with players
+on them against crimped foil packs with a five-a-side tray under them.
+
+**Hover** is the packs' own (one function, `hoverable`, serves both): the card lifts, tilts in 3D
+towards the cursor, a sheen sweeps across it once, its rim glows gold and the other two dim. It is
+live from the moment the cards stand in their row. Keyboard focus (Tab) gives the same lifted
+state. Under reduced motion there is no lift, tilt or sweep, only the gold rim.
 
 ## The Draft packs and the `art/` folder
 
 The five packs are the subject of the Draft beat: tall foil packs, 2:3, standing in a row (about
-122 x 183 px each at 1440x900, 150 x 225 at 1920x1080). Each is a layered HTML element:
+125 x 188 px each at 1440x900, 137 x 206 at 1920x1080). Each is a layered HTML element:
 
 ```
 .pack            its place in the row, driven by the scroll
@@ -87,7 +110,7 @@ with a ridged strip, brushed foil, one diagonal swoosh with a thin echo and a go
 and the pack's number very large and outlined behind the swoosh. Three tones of the same night
 and steel: packs 1 and 5 night, 2 and 4 smoked, 3 bright steel with a black swoosh.
 
-**Hover** (desktop pointer, only while the packs stand closed in their row: for a short stretch
+**Hover** (shared with the fixture cards; desktop pointer, only while the packs stand closed in their row: for a short stretch
 before they open, and from the point they close again, which includes the beat at rest): the pack
 lifts, tilts in 3D towards the cursor, a sheen sweeps across it once, its rim glows gold and the
 other four dim. Keyboard focus (Tab) gives the same lifted state. Under reduced motion there is
@@ -121,10 +144,16 @@ set works. The hover video is only looked for the first time a pack is hovered.
   dim or cover part of it. The word sits in a band under the bar (capitals 12.5% of the window
   height). It is placed against the ball's outline on screen, measured at the beat's resting
   pose each time the window is sized (`layoutTitles`), not by fixed numbers: centred over the
-  closed ball (ELEVN, FULL TIME, HOLD), and the ball is moved down by whatever is needed for its
-  top to clear the word; or to the left of the part of the ball that reaches into the band
-  (MODES, BLITZ, DRAFT). The word never overlaps the ball at rest; it can cross it briefly while
-  the camera travels between beats.
+  closed ball (ELEVN, HOLD), and the ball is moved down by whatever is needed for its top to
+  clear the word; to the left of the part of the ball that reaches into the band (MODES, BLITZ,
+  DRAFT); or at the left content edge (FULL TIME, where the ball is a macro: the word goes where
+  the ball is not, and the ball is still moved down if it would touch it). The word never
+  overlaps the ball at rest (`node capture.js titles` prints the gap at four window sizes: 19 px
+  at the least); it can cross it briefly while the camera travels between beats.
+- Blitz and Draft: the ball's centre is placed 0.24 window heights in from the right end of the
+  cards (`modeX`), so it stays over them whatever the window's shape.
+- The copy column is 9.4 em of the headline size (`--copy`), so every headline wraps the same
+  way at every width: three lines at most (checked from 1280 to 2560 wide).
 - The mode notes are HTML, in a row under each icon.
 - Hold to open: the gold ring fills in 900 ms (on the wall clock), the seam cracks a little
   while it fills, then the halves part 60 mm and the camera comes round to the three-quarter
@@ -138,6 +167,33 @@ set works. The hover video is only looked for the first time a pack is hovered.
 - Rendering stops in a hidden tab, when nothing has changed, and once the prizes band has
   covered the stage.
 
+## Loading and slower computers
+
+- **Poster first.** `poster/beat-1.jpg` (the hero frame, 98 KB) is an `<img>` in the HTML and is
+  preloaded, so it is on screen before any script has run. The canvas fades in over it (600 ms)
+  once its first frame is drawn, and the poster is then taken away. A poster is the canvas alone
+  at 2400x1080; it is shown at the window's height and slid sideways so the ball lands where
+  the live ball will be (compared with the live canvas at 1440x900 and 1728x1000: no offset),
+  so the cross-fade does not jump. Without JavaScript the poster simply stays behind the words.
+- **Quality tiers** (`BallEngine.setQuality`). The page starts at `high` and times the frames it
+  draws for the first second and a half. If the middle frame took longer than 28 ms (under
+  about 35 frames a second) it steps down one tier and times once more.
+  `?quality=high|low|min` fixes the tier and switches the timing off.
+
+  | Tier | Buffer pixels per CSS pixel | Bloom | Glass refraction | Multisampling |
+  |---|---|---|---|---|
+  | high | the screen's own, 2 at most | full | full-size copy of the scene | 4x |
+  | low | 1 at most | worked out at half size | half-size copy | 2x |
+  | min | 0.75 at most | off | half-size copy | off |
+
+  `low` is hard to tell from `high` (the glass is a little softer). `min` is visibly plainer:
+  without the bloom the highlights lose their glow and edges are rougher.
+- **No WebGL** (the context cannot be made, or is lost later; `?nogl=1` to try it). The canvas,
+  the title words and the hold are not shown. Each beat gets its own still instead,
+  `poster/beat-1.jpg` to `beat-6.jpg` (the end frame reuses the hero's), cross-faded as the beat
+  changes; the words, the cards and the packs work as usual because they are HTML. About
+  580 KB for all six, and only the ones reached are loaded.
+
 ## Engine changes (`../ball/ball.js`)
 
 All earlier setters and URL parameters still work.
@@ -150,6 +206,7 @@ All earlier setters and URL parameters still work.
 - `setSplit` accepts up to 4 (1 is still 60 mm apart).
 - `project(point, object)` and `pxPerMm()` for placing HTML against the ball.
 - `pointer: false` in the options leaves drag and cursor to the page.
+- `setQuality('high' | 'low' | 'min')`: see "Loading and slower computers".
 - Glass variant: the rim ring of each half is satin steel instead of mirror steel, which had
   read as a black band once the ball was apart.
 
@@ -157,66 +214,75 @@ All earlier setters and URL parameters still work.
 
 | Spec | Here | Why |
 |---|---|---|
-| Camera fit 60 mm for the close-up, 260 for Blitz and Draft | About 172 to 180, and 540 to 560 | The spec frames to the short side with nothing else on screen. Here the close-up keeps the ball's top edge in view so the title word can be read, and Blitz and Draft keep both halves in frame with room for the icon |
+| Camera fit 60 mm for the close-up | 76 to 80 | A true macro again (the ball is about two screens tall). The last step to 60 is not taken so that the ball's limb stays in frame; the title word stands top left where the ball is not |
 | Explode 1 at "apart": panels 30 mm out, halves 60 mm apart | Panels at 0.7 (pole panels fully out, the equator row still seated), halves 144 mm apart | At 60 mm with every panel lifted the gap closes up and it reads as one burst ball, not two halves |
 | Access: explode 1 to 0 | Panels return and the halves stay 60 mm apart with the core lit; they close on the way to the end | Gives the access beat its own frame ("the one frame") and the end a last motion |
 | Orbit of 40 degrees per mode | The ball turns about its own axis, 14 degrees during each rest and about 26 between beats; the camera slides to the half | Orbiting the camera foreshortens the diagonal split |
 | Landscape: split axis horizontal, Blitz left | Diagonal, Blitz upper right, Draft lower left | The ball prototype's tilt and "the one frame" are diagonal; kept so the hero, the hold and the story share one axis |
 | Callouts in two columns, each with a leader line | One icon with three notes per beat, lower right, no leader lines | The lines crossed the title word and the ball; the icon now stands directly in front of its ball |
 | Title word behind the ball, refracted by the glass | Title word in front of everything, never overlapping the ball at rest | The owner could not read the whole word: letters were hidden by the ball and dimmed by the wash. Legibility wins |
-| Camera fit 260 for Blitz and Draft | 740, the ball in the upper right | The packs and the Blitz squads are the subject of those beats and need the room |
+| Camera fit 260 for Blitz and Draft | 560, the ball in the upper right, above the cards | The cards and packs are the subject of those beats and need the room |
+| Blitz and Draft show the ball fully torn down | Panels back on, halves 84 mm apart, core lit | Compact enough to be drawn larger (each half 354 px across at 1440x900, up from 267) without covering the cards |
 | Hold: release closes it | Same, and the seam cracks 10% while the ring fills | Feedback during the 900 ms |
 | Keyboard: Space on the focused canvas | A real button under the ball takes Space or Enter | A canvas is a poor focus target for screen readers |
 | Hero and end both carry the gold button | Outlined "Connect wallet" in the words; the one gold button is in the bar | One gold button per view, as in the approved mockup |
-| Blueprint toggle, sound, tilt on phones, poster-first, quality tiers | Not built | Out of scope for this pass (sound was asked to stay off) |
+| Blueprint toggle, sound, tilt on phones | Not built | Out of scope for this pass (sound was asked to stay off) |
+| Three quality tiers chosen by device class | Three tiers chosen by timing the first frames | No device sniffing; the page measures what it actually gets |
 | Rain, lanterns, wet ground, bokeh | Dropped by the owner | The video they came from is no longer a reference |
-| Reduced motion uses pre-captured stills | The live canvas held still per beat | Same result on screen; real stills belong with the poster work |
+| Reduced motion uses pre-captured stills | The live canvas held still per beat | Same result on screen. The pre-captured stills are used when there is no WebGL |
 | Devnet banner, glass nav "once scrolled" | Nav is always glass; no banner | Prototype of the motion, not the chrome |
 
 ## Known weak points
 
-- **The title word no longer passes behind the glass.** It is flat HTML in front of the scene, so
-  the refraction through the ball is gone, and while the camera travels between beats the word
-  can sit over the moving ball for a moment.
-- **The ball is small on Blitz and Draft** (about 45% of the window height, upper right) and its
-  lower half is behind the icon. That was the trade for making the packs the subject.
-- **The packs are drawn, not photographed.** The code-drawn foil reads as a pack but is flat next
-  to the ball: no crumple, no real reflections, and the ball's light does not fall on it. The
-  `art/` images are meant to fix this.
+- **Nothing here has been seen on a real GPU.** Everything was checked in headless Chromium on
+  software WebGL (about one frame a second). That matters most for this round's quality tiers:
+  the 28 ms threshold, and how much each tier really saves, are reasoned, not measured. The
+  timing itself was only seen to work in the sense that the software renderer steps down. The
+  hover's easing and 900 ms sweep, the lock's snap and the poster cross-fade were checked as
+  stills and by state, not by eye at speed.
+- **Blitz, Draft and Access now show nearly the same ball**: panels on, halves apart, core lit.
+  Blitz and Draft differ by a small lean and the turn; Access is the same thing larger and
+  centred. The full teardown is only seen on the MODES beat and on the way out of it.
+- **The fixture cards are flat.** They are clean and readable but they are SVG: no real glass,
+  and the ball's light does not fall on them. Next to the photographed-looking pack they are
+  the plainer of the two, though no longer by much.
+- **The cards do not show "at least one player from each club".** The three tokens are not
+  marked home or away; at this size a mark was unreadable.
+- **The ball still passes behind the top edge of the cards and packs** (a few tens of pixels
+  of its lowest part), most on Draft. It is not hidden, but it is not fully clear either.
+- **The macro has little glass in it at rest**: mostly steel edges, a dark pane and the limb.
+  The exact panel under the camera is whatever the turn gives; it was not art-directed.
+- **The title word does not pass behind the glass.** It is flat HTML in front of the scene, and
+  while the camera travels between beats it can sit over the moving ball for a moment. This
+  follows the round-two decision (legibility first); the 2026-11-17 note in `CLAUDE.md` says
+  the words sit behind the ball but offset, which this prototype does not do.
+- **No WebGL means no title words and no hold**, and the stills are fixed pictures: fine at
+  common window shapes, with dark side margins on windows wider than 20:9.
 - **Packs "close again"** once the five are picked, so that the beat rests on five bright packs
   that can be hovered. It is a small liberty with what happens to an opened pack.
-- **Hover has not been seen at real speed.** The lift, tilt and sweep were checked as stills in
-  headless Chromium; the easing and the 900 ms sweep need a look on a real GPU. The image and
-  hover-video paths were tried once with throwaway test files (both swapped in correctly), not
-  with real artwork.
-- **Missing `art/` files show as 404s in the browser console** (five on load, two more the first
-  time a pack is hovered). Harmless, but noisy; a build step for the real site would remove them.
-- **The close-up is not very close.** To leave the title word clear the camera stops further out
-  (the ball is about 1.2 screens tall). The spec's 60 mm macro is gone.
-- **Blitz and Draft still share one ball pose.** The beats differ by their icon, their notes, the
-  title word and a small lean of the camera.
-- **The Blitz icon is large and plain** next to the packs: nine tokens in three boxes, scaled up
-  to match the packs' width.
+- **Missing `art/pack-N` files show as 404s in the browser console** (five on load, two more the
+  first time a pack is hovered). Harmless, but noisy; a build step for the real site would
+  remove them.
 - **The icon plays while the camera is still arriving** (the first two thirds of it), so on a
   fast scroll the eye has two things to follow.
-- **Hold to open** from the front shows the core partly behind a hexagon frame, and the opened
-  ball can cross the title word while it is held.
-- Frame rate is unmeasured: everything here was checked in headless Chromium on software
-  WebGL (about one frame a second), so timings were verified by state, not by eye. The video
-  is made frame by frame in still mode, so it shows the scrubbed motion but not the idle turn,
-  the word fades, the cursor light or the pack hover.
+- **Hold to open** from the front shows the core partly behind a hexagon frame.
+- The video is made frame by frame in still mode, so it shows the scrubbed motion but not the
+  idle turn, the word fades, the cursor light, the hovers or the poster cross-fade.
 - Glass still does not see other glass, and the inside of the ball has no shadowing (see the
   ball README).
 - The phone view is only "does not break": no title words, the icons sit under the words at
-  their last frame, and the packs are small.
+  their last frame, and the cards and packs are small.
 
 ## Files
 
 - `index.html`, `home.css`, `home.js`: the page
-- `icons.js`: the two mode icons and the Draft packs
-- `art/`: optional pack artwork (see above); empty for now
-- `capture.js`: stills and the video through Playwright and ffmpeg
+- `icons.js`: the Blitz fixture cards, the Draft packs and their shared hover
+- `art/`: the Draft pack artwork and its hover video (see above)
+- `poster/`: `beat-1.jpg` to `beat-6.jpg`, the canvas alone at 2400x1080: the load poster and the
+  no-WebGL stills
+- `capture.js`: stills, posters and the video through Playwright and ffmpeg
 - `shots/`: `beat-1-hero.png` to `beat-7-end.png`, `hold-mid.png`, `hold-open.png`,
   `blitz-step-1.png` to `-4`, `draft-step-1.png` to `-4` (1440x900); the same seventeen with
-  `-1920` (1920x1080); `beat-1-hero`, `beat-4-blitz` and `beat-5-draft` with `-1512x860` and
-  `-1728x1000`; `draft-pack-hover.png`; `scroll.mp4`
+  `-1920` (1920x1080); `beat-1-hero`, `beat-2-full-time`, `beat-4-blitz` and `beat-5-draft` with
+  `-1512x860` and `-1728x1000`; `blitz-card-hover.png`, `draft-pack-hover.png`;
+  `no-webgl-blitz.png`, `quality-low-hero.png`; `scroll.mp4`
