@@ -1,5 +1,7 @@
 # 02. Design direction and the updated design system
 
+> **Note, 2026-11-17:** `web/DESIGN.md` is now the source of truth. Where this document and `web/DESIGN.md` differ, `web/DESIGN.md` wins.
+
 Written 2026-11-17. A proposal for the owner to approve: nothing here is built, and
 `web/DESIGN.md` is not changed until it is. Contrast ratios are calculated (WCAG 2.1) from the hex
 values; nothing has been checked on a rendered page yet. Desktop first throughout.
@@ -34,7 +36,9 @@ and lightest ground they may sit on.
 | `--muted` | `#A4A8AF` | Labels, meta | 8.2 on bg, 8.0 on bg-2, 7.7 on surface, 7.0 on surface-2 |
 | `--steel` (new) | `#C9CCD1` | Cool neutral: eyebrows, icons, rank numbers, the non-captain player marker | 12.2 on bg, 11.8 on bg-2, 11.4 on surface, 10.4 on surface-2 |
 | `--steel-2` (new) | `#858B95` | Tertiary text: timestamps, "provisional", disabled labels | 5.7 on bg, 5.6 on bg-2, 5.3 on surface, 4.9 on surface-2 |
-| `--edge` (new) | white at 8% / 14% / 28% | Card edge / glass edge and hairline rules / secondary button outline and leader lines | Not text |
+| `--line` (new) | white at 8% | Card edge, rules between rows | Not text |
+| `--edge-glass` (new) | white at 14% | Glass edge and hairline rules | Not text |
+| `--edge-strong` (new) | solid `#6F7885` | The edge of every control: secondary button outline, wallet pill, chips | 4.4 on bg, 4.1 on surface, 3.7 on surface-2 (floor 3.0). Replaces white at 28%, which was 2.4 |
 | `--glass` (new) | `#0E1014` at 62%, blur 20px | Smoked glass panels | Text on glass is `--text` or `--muted` only; worst case over a bright canvas glint still above 7:1 because of the tint. To verify on the build |
 | `--accent` | `#F2C14E` | Trophy gold, unchanged role | 11.7 on bg, 11.3 on bg-2, 10.9 on surface; black label on gold 11.7 |
 | `--live` | `#FF5A52` | LIVE only | 6.4 on bg, 5.9 on surface; black label 6.4 |
