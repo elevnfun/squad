@@ -44,7 +44,7 @@ artwork and falls back when it is not there.
 | Scroll | Beat | Words | What the ball does |
 |---|---|---|---|
 | 0% | Hero | elevn. Fantasy football with a result at full time. | Whole and closed, turning 6 degrees a second. The core is a dark bead. Hold to open |
-| 20% | Full time | A week is too long to wait. Your points are banked at the final whistle. | A macro: the camera pushes in until the ball is about two screens tall. Glass and steel fill the lower right; the title word stands top left, over the dark |
+| 20% | Full time | A week is too long to wait. Your points are banked 15 minutes after the final whistle. | A macro: the camera pushes in until the ball is about two screens tall. Glass and steel fill the lower right; the title word stands top left, over the dark |
 | 40% | Two | Two ways to play. One ball, two halves: Matchday Blitz and Draft. | The teardown: panels lift from the poles, the halves part, the core ignites gold |
 | 56% | Blitz | Three squads of three, on any three fixtures. Your captain scores double. A prize every matchday. | The panels close back on, the two halves stay 84 mm apart with the core lit, and the ball draws back to the upper right and turns. The three fixture cards play below it (below) |
 | 72% | Draft | Open five packs of three and build a five-a-side. Your captain scores double. Paid weekly. | The same frame, leaning a little to the Draft half; the ball turns on; the five packs play below it (below) |
