@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>elevn match ball: look prototype</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0A0B0D; overflow: hidden; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  #ui { position: fixed; right: 16px; bottom: 16px; display: flex; gap: 14px; align-items: center;
+        font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase;
+        color: #858B95; background: rgba(14,16,20,.62); border: 1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 7px 12px;
+        -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); user-select: none; }
+  #ui button { all: unset; cursor: pointer; padding: 4px 8px; border-radius: 999px; color: #858B95; }
+  #ui button[aria-pressed="true"] { color: #F4F4F1; background: rgba(255,255,255,.08); }
+  #ui button:focus-visible { outline: 1px solid #F2C14E; }
+  #ui label { display: flex; gap: 6px; align-items: center; }
+  #ui input[type=range] { width: 70px; accent-color: #C9CCD1; }
+  #err { position: fixed; left: 16px; top: 16px; color: #FF6B63; font: 12px ui-monospace, monospace; white-space: pre-wrap; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./node_modules/three/build/three.module.js", "three/addons/": "./node_modules/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<canvas id="c" aria-label="The elevn match ball. Drag to turn it."></canvas>
+<div id="ui">
+  <span><button data-v="steel">Steel</button><button data-v="glass">Glass</button></span>
+  <label>Open <input id="split" type="range" min="0" max="1" step="0.01" value="0"></label>
+  <label>Explode <input id="explode" type="range" min="0" max="1" step="0.01" value="0"></label>
+</div>
+<div id="err"></div>
+<script type="module">
+  import { BallEngine } from './ball.js';
+  const q = new URLSearchParams(location.search);
+  const num = (k, d = 0) => (q.has(k) && isFinite(parseFloat(q.get(k))) ? parseFloat(q.get(k)) : d);
+  const still = q.get('still') === '1';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try {
+    const ball = new BallEngine(document.getElementById('c'), {
+      still, reducedMotion: reduced, variant: q.get('variant') || 'steel',
+      view: q.get('view') || (num('split') > 0.5 ? 'three-quarter' : 'hero'),
+      pixelRatio: q.has('dpr') ? num('dpr', 1) : undefined,
+    });
+    ball.setSplit(num('split')).setExplode(num('explode')).setTurn(num('turn') * Math.PI / 180);   // ?turn= is in degrees
+    if (q.has('studio')) ball.setStudio(num('studio') * Math.PI / 180, 0, true);
+    window.ball = ball;
+
+    const ui = document.getElementById('ui');
+    if (q.get('ui') === '0') ui.style.display = 'none';
+    const sync = () => {
+      ui.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === ball.state.variant)));
+      document.getElementById('split').value = ball.state.split;
+      document.getElementById('explode').value = ball.state.explode;
+    };
+    ui.addEventListener('click', (e) => { if (e.target.dataset.v) { ball.setVariant(e.target.dataset.v); sync(); } });
+    document.getElementById('split').addEventListener('input', (e) => ball.setSplit(e.target.value));
+    document.getElementById('explode').addEventListener('input', (e) => ball.setExplode(e.target.value));
+    sync();
+
+    // First full render, then the flag the capture script waits for.
+    ball.render();
+    requestAnimationFrame(() => { ball.render(); window.__ballReady = true; ball.start(); });
+  } catch (e) {
+    document.getElementById('err').textContent = String(e && e.stack || e);
+    window.__ballError = String(e);
+  }
+</script>
+</body>
+</html>
