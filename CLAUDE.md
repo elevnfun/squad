@@ -56,6 +56,8 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
   Sources: the three leagues' official sites, Sky Sports, BBC Sport and FotMob.
 - First visit: an interactive tutorial built into the website highlights each area and explains
   it, and can be skipped. Not a PDF. Built last, after the rest of the website is complete.
+- Desktop first: the desktop website gets much the bigger focus. The phone view must work but is
+  adapted from the desktop design.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 
 Background: `docs/blueprint/reference/six-formats.md`. Every game number lives in `config.toml`.

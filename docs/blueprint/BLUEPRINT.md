@@ -13,7 +13,8 @@ The project runs in four sections: 1 blueprint and planning (this file), 2 desig
 Cut the wait for a result from one week to about two hours, with two game modes only, so the
 site never turns into a jumble of games.
 
-Audience: crypto-native football fans on phones, arriving from X and Telegram.
+Audience: crypto-native football fans arriving from X and Telegram. The desktop website gets
+much the bigger focus; the phone view must work but is adapted from the desktop design. [Owner]
 
 Ground rules: free to enter for $ELEVN holders; prizes from creator fees, except the Blitz
 weekly prize, which the team pays from its own wallet; real football data; legal review still pending.
@@ -121,7 +122,7 @@ Three places:
 | Ranks | The Blitz daily and weekly boards, the Draft weekly board, and your prizes |
 | Chat | The community room |
 
-- Phone: a bottom tab bar. Desktop: the same three in the top bar.
+- Desktop, the main view: the three in the top bar. Phone: the same three in a bottom tab bar.
 - Logged out, the home page is the scroll story. Logged in, the logo opens Today.
 - Each mode is one card with one state and one button: Play, Live or Result.
 - One scoring engine, one sign-in, one prize page for both modes.

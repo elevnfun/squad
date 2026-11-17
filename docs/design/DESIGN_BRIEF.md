@@ -109,3 +109,9 @@ On the motion and hero spec (`docs/design/03-motion-and-hero.md`):
   6. Sound is allowed in the hero only, off until asked for.
   7. Durations become named tokens.
 
+Desktop first (owner, 2026-11-17): the desktop website gets much the bigger focus. Screens,
+the scroll story and the motion are designed for a desktop browser first and at full quality
+there. The phone view must still work and be usable, but it is adapted from the desktop design,
+not the other way round. This replaces the earlier phone-first assumption in the blueprint and
+in `web/DESIGN.md`.
+
