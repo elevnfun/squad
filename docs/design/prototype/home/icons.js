@@ -1,6 +1,7 @@
 // The two mode icons: flat SVG, steel rims, glass fill, one gold accent. Each is a function
 // of one number, t from 0 to 1, so the scrollbar scrubs it forwards and backwards.
-//   Blitz: three fixture cards appear and spread into a row, three players drop into each,
+//   Blitz: three fixture cards appear and spread into a row, three players drop into each
+//          (home on the left, away on the right, at least one from each club),
 //          a captain is marked in each, then each card's kickoff bar runs out and its lock
 //          snaps shut, one card after the other. The cards are HTML like the packs, and
 //          share their hover; their body is art/card.png, with a glint drawn in code on hover.
@@ -154,9 +155,17 @@ function fixtureCard(host, i) {
   text(81, 99, 12.5, KICKOFFS[i], { fill: '#f4f4f1', 'letter-spacing': 0.6 });
   el('rect', { x: 23, y: 108, width: BAR, height: 2.4, rx: 1.2, fill: '#ffffff', 'fill-opacity': 0.14 }, s);
   const bar = el('rect', { x: 23, y: 108, width: BAR, height: 2.4, rx: 1.2, fill: '#f4f4f1' }, s);
-  // the squad: captain on top, two below
+  // the squad, in two columns either side of a faint centre line: HOME on the left, AWAY on the
+  // right, as in the header. At least one player from each club, so the split is 2 + 1 or 1 + 2
+  // (it differs from card to card), and the captain (first in the list) can be on either side.
+  const sides = el('g', { opacity: 0 }, s);
+  el('path', { d: 'M108 128V274', stroke: '#ffffff', 'stroke-opacity': 0.26, 'stroke-width': 1, 'stroke-dasharray': '3 5' }, sides);
+  for (const [x, str] of [[HOME_X, 'HOME'], [AWAY_X, 'AWAY']]) {
+    const t = el('text', { x, y: 275, 'text-anchor': 'middle', 'font-family': '"Barlow Condensed", "Arial Narrow", sans-serif', 'font-weight': 700, 'font-size': 14.5, 'letter-spacing': 1.8, fill: '#c9ccd1' }, sides);
+    t.textContent = str;
+  }
   const toks = el('g', {}, s), top = el('g', {}, s);
-  const players = [[108, 170, 2.25], [60, 254, 1.9], [156, 254, 1.9]].map(([x, y, sc]) => ({ ...token(toks, id), x, y, sc }));
+  const players = SQUADS[i].map(([side, y], j) => ({ ...token(toks, id), x: side === 'H' ? HOME_X : AWAY_X, y, sc: j === 0 ? 2.1 : 1.85, from: side === 'H' ? -1 : 1 }));
   const cap = badge(top);
   // the lock, on the card's bottom edge: its shackle stands open until kickoff
   const flash = el('circle', { cx: 108, cy: FH - 2, r: 16, fill: 'none', stroke: '#f4f4f1', 'stroke-width': 1.6, opacity: 0 }, top);
@@ -164,9 +173,17 @@ function fixtureCard(host, i) {
   const disc = el('circle', { r: 9, fill: '#0e1014', stroke: '#c9ccd1', 'stroke-width': 1 }, lock);
   const shackle = el('path', { d: 'M-2.6 -1v-1.8a2.6 2.6 0 0 1 5.2 0v1.8', fill: 'none', stroke: '#f4f4f1', 'stroke-width': 1.3, 'stroke-linecap': 'round' }, lock);
   const block = el('rect', { x: -4, y: -1, width: 8, height: 6, rx: 1.4, fill: '#f4f4f1' }, lock);
-  return { rim, chip, open, shut, bar, players, cap, flash, lock, disc, shackle, block };
+  return { rim, chip, open, shut, bar, sides, players, cap, flash, lock, disc, shackle, block };
 }
 const BAR = 106;                                // the kickoff bar stops short of the stripe
+// each card's three players: [side, y], the captain first. Two stand at 152 and 222, one alone at 187
+const HOME_X = 62, AWAY_X = 154;
+const SQUADS = [
+  [['H', 152], ['H', 222], ['A', 187]],         // fixture 1: two home, one away, a home captain
+  [['A', 152], ['H', 187], ['A', 222]],         // fixture 2: one home, two away, an away captain
+  [['A', 187], ['H', 152], ['H', 222]],         // fixture 3: two home, one away, the away player is captain
+];
+const SPLIT = SQUADS.map((q) => { const h = q.filter(([side]) => side === 'H').length; return `${h} home and ${3 - h} away`; });
 
 // ---------------------------------------------------------------- the card's hover glint
 // The pack's hover video, remade in code for the cards. Over 4 seconds, looping: the card
@@ -300,7 +317,7 @@ export function blitzIcon(host) {
     const cx = 380 + (i - 1) * 250;
     const card = div('pack fx'), body = div('pack-body'), art = div('pack-art'), sheen = div('pack-sheen');
     card.tabIndex = -1;
-    card.setAttribute('role', 'img'); card.setAttribute('aria-label', `Fixture ${i + 1} of 3: a squad of three with a captain, locked at its ${KICKOFFS[i]} kickoff`);
+    card.setAttribute('role', 'img'); card.setAttribute('aria-label', `Fixture ${i + 1} of 3: a squad of three, ${SPLIT[i]}, with a captain, locked at its ${KICKOFFS[i]} kickoff`);
     const parts = fixtureCard(art, i);
     body.append(art, sheen); card.append(body); row.append(card);
     Object.assign(card.style, { left: `${((cx - CW / 2) / W) * 100}%`, top: `${(CY / H) * 100}%`, width: `${(CW / W) * 100}%` });
@@ -341,14 +358,15 @@ export function blitzIcon(host) {
       st.setProperty('--rot', `${((i - 1) * 9 * (1 - spread)).toFixed(2)}deg`);
       st.opacity = a.toFixed(3);
       if (a < 0.999) live = false;
-      // three players drop in, the captain first
+      // the two sides are marked, then three players drop in on their own side, the captain first
+      c.sides.setAttribute('opacity', seg(t, 0.13 + i * 0.05, 0.2 + i * 0.05).toFixed(3));
       c.players.forEach((p, j) => {
         const at = 0.18 + i * 0.05 + j * 0.03, o = seg(t, at, at + 0.09);
-        set(p.g, p.x, p.y - 16 * (1 - o), p.sc * (0.6 + 0.4 * o), o);
+        set(p.g, p.x + 12 * p.from * (1 - o), p.y - 16 * (1 - o), p.sc * (0.6 + 0.4 * o), o);
         p.cap.setAttribute('opacity', j === 0 ? seg(t, 0.44 + i * 0.03, 0.52 + i * 0.03) : 0);
       });
       const b = seg(t, 0.48 + i * 0.03, 0.56 + i * 0.03);
-      set(c.cap, 108 + 27, 170 - 24, 1.5 * (0.5 + 0.5 * b), b);
+      set(c.cap, c.players[0].x + 25, c.players[0].y - 22, 1.5 * (0.5 + 0.5 * b), b);
       // kickoff: the bar runs out, then the lock snaps shut
       const k0 = 0.64 + i * 0.11, k1 = k0 + 0.045;
       const left = 1 - clamp01((t - 0.52) / (k0 - 0.52));

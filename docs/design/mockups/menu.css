@@ -30,3 +30,15 @@ body.menu-open .menu-panel { transform: none; visibility: visible; transition-de
 @media (max-width: 700px) { .menu-btn { min-width: 40px; padding: 0 10px; font-size: 20px; } .menu-btn .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .menu-panel { width: 100vw; } .menu-panel .mp-in { padding: 24px 20px; } .menu-panel .mp-main .t { font-size: 30px; } }
 @media (prefers-reduced-motion: reduce) { .menu-panel, .menu-scrim { transition: none !important; } }
 .menu-panel:focus, .menu-panel:focus-visible { outline: none; }
+/* Winnings sits in the bar on desktop; on a phone the bar shows only a compact chip, so the menu carries it (not for guests) */
+.menu-panel .mp-foot a.mp-win { display: none; }
+@media (max-width: 700px) {
+  .menu-panel .mp-foot { flex-wrap: wrap; gap: 4px 24px; }
+  .menu-panel .mp-foot a { min-height: 44px; font-size: 15px; }
+  .menu-panel .mp-foot a.mp-win { display: inline-flex; }
+  body.guest .menu-panel .mp-foot a.mp-win { display: none; }
+  .menu-panel .mp-main a { padding: 12px; }
+  .menu-panel .mp-main .d { font-size: 15px; }
+  .menu-panel .here { font-size: 12px; }
+  body.menu-open .tabbar { display: none; }
+}

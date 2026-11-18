@@ -206,26 +206,70 @@ ul, ol { list-style: none; }
   .btn { transition: none; }
 }
 
-/* ---------- narrow screens: must not break. The ball is a still behind the words, which flow. ---------- */
+/* ---------- narrow screens (900 px and under): a plain page, one block per beat ----------
+   Each beat is its own still of the ball (poster/beat-N.jpg, the canvas alone at 2400 x 1080)
+   in a band on top, then the words, then the cards or packs in a row that scrolls sideways.
+   The live canvas, the wash, the title words, the rail and the hold are not shown.
+   --u is the unit everything is sized in: 1% of the window's width, capped for tablets. */
 @media (max-width: 900px) {
-  .wrap { width: calc(100% - 48px); }
-  .links { display: none; }
-  .menu { display: none; }
-  #stage { opacity: .55 !important; }
-  /* the hero still, placed like the narrow canvas: the ball half the width, centred, a third of the way down */
-  #stills img, #stills img:first-child { height: 78vw; left: -59vw; top: calc(33vh - 42vw); opacity: 0; }
-  #stills img:first-child { opacity: .55; }
-  #scrim { background: linear-gradient(180deg, rgba(10,11,13,0) 30%, rgba(10,11,13,.8) 62%); opacity: 1; }
-  .beat, #hero, #full-time, #two, #blitz, #draft, #access, #end { height: auto; min-height: 92vh; display: flex; align-items: flex-end; padding-bottom: 12vh; }
-  .js .words, .js .beat.on .words { position: static; opacity: 1; visibility: visible; transform: none; margin: 0; width: 100%; }
-  .js .mode, .js .beat.on .mode { position: static; opacity: 1; visibility: visible; transform: none; width: auto; margin: 28px 24px 0; }
-  #titles { display: none; }
-  .beat { flex-direction: column; justify-content: flex-end; align-items: stretch; }
-  .js .rail, .js .hold, #overlay { display: none; }
-  .lead { font-size: 18px; }
-  .sh { display: block; } .sh .r { margin-top: 24px; }
-  .boards { grid-template-columns: 1fr; }
-  .band { padding: 64px 0; }
+  :root { --u: min(1vw, 5.4px); --h1: clamp(30px, 8.4vw, 44px); --copy: 560px; }
+  .wrap { width: calc(100% - 40px); }
+  .links, .menu-t { display: none; }
+  .nav .right { gap: 8px; }
+  .logo { display: inline-block; line-height: 44px; }
+  .btn, .btn-sm { height: 44px; }
+  .menu { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--edge-control); font-size: 22px; font-weight: 500; line-height: 1; }
+  #stage, #stills, #scrim { visibility: hidden; }
+  #titles, #overlay, .js .rail, .js .hold { display: none; }
+
+  .beat, #hero, #full-time, #two, #blitz, #draft, #access, #end { height: auto; min-height: 0; padding-bottom: 72px; }
+  #hero { padding-top: var(--nav); }
+  /* the still: shown --s tall, slid so the ball (at --fx, --fy of the picture) is centred in the band */
+  .beat::before { content: ""; display: block; height: calc(var(--bh) * var(--u)); background-repeat: no-repeat;
+    background-size: auto calc(var(--s) * var(--u));
+    background-position: calc(50vw - var(--fx) * var(--s) * var(--u) * 2400 / 1080) calc((var(--bh) / 2 - var(--fy) * var(--s)) * var(--u));
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 16%, #000 80%, transparent); mask-image: linear-gradient(180deg, transparent, #000 16%, #000 80%, transparent); }
+  #hero::before { -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent); mask-image: linear-gradient(180deg, #000 80%, transparent); }
+  #hero::before, #end::before { background-image: url("poster/beat-1.jpg"); --s: 104; --fx: .628; --fy: .57; --bh: 78; }
+  /* full time is a close-up in the picture's right-hand corner: the picture fills the band from the right and fades out to the left */
+  #full-time::before { background-image: url("poster/beat-2.jpg"); --s: 70; --bh: 70; background-position: right top;
+    -webkit-mask-image: linear-gradient(90deg, transparent calc(100% - 96 * var(--u)), #000 calc(100% - 40 * var(--u))), linear-gradient(180deg, transparent, #000 16%, #000 80%, transparent);
+    mask-image: linear-gradient(90deg, transparent calc(100% - 96 * var(--u)), #000 calc(100% - 40 * var(--u))), linear-gradient(180deg, transparent, #000 16%, #000 80%, transparent);
+    -webkit-mask-composite: source-in; mask-composite: intersect; }
+  #two::before { background-image: url("poster/beat-3.jpg"); --s: 84; --fx: .615; --fy: .525; --bh: 84; }
+  #blitz::before { background-image: url("poster/beat-4.jpg"); --s: 132; --fx: .668; --fy: .355; --bh: 72; }
+  #draft::before { background-image: url("poster/beat-5.jpg"); --s: 120; --fx: .68; --fy: .345; --bh: 72; }
+  #access::before { background-image: url("poster/beat-6.jpg"); --s: 100; --fx: .625; --fy: .585; --bh: 74; }
+
+  .words, .js .words, .js .beat.on .words { position: static; opacity: 1 !important; visibility: visible; transform: none; margin: 0; padding-top: 8px; width: min(var(--copy), 100%); transition: none; }
+  .words .eyebrow { margin-bottom: 14px; }
+  .words .lead { margin-top: 16px; max-width: 34ch; }
+  .words .btns { margin-top: 28px; }
+  .lead { font-size: 17px; }
+
+  /* the cards and the packs: one row, wider than the phone, scrolled sideways, a card at a time */
+  .js .mode, .js .beat.on .mode { position: static; opacity: 1 !important; visibility: visible; transform: none; width: auto; margin: 12px 0 0; transition: none; }
+  .mode .icon { aspect-ratio: auto; overflow-x: auto; overflow-y: hidden; padding: 28px 12px 22px; scroll-snap-type: x mandatory; scroll-padding-inline: 20px;
+    -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .mode .icon::-webkit-scrollbar { display: none; }
+  .mode .packs { position: relative; inset: auto; width: 840px; aspect-ratio: 760 / 350; }
+  .draft-icon > svg { inset: 28px auto auto 12px; width: 840px; height: auto; }
+  .mode .pack { scroll-snap-align: center; }
+  .callouts { margin: 6px 20px 0; gap: 8px 24px; }
+  .pack-num { font-size: 13px !important; }
+
+  .past-story .words, .past-story .mode { pointer-events: auto; }
+  .sh { display: block; margin-bottom: 32px; } .sh .r { margin-top: 24px; }
+  .boards { grid-template-columns: 1fr; gap: 16px; }
+  .card { padding: 20px; }
+  .band { padding: 64px 0 56px; }
+  .foot { margin-top: 32px; }
+}
+/* a tablet is wide enough for the whole row */
+@media (min-width: 700px) and (max-width: 900px) {
+  .mode .icon { margin-inline: 20px; overflow: visible; padding: 28px 0 12px; }
+  .mode .packs, .draft-icon > svg { width: 100%; }
+  .draft-icon > svg { left: 0; }
 }
 
 /* the pack's number, drawn over shared artwork (art/pack.png) and its hover video */

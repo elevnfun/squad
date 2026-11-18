@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Banked · elevn mockup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="menu.css"><script src="menu.js" defer></script></head>
+<link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="menu.css"><script src="menu.js" defer></script><script src="tabbar.js" defer></script></head>
 <body>
 <div class="devnet">Devnet test: prizes shown in this mockup are sample test SOL</div>
 <header class="nav"><div class="wrap">
@@ -49,13 +49,13 @@
 <hr class="rule" style="margin:28px 0">
 <p class="small muted">Top 5 are paid, 50 / 25 / 12 / 8 / 5 percent. Results are final 15 minutes after the day's last match; half is collectable at once, half is released 20% a day. The $500 weekly prize (3.13 SOL) runs Tuesday to Monday.</p>
 </aside></div></div>
-</main><div style="position:absolute;inset:96px 0 0 0;z-index:30;display:grid;place-items:start center;padding-top:36px;background:radial-gradient(ellipse 40% 50% at 50% 45%, rgba(206,210,218,.16), rgba(10,11,13,.6) 80%), rgba(10,11,13,.5)">
-<section class="glass" role="dialog" aria-modal="true" aria-labelledby="bk-t" style="width:580px;padding:0;overflow:hidden;position:relative">
+</main><div class="bk-ov" style="position:absolute;inset:96px 0 0 0;z-index:30;display:grid;place-items:start center;padding-top:36px;background:radial-gradient(ellipse 40% 50% at 50% 45%, rgba(206,210,218,.16), rgba(10,11,13,.6) 80%), rgba(10,11,13,.5)">
+<section class="glass bk-dlg" role="dialog" aria-modal="true" aria-labelledby="bk-t" style="width:min(580px,100%);padding:0;overflow:hidden;position:relative">
 <div style="height:3px;background:linear-gradient(90deg,rgba(242,193,78,0),var(--accent) 20%,var(--accent) 80%,rgba(242,193,78,0))"></div>
-<div style="padding:40px 48px 40px">
-<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px"><h2 id="bk-t" class="word gold-o" style="font-size:96px">Banked</h2><span class="small muted" style="padding-bottom:6px;text-align:right">Squad 1 of 3 · final</span></div>
+<div class="bk-in" style="padding:40px 48px 40px">
+<div class="bk-top" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px"><h2 id="bk-t" class="word gold-o" style="font-size:96px">Banked</h2><span class="small muted" style="padding-bottom:6px;text-align:right">Squad 1 of 3 · final</span></div>
 <p class="small" style="margin-top:20px;font-weight:600"><span class="crest">ARS</span> Arsenal 2-1 Tottenham <span class="muted" style="font-weight:500">· Premier League</span></p>
-<div style="margin:32px 0 8px"><span style="font-size:96px;font-weight:700;letter-spacing:-.04em;line-height:1">+34</span><span style="font-size:28px;font-weight:600;margin-left:14px;color:var(--steel)">banked</span></div>
+<div class="bk-num" style="margin:32px 0 8px"><span style="font-size:96px;font-weight:700;letter-spacing:-.04em;line-height:1">+34</span><span style="font-size:28px;font-weight:600;margin-left:14px;color:var(--steel)">banked</span></div>
 <p style="font-size:24px;font-weight:600;letter-spacing:-.01em">Up to 12th</p>
 <p class="small muted" style="margin-top:6px">The prize line is 5th place, currently 74 pts. Two squads still to play.</p>
 <div class="ruled" style="margin-top:32px;font-size:15px">
@@ -63,7 +63,7 @@
 <div class="stat"><span style="font-weight:600"><span class="cap ring" style="margin-right:10px;visibility:hidden">C</span>Declan Rice</span><span class="v">10</span></div>
 <div class="stat"><span style="font-weight:600"><span class="cap ring" style="margin-right:10px;visibility:hidden">C</span>Micky van de Ven</span><span class="v">8</span></div>
 </div>
-<div style="display:flex;gap:12px;margin-top:36px;align-items:center"><a class="btn btn-gold" href="#">Share to X</a><a class="btn btn-line" href="today.html">Back to Today</a></div>
+<div class="bk-act" style="display:flex;gap:12px;margin-top:36px;align-items:center"><a class="btn btn-gold" href="#">Share to X</a><a class="btn btn-line" href="today.html">Back to Today</a></div>
 <p class="small steel2" style="margin-top:20px">Banked about 15 minutes after full time. Banked points are final; later stat corrections are ignored. Prizes: results are final 15 minutes after the day's last match; half is collectable at once, half is released 20% a day.</p>
 </div></section></div>
 <footer class="foot-note"><div class="wrap"><span>Design mockup. Sample data: clubs and players are real names, every result, rank, wallet and amount is made up.</span><span>Sample rate used: 1 SOL = $160</span></div></footer>

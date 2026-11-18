@@ -651,3 +651,172 @@ main:has(> .rays) { position: relative; }   /* the rays sit inside <main>, so th
 @media (max-width: 1100px) { .wfigs { grid-template-columns: 1fr; } .fig { border-left: 0; border-top: 1px solid var(--line); padding: 24px; } .fig:first-child { border-top: 0; } .wcols { grid-template-columns: 1fr; } .wcols > div + div { border-left: 0; border-top: 1px solid var(--line); } .wcols > div { padding: 24px; } .wbar { padding: 16px 24px; } .wbar .hint { margin-left: 0; text-align: left; } .wnote { margin: 0 24px 24px; flex-wrap: wrap; } .rays i:nth-child(-n+2) { display: none; } }
 @media (max-width: 700px) { .wchip a + a { padding: 0 12px 0 10px; } .hrow { grid-template-columns: 1fr auto; row-gap: 6px; } .hrow .dt { grid-column: 1 / -1; order: 3; } .strip { flex-wrap: wrap; gap: 6px 12px; } .strip .msg { flex: 1 1 100%; } .msg { grid-template-columns: 1fr; gap: 4px; } .nav .right .btn-gold { padding: 0 14px; } .banner { text-align: left; } .composer { flex-wrap: wrap; }  }
 @media (max-width: 700px) { .rays { height: 150px; } .rays i:nth-child(2n) { display: none; } .rays i { opacity: .45 !important; } }
+
+/* =====================================================================
+   PHONE POLISH (2026-11-18, 700px and below only; nothing here applies at desktop widths).
+   Top bar in one row, bottom tab bar, single-column screens, 15px body type, 44px targets.
+   ===================================================================== */
+.tabbar { display: none; }
+@media (max-width: 700px) {
+  html { -webkit-text-size-adjust: 100%; }
+  /* top bar: logo, compact wallet chip (Winnings lives in the menu), menu button; one row, never wraps */
+  .nav .wrap { flex-wrap: nowrap; gap: 8px; }
+  .nav .logo { flex: none; }
+  .nav .right { flex: none; gap: 2px; min-width: 0; margin-left: auto; }
+  .wchip { height: 44px; flex: none; }
+  .wchip a { white-space: nowrap; padding: 0 14px 0 12px; gap: 8px; }
+  .wchip a + a { display: none; }
+  .nav .right .btn { height: 44px; flex: none; }
+  .nav .right .menu-btn { height: 44px; min-width: 44px; }
+  /* bottom tab bar */
+  .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 0 8px env(safe-area-inset-bottom, 0px);
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03)), rgba(10,11,13,.88);
+    -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 -14px 30px -18px rgba(0,0,0,.9); }
+  .tabbar a { position: relative; flex: 1 1 0; min-width: 0; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--muted); -webkit-tap-highlight-color: transparent; }
+  .tabbar a.cur { color: var(--text); }
+  .tabbar a.cur::after { content: ""; position: absolute; left: 50%; top: 4px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--accent); }
+  .tabbar a:focus-visible { outline-offset: -6px; }
+  body.has-tabbar { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (max-width: 700px) {
+  /* ---- page frame: 16px page padding, 15px body type ---- */
+  .wrap { width: calc(100% - 32px); }
+  .small, .mode .status, .sq-row, .fig .sub, .hrow, .prz, .checks, .stat .k, .tile .why, .fxcard .note, .fxcard .sub, .mode .nums .lbl, .hrow .dt small, .wnote p, .wbar .hint, .sq-row .fx small, .lrow, .msg, .fxr { font-size: 15px; }
+  .fxcard .hd .r, .pcard .mt, .banner { font-size: 13px; }
+  .ph { padding: var(--s5) 0 var(--s5); row-gap: var(--s3); }
+  .ph .lead { font-size: 17px; }
+  .lead { font-size: 17px; }
+  .word, .ph h1.word { font-size: min(88px, calc((100vw - 32px) / 3.9)); }
+  .ph h1:not(.word) { font-size: 30px; letter-spacing: -.025em; }
+  .g { padding-bottom: 32px !important; }
+  main[style*="padding-bottom"] { padding-bottom: 32px !important; }
+  .col { margin-bottom: 16px; }
+  .foot-note { padding: 24px 0 32px; font-size: 12px; }
+  .btn { height: 48px; }
+  .btn-sm { height: 44px; }
+  .big { font-size: 40px; }
+  .cd { font-size: 44px; padding: 12px 14px; max-width: 100%; }
+  .cd small { font-size: 16px; margin: 0 8px 0 2px; }
+  /* rays: fewer, fainter, ending above the first line of text */
+  .rays { height: 130px; }
+  .rays i { opacity: .3 !important; }
+
+  /* ---- Today ---- */
+  .mode { padding: 20px 16px; border-radius: 16px; }
+  .mode .top { align-items: flex-start; gap: 12px; }
+  .mode .nums { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; margin: 20px 0; }
+  .mode .nums > :nth-child(3) { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .mode .nums > :nth-child(3) .lbl { margin: 0; }
+  .mode .nums > :nth-child(3) .big { font-size: 32px; }
+  .sq-row { grid-template-columns: 20px minmax(0, 1fr) auto; column-gap: 12px; row-gap: 8px; }
+  .sq-row .pts { display: block; grid-column: 3; grid-row: 1; min-width: 0; font-size: 20px; }
+  .sq-row .badge { grid-column: 2; justify-self: start; }
+  .mode .foot .btn, .so-act .btn, .bk-act .btn { width: 100%; }
+  .strip { padding: 16px; }
+  .col > aside.glass { position: static !important; }
+  .glass { padding: 20px 16px; border-radius: 20px; }
+  .glass[style*="padding"]:not([style*="padding:0"]) { padding: 20px 16px !important; }
+  .card[style*="padding"]:not([style*="padding:0"]) { padding: 20px 16px !important; }
+  .stat .v { font-size: 18px; }
+
+  /* ---- Ranks ---- */
+  .tabs { gap: 8px; margin-bottom: 24px !important; }
+  .tabs a { flex: 1 1 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px 4px; min-height: 56px; font-size: 14px; line-height: 1.3; }
+  .rk-win { flex-direction: column; align-items: flex-start !important; gap: 12px !important; }
+  .rk-win p:first-of-type { font-size: 30px !important; }
+  .rk-win .small { max-width: none !important; text-align: left !important; }
+  .board .head, .lrow { grid-template-columns: 32px minmax(0, 1fr) 56px 44px; column-gap: 8px; padding: 0 12px; }
+  .board .head > :nth-child(3) { display: none; }
+  .lrow { height: auto; min-height: 64px; padding-top: 10px; padding-bottom: 10px; grid-template-areas: "rk wl pts mv" "rk dots pts mv"; row-gap: 4px; }
+  .lrow .rk { grid-area: rk; } .lrow .wl { grid-area: wl; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lrow .dots { display: flex; grid-area: dots; } .lrow .pts { grid-area: pts; } .lrow .mv { grid-area: mv; }
+  .lrow > :nth-child(3) { display: flex; }
+  .lrow.you .wl .you-tag { margin-left: 6px; }
+  .pline span { right: 12px; }
+  .bd-foot { flex-direction: column; gap: 10px; padding: 14px 16px !important; }
+  .bd-key { flex-wrap: wrap; gap: 8px 16px !important; }
+  .prz .r { grid-template-columns: 36px 44px 1fr; }
+
+  /* ---- Chat ---- */
+  .msgs .msg { grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 14px 16px; }
+  .msgs .msg .wl { grid-column: 1; grid-row: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .msgs .msg .tm { grid-column: 2; grid-row: 1; padding-top: 0; font-size: 12px; }
+  .msgs .msg > span:nth-child(2) { grid-column: 1 / -1; grid-row: 2; line-height: 1.5; }
+  .composer { padding: 12px 16px; gap: 10px; }
+  .composer .field { flex: 1 1 140px; min-width: 0; }
+  .composer .btn { flex: 0 0 auto; }
+  .composer[data-guest] .btn { flex: 1 1 100%; }
+
+  /* ---- Winnings ---- */
+  .wpanel { border-radius: 20px; }
+  .fig { padding: 20px 16px; }
+  .fig .amt { font-size: 40px; margin-top: 10px; }
+  .fig .amt .u { font-size: 18px; }
+  .fig .state { font-size: 24px; }
+  .fig .sub { max-width: none; }
+  .wbar { flex-direction: column; align-items: stretch; gap: 10px; padding: 16px; }
+  .wbar .btn { width: 100%; }
+  .wbar .hint { text-align: left; max-width: none; margin: 4px 0 0; }
+  .frozenbar { flex-direction: column; align-items: stretch; gap: 14px; padding: 16px; border-radius: 20px 20px 0 0; }
+  .frozenbar p { flex: none; }
+  .frozenbar .badge { align-self: flex-start; }
+  .frozenbar .btn { margin-left: 0; width: 100%; }
+  .wcols > div { padding: 20px 16px; }
+  .wnote { margin: 0 16px 16px; padding: 16px; }
+  .wnote .btns { margin-left: 0; }
+  .hrow { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "dt am" "d bg"; gap: 8px 12px; align-items: start; }
+  .hrow .dt { grid-area: dt; grid-column: auto; order: 0; font-size: 15px; }
+  .hrow .am { grid-area: am; }
+  .hrow .d { grid-area: d; font-size: 14px; align-self: center; }
+  .hrow > :nth-child(2) { grid-area: bg; justify-self: end; }
+  .how li { font-size: 15px; }
+
+  /* ---- Blitz pick: fixtures, then squads, then the builder, then the board ---- */
+  .pk-fx .fxr, .flist .fxr { grid-template-columns: 24px 50px minmax(0, 1fr) !important; gap: 4px 10px !important; padding: 10px 8px; min-height: 56px; font-size: 15px; }
+  .pk-fx .fxr .m { white-space: normal !important; overflow: visible; flex-wrap: wrap; row-gap: 0; }
+  .pk-fx .fxr .s { grid-column: 3; text-align: left; white-space: normal !important; font-size: 13px; }
+  .pk-fx .fxr .t { font-size: 14px; }
+  .flist { padding: 4px 8px 8px; }
+  .fxcard { padding: 16px 12px 24px; }
+  .fxcard .hd { gap: 8px; }
+  .fxcard .hd .teams { flex-wrap: wrap; row-gap: 4px; font-size: 16px; }
+  .fxcard .hd .r { margin-left: 30px; width: auto; }
+  .fxcard .sub { margin-left: 0; }
+  .slots { gap: 8px; margin-top: 16px; }
+  .sl { padding: 12px 4px 10px; }
+  .sl .nm { font-size: 14px; }
+  .sl .mt { font-size: 12px; letter-spacing: 0; }
+  .pk-bd .card { padding: 20px 12px !important; }
+  .pk-bdhd { flex-direction: column; gap: 8px; }
+  .pk-bdhd .small { text-align: left !important; }
+  .tile { padding: 12px; }
+  .tile .nm { font-size: 15px; }
+  .pk-save { flex-direction: column; align-items: stretch !important; gap: 12px !important; }
+  .pk-save .small { max-width: none !important; }
+  .pk-save .btn { width: 100%; }
+  .pk-board { margin-top: 8px; }
+  .squad .chip { flex: 1 1 100%; }
+
+  /* ---- Shootout / banked / connect ---- */
+  .so-hd { flex-direction: column; align-items: flex-start !important; gap: 8px; }
+  .so-hd .score { font-size: 22px !important; }
+  .bk-ov, .cn-ov { position: fixed !important; inset: 92px 0 0 0 !important; overflow-y: auto; padding: 12px 16px 16px !important; align-content: start; }
+  body:has(.bk-ov) .tabbar, body:has(.cn-ov) .tabbar { display: none; }
+  body:has(.bk-ov).has-tabbar, body:has(.cn-ov).has-tabbar { padding-bottom: 0; }
+  .bk-in { padding: 24px 20px 24px !important; }
+  .bk-top h2.word { font-size: 56px !important; }
+  .bk-top { gap: 8px !important; align-items: flex-end; }
+  .bk-top .small { font-size: 13px; }
+  .bk-num { margin: 18px 0 6px !important; }
+  .bk-num span:first-child { font-size: 64px !important; }
+  .bk-num span:last-child { font-size: 22px !important; margin-left: 8px !important; }
+  .bk-in .ruled { margin-top: 18px !important; }
+  .bk-act { flex-direction: column; align-items: stretch !important; gap: 10px !important; margin-top: 20px !important; }
+  .bk-in > p:last-child { margin-top: 14px !important; }
+  .cn-dlg { padding: 24px 20px !important; }
+  .cn-dlg .btn { width: 100%; }
+}
