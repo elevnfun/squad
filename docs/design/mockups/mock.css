@@ -578,6 +578,17 @@ body.guest [data-in] { display: none !important; }
 .wnote b { display: block; font-size: 16px; margin-bottom: 6px; }
 .wnote p { font-size: 14px; color: var(--muted); line-height: 1.55; max-width: 70ch; }
 .wnote .btns { margin-left: auto; align-self: center; flex: none; }
+/* frozen state (winnings state 4): red badge, same red as LIVE, with a snowflake so it is not colour-only */
+.badge.frozen { background: var(--live); color: #0a0b0d; height: 28px; padding: 0 12px; font-size: 13px; letter-spacing: .1em; }
+.frozenbar { display: flex; align-items: center; gap: 20px; padding: 20px 36px; border-bottom: 1px solid rgba(255,90,82,.5); background: linear-gradient(90deg, rgba(255,90,82,.14), rgba(255,90,82,.04)), var(--row); border-radius: 24px 24px 0 0; flex-wrap: wrap; }
+.frozenbar p { flex: 1 1 320px; font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.5; max-width: 62ch; }
+.frozenbar .btn { margin-left: auto; flex: none; }
+.pausedtag { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; padding: 2px 9px; border: 1px dashed var(--edge-control); border-radius: 999px; font-size: 11px; letter-spacing: .1em; color: var(--steel); }
+.pz { display: inline-flex; gap: 2px; } .pz i { width: 2.5px; height: 9px; background: currentColor; border-radius: 1px; }
+.fig.paused .amt { color: var(--steel); }
+.cd.paused { border-style: dashed; border-color: var(--edge-control); color: var(--steel); }
+.cd.paused small { color: var(--steel-2); }
+.btn.off svg { flex: none; }
 .statebar { display: flex; gap: 20px; flex-wrap: wrap; }
 .statebar a { color: var(--steel); text-decoration: underline; text-underline-offset: 3px; }
 
@@ -597,7 +608,7 @@ body.guest [data-in] { display: none !important; }
 .composer .field { height: 44px; }
 .field[disabled] { color: var(--steel); background: var(--row-2); }
 
-/* draft board variants (compare only; draft.html keeps the green pitch) */
+/* draft board variants: .steel is archived; .sg is the final board (see below) */
 .pitchbox.steel, .pitchbox.sg {
   background:
     radial-gradient(ellipse 80% 55% at 50% 22%, rgba(255,255,255,.10), rgba(255,255,255,0) 70%),
@@ -608,26 +619,34 @@ body.guest [data-in] { display: none !important; }
 /* etched lines: a light line with a dark line under it, as if cut into the metal */
 .pitchbox.steel .ln, .pitchbox.steel .ln::before, .pitchbox.steel .ln::after { border-color: rgba(201,204,209,.42); box-shadow: 0 1px 0 rgba(0,0,0,.7), inset 0 1px 0 rgba(0,0,0,.5); }
 .pitchbox.steel .ln::before { border-top-color: rgba(201,204,209,.42); }
+/* FINAL draft board (owner decision): steel with green lines. Used by draft.html and draft-guest.html; also the archived draft-steel-green.html.
+   Green is strong enough to read as a pitch at a glance but darker and calmer than the old green pitch; gold stays for the captain only. */
 .pitchbox.sg { background:
-    radial-gradient(ellipse 34% 30% at 50% 50%, rgba(92,160,118,.20), rgba(92,160,118,0) 100%),
-    radial-gradient(ellipse 80% 55% at 50% 22%, rgba(255,255,255,.08), rgba(255,255,255,0) 70%),
+    radial-gradient(ellipse 36% 32% at 50% 50%, rgba(74,170,108,.36), rgba(74,170,108,.10) 62%, rgba(74,170,108,0) 100%),
+    radial-gradient(ellipse 80% 55% at 50% 22%, rgba(255,255,255,.07), rgba(255,255,255,0) 70%),
+    linear-gradient(180deg, rgba(46,128,82,.13), rgba(46,128,82,.09)),
     repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 1px, rgba(255,255,255,0) 1px 3px),
-    linear-gradient(180deg, #22272a 0%, #171b1c 55%, #131617 100%); }
-.pitchbox.sg .ln, .pitchbox.sg .ln::before, .pitchbox.sg .ln::after { border-color: rgba(112,176,134,.62); box-shadow: 0 1px 0 rgba(0,0,0,.7); }
+    linear-gradient(180deg, #22282a 0%, #171c1c 55%, #131817 100%);
+  border-color: rgba(120,190,146,.38); }
+.pitchbox.sg .ln, .pitchbox.sg .ln::before, .pitchbox.sg .ln::after { border-color: rgba(98,190,132,.62); box-shadow: 0 1px 0 rgba(0,0,0,.7), 0 0 10px rgba(74,170,108,.28); }
+.pitchbox.sg .ln::before { border-top-color: rgba(98,190,132,.62); }
 .pitchbox.steel .pl, .pitchbox.sg .pl { color: var(--text); }
 
-/* soft light rays: confined to the top band (variant: today-rays.html) */
-.rays { position: absolute; left: 0; right: 0; top: 0; height: 560px; z-index: -1; pointer-events: none; overflow: hidden;
-  -webkit-mask: linear-gradient(180deg, #000 0, #000 28%, rgba(0,0,0,.5) 62%, transparent 100%); mask: linear-gradient(180deg, #000 0, #000 28%, rgba(0,0,0,.5) 62%, transparent 100%); }
-.rays i { position: absolute; top: -140px; height: 760px; transform-origin: 50% 0; filter: blur(26px);
-  background: linear-gradient(180deg, rgba(236,239,244,.46), rgba(236,239,244,.17) 55%, rgba(232,235,240,0)); }
-.rays i:nth-child(1) { left: 52%; width: 70px; transform: rotate(24deg); opacity: .55; animation: ray 34s ease-in-out infinite alternate; }
-.rays i:nth-child(2) { left: 61%; width: 150px; transform: rotate(18deg); opacity: .5; animation: ray 46s ease-in-out -9s infinite alternate; }
-.rays i:nth-child(3) { left: 72%; width: 60px; transform: rotate(31deg); opacity: .6; animation: ray 38s ease-in-out -20s infinite alternate; }
-.rays i:nth-child(4) { left: 81%; width: 190px; transform: rotate(13deg); opacity: .4; animation: ray 52s ease-in-out -4s infinite alternate; }
-.rays i:nth-child(5) { left: 91%; width: 80px; transform: rotate(22deg); opacity: .5; animation: ray 41s ease-in-out -14s infinite alternate; }
+/* soft light rays, shared by Today, Ranks and Chat: confined to the top band (page title and countdown) and faded to nothing
+   before the first data panel, so nothing behind a table or text block is lit and contrast is unaffected.
+   The real site animates the shafts slowly (the drift below); under prefers-reduced-motion they are static, as in this mockup. */
+main:has(> .rays) { position: relative; }   /* the rays sit inside <main>, so they start at the page-title band, below the devnet strip, nav and guest banner */
+.rays { position: absolute; left: 50%; width: 100vw; margin-left: -50vw; top: 0; height: clamp(172px, 12.5vw, 225px); z-index: -1; pointer-events: none; overflow: hidden;
+  -webkit-mask: linear-gradient(180deg, transparent 0, #000 9%, #000 58%, rgba(0,0,0,.4) 86%, transparent 100%); mask: linear-gradient(180deg, transparent 0, #000 9%, #000 58%, rgba(0,0,0,.4) 86%, transparent 100%); }
+.rays i { position: absolute; top: -50px; height: 520px; transform-origin: 50% 0; filter: blur(12px);
+  background: linear-gradient(180deg, rgba(240,243,248,.78), rgba(240,243,248,.34) 55%, rgba(232,235,240,0)); }
+.rays i:nth-child(1) { left: 62%; width: 38px; transform: rotate(44deg); opacity: .62; animation: ray 34s ease-in-out infinite alternate; }
+.rays i:nth-child(2) { left: 70%; width: 90px; transform: rotate(38deg); opacity: .55; animation: ray 46s ease-in-out -9s infinite alternate; }
+.rays i:nth-child(3) { left: 78%; width: 34px; transform: rotate(50deg); opacity: .68; animation: ray 38s ease-in-out -20s infinite alternate; }
+.rays i:nth-child(4) { left: 85%; width: 120px; transform: rotate(33deg); opacity: .46; animation: ray 52s ease-in-out -4s infinite alternate; }
+.rays i:nth-child(5) { left: 94%; width: 48px; transform: rotate(42deg); opacity: .58; animation: ray 41s ease-in-out -14s infinite alternate; }
 @keyframes ray { from { translate: -18px 0; } to { translate: 22px 0; } }
 @media (prefers-reduced-motion: reduce) { .rays i { animation: none; } }
 
 @media (max-width: 1100px) { .wfigs { grid-template-columns: 1fr; } .fig { border-left: 0; border-top: 1px solid var(--line); padding: 24px; } .fig:first-child { border-top: 0; } .wcols { grid-template-columns: 1fr; } .wcols > div + div { border-left: 0; border-top: 1px solid var(--line); } .wcols > div { padding: 24px; } .wbar { padding: 16px 24px; } .wbar .hint { margin-left: 0; text-align: left; } .wnote { margin: 0 24px 24px; flex-wrap: wrap; } .rays i:nth-child(-n+2) { display: none; } }
-@media (max-width: 700px) { .wchip a + a { padding: 0 12px 0 10px; } .hrow { grid-template-columns: 1fr auto; row-gap: 6px; } .hrow .dt { grid-column: 1 / -1; order: 3; } .strip { flex-wrap: wrap; gap: 6px 12px; } .strip .msg { flex: 1 1 100%; } .msg { grid-template-columns: 1fr; gap: 4px; } .nav .right .btn-gold { padding: 0 14px; } .banner { text-align: left; } .composer { flex-wrap: wrap; } .rays { height: 420px; } }
+@media (max-width: 700px) { .wchip a + a { padding: 0 12px 0 10px; } .hrow { grid-template-columns: 1fr auto; row-gap: 6px; } .hrow .dt { grid-column: 1 / -1; order: 3; } .strip { flex-wrap: wrap; gap: 6px 12px; } .strip .msg { flex: 1 1 100%; } .msg { grid-template-columns: 1fr; gap: 4px; } .nav .right .btn-gold { padding: 0 14px; } .banner { text-align: left; } .composer { flex-wrap: wrap; }  }
