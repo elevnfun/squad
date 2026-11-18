@@ -537,7 +537,7 @@ body.guest [data-in] { display: none !important; }
 /* winnings strip on Today: one line */
 .strip { display: flex; align-items: center; gap: 16px; padding: 14px 24px; border-radius: 16px; font-size: 15px; }
 .strip .eyebrow { flex: none; }
-.strip .msg { flex: 1; }
+.strip .msg { flex: 1; display: block; padding: 0; border: 0; background: none; font-size: inherit; }
 .strip .msg b { font-weight: 700; }
 .strip .go { flex: none; font-size: 14px; font-weight: 600; color: var(--text); text-decoration: underline; text-decoration-color: var(--edge-control); text-underline-offset: 4px; }
 .strip:hover .go { text-decoration-color: var(--steel); }
@@ -620,7 +620,7 @@ body.guest [data-in] { display: none !important; }
 .rays { position: absolute; left: 0; right: 0; top: 0; height: 560px; z-index: -1; pointer-events: none; overflow: hidden;
   -webkit-mask: linear-gradient(180deg, #000 0, #000 28%, rgba(0,0,0,.5) 62%, transparent 100%); mask: linear-gradient(180deg, #000 0, #000 28%, rgba(0,0,0,.5) 62%, transparent 100%); }
 .rays i { position: absolute; top: -140px; height: 760px; transform-origin: 50% 0; filter: blur(26px);
-  background: linear-gradient(180deg, rgba(232,235,240,.30), rgba(232,235,240,.10) 55%, rgba(232,235,240,0)); }
+  background: linear-gradient(180deg, rgba(236,239,244,.46), rgba(236,239,244,.17) 55%, rgba(232,235,240,0)); }
 .rays i:nth-child(1) { left: 52%; width: 70px; transform: rotate(24deg); opacity: .55; animation: ray 34s ease-in-out infinite alternate; }
 .rays i:nth-child(2) { left: 61%; width: 150px; transform: rotate(18deg); opacity: .5; animation: ray 46s ease-in-out -9s infinite alternate; }
 .rays i:nth-child(3) { left: 72%; width: 60px; transform: rotate(31deg); opacity: .6; animation: ray 38s ease-in-out -20s infinite alternate; }
