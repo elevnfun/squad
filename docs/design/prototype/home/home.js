@@ -416,7 +416,7 @@ function setScrim(v) {
 }
 
 // Measured when the window is sized (and when the story's own height changes), never per frame.
-function measure() {
+function measureWindow() {
   vp.W = window.innerWidth; vp.H = window.innerHeight; vp.narrow = vp.W <= 900;
   vp.storyH = story.offsetHeight; vp.range = vp.storyH - vp.H;
 }
@@ -521,7 +521,7 @@ function onScroll() {
   if (past !== seen.past) { seen.past = past; root.classList.toggle('past-story', past); }
 }
 function onResize() {
-  measure();
+  measureWindow();
   if (engine) engine.resize();
   layoutTitles(); onScroll();
   state.dirty = true;
@@ -529,7 +529,7 @@ function onResize() {
 }
 window.addEventListener('scroll', onScroll, { passive: true });
 window.addEventListener('resize', onResize);
-if ('ResizeObserver' in window) new ResizeObserver(() => { const h = story.offsetHeight; if (h !== vp.storyH) { measure(); onScroll(); state.dirty = true; } }).observe(story);
+if ('ResizeObserver' in window) new ResizeObserver(() => { const h = story.offsetHeight; if (h !== vp.storyH) { measureWindow(); onScroll(); state.dirty = true; } }).observe(story);
 document.addEventListener('visibilitychange', () => { state.last = performance.now(); stats.lastRaf = 0; if (mon.holdUntil !== Infinity) hush(500); });
 
 // rail and logo: jump to a beat's mark
@@ -638,7 +638,7 @@ canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); useStil
 
 async function start() {
   try { await Promise.all([document.fonts.load('700 100px "Barlow Condensed"'), document.fonts.load('800 60px "Sora"'), document.fonts.ready]); } catch (e) { /* fall back to system fonts */ }
-  measure(); vp.scrollY = window.scrollY;
+  measureWindow(); vp.scrollY = window.scrollY;
   if (!engine) { useStills(); return; }
   if (FORCED) setQuality(FORCED);
   layoutTitles();
