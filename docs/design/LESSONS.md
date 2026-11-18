@@ -193,3 +193,9 @@ Reporting
   change re-capture one product screen and compare it with the committed shot before reporting.
 - Rule for next time: a screenshot taken under 200 ms after a click shows the transition, not the
   result; wait for it to finish.
+
+## 2026-11-18 · draft agent · shortening the Draft screen
+- Did: Draft at 1440 went from 3,684px to 1,785px (guest 1,822). New own stylesheet `draft-page.css`; the three pages are generated from one template so they cannot drift. Header and lock/pot/holding bar are two slim rows; packs and the opened-pack reveal share one glass shelf (packs left, three players of the selected pack right); "Your fifteen" is 5 rows (one per pack, columns Top / Mid / Budget) beside the five-a-side board; prizes are a 5-cell strip under the fifteen; the six rule checks are one slim full-width strip.
+- How: the column headers carry the tier, so each player chip needs only name, position, club and a word plus tick for "In five"; sealed packs are one dashed row each. The pitch rows were placed from the measured line and label heights.
+- Changed: the first board put the midfield line through two names and the DEF label on the bottom line (pitch rows are absolutely placed, so any height change needs the rows moved); the rules list wrapped in a half-width column, so it became a 3x2 strip.
+- Rule for next time: when shrinking an absolutely positioned board, re-place every row and crop-check the lines against the labels; when a text list wraps, change the container, not the words.
