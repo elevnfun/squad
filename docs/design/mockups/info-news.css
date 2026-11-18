@@ -84,3 +84,22 @@
 .nw-item.h:hover { border-color: var(--steel); }
 @media (max-width: 1100px) { .nw-flow { column-count: 1; } }
 @media (max-width: 1100px) { .ph .lead { max-width: 30ch; } }
+
+@media (max-width: 700px) {
+  .fchips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .fchip { height: 44px; padding: 0 12px; }
+  .nw-bar { margin-bottom: 24px; }
+  .nw-meta { gap: 4px 0; }
+  .nw-meta .kind { flex: 1 1 100%; }
+  .nw-meta .lg::before { display: none; }
+  .nw-meta .tm::before { margin: 0 10px; }
+  .nw-lead { padding: 20px 16px; border-radius: 20px; }
+  .nw-lead-h { font-size: 26px; max-width: none; }
+  .nw-item { padding: 20px 16px; }
+  .nw-item.h { padding: 16px; }
+  .nw-h { font-size: 20px; }
+  .nw-out { min-height: 44px; display: inline-flex; align-items: center; }
+  .nw-src { font-size: 14px; }
+  .nw-meta { font-size: 13px; }
+  .nw-end { margin: 24px 0 32px; }
+}

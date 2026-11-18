@@ -477,6 +477,23 @@ const VIEWS = {
   macro: { dir: [0.34, 0.3, 1], fit: 78, target: 'seam' },
 };
 
+// ---------------------------------------------------------------- quality
+// Quality levels, best first. Going down, the cheaper effects go before any resolution:
+//   dpr    buffer pixels per CSS pixel, at most (never more than the screen has, 2 at most)
+//   msaa   multisampling of the scene
+//   glass  pixels per CSS pixel of the picture the glass refracts, at most
+//   bloom  1: worked out from a picture the size of the window in CSS pixels; 0.5: half that; 0: off
+// ?quality=high, low and min are levels 0, 3 and 6.
+export const LEVELS = [
+  { name: 'high',   dpr: 2,    msaa: 4, glass: 2,   bloom: 1 },
+  { name: 'high-1', dpr: 2,    msaa: 4, glass: 1,   bloom: 0.5 },
+  { name: 'high-2', dpr: 2,    msaa: 2, glass: 1,   bloom: 0 },
+  { name: 'low',    dpr: 1.5,  msaa: 2, glass: 1,   bloom: 0 },
+  { name: 'low-1',  dpr: 1.25, msaa: 2, glass: 1,   bloom: 0 },
+  { name: 'low-2',  dpr: 1,    msaa: 2, glass: 0.5, bloom: 0 },
+  { name: 'min',    dpr: 0.75, msaa: 0, glass: 0.5, bloom: 0 },
+];
+
 // ---------------------------------------------------------------- engine
 export class BallEngine {
   constructor(canvas, opts = {}) {
@@ -491,13 +508,20 @@ export class BallEngine {
     this.drag = { yaw: 0, pitch: 0, vy: 0, active: false };
     this.look = LOOK;
     this.frames = 0;
+    this.lastCalls = 0; this.lastTriangles = 0;   // renderer.info of the last frame drawn
     this._dirty = true;
     this._running = false;
     this._last = performance.now();
+    // scratch objects, so that nothing is allocated while the ball moves
+    this._v1 = new THREE.Vector3(); this._v2 = new THREE.Vector3(); this._v3 = new THREE.Vector3();
+    this._freeCam = { fit: 330, dir: [0, 0.16, 1], target: [0, 0, 0], shift: [0, 0] };
+    this._w = canvas.clientWidth || window.innerWidth; this._h = canvas.clientHeight || window.innerHeight;
 
     const r = this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
-    this._dpr = Math.min(opts.pixelRatio || window.devicePixelRatio || 1, 2);
-    this.quality = 'high';
+    this._fixedDpr = opts.pixelRatio || 0;   // ?dpr= : do not follow the screen
+    this._dpr = Math.min(this._fixedDpr || window.devicePixelRatio || 1, 2);
+    this.level = 0;
+    this.quality = LEVELS[0].name;
     r.setPixelRatio(this._dpr);
     r.setClearColor(SPEC.bg, 1);
     r.toneMapping = THREE.NoToneMapping;     // ACES is applied once, in the output pass
@@ -530,6 +554,16 @@ export class BallEngine {
   setExplode(t) { this.state.explode = clamp01(+t || 0); this._applyPose(); return this; }
   /** Turntable angle in radians, about the ball's own (tilted) axis. */
   setTurn(angle) { this.state.turn = +angle || 0; this._applyPose(); return this; }
+  /** Split, explode, turn and ignite (null follows the opening) in one call: one pass over the ball instead of four. */
+  setPose(split, explode, turn, ignite = null) {
+    const s = this.state;
+    s.split = Math.min(4, Math.max(0, +split || 0));
+    s.explode = clamp01(+explode || 0);
+    s.turn = +turn || 0;
+    s.ignite = ignite === null || ignite === undefined ? null : clamp01(+ignite || 0);
+    this._applyPose();
+    return this;
+  }
   /** 'steel' or 'glass'. */
   setVariant(name) {
     const v = name === 'glass' ? 'glass' : 'steel';
@@ -548,44 +582,56 @@ export class BallEngine {
    * of the viewport from the centre (0.12 puts it at 62% across).
    */
   setCamera({ fit = 330, dir = [0, 0.16, 1], target = [0, 0, 0], shift = [0, 0] } = {}) {
-    this._cam = { fit, dir, target, shift };
+    const c = this._freeCam;                 // copied, so the caller may reuse its arrays
+    c.fit = fit;
+    c.dir[0] = dir[0]; c.dir[1] = dir[1]; c.dir[2] = dir[2];
+    c.target[0] = target[0]; c.target[1] = target[1]; c.target[2] = target[2];
+    c.shift[0] = shift[0]; c.shift[1] = shift[1];
+    this._cam = c;
     this._applyView();
     return this;
   }
   /**
-   * 'high' (the default), 'low' or 'min', for slower computers.
-   *   low  one buffer pixel per CSS pixel at most, the glass refracts a half-size copy of the
-   *        scene, the bloom is worked out at half its size, 2x multisampling instead of 4x
-   *   min  three quarters of that buffer, no bloom (the highlights lose their glow), no multisampling
+   * A quality level, 0 (best) to LEVELS.length - 1: see LEVELS. Changing the multisampling or
+   * the size makes new buffers, so the next frame is a slow one.
    */
-  setQuality(tier) {
-    const q = this.quality = tier === 'low' || tier === 'min' ? tier : 'high';
-    const pr = q === 'high' ? this._dpr : Math.min(this._dpr, 1) * (q === 'min' ? 0.75 : 1);
-    this.renderer.setPixelRatio(pr);
-    this.composer.setPixelRatio(pr);
-    this.bloom.enabled = q !== 'min';
-    this.renderer.transmissionResolutionScale = q === 'high' ? 1 : 0.5;
-    const samples = q === 'high' ? 4 : q === 'low' ? 2 : 0;
-    for (const rt of [this.composer.renderTarget1, this.composer.renderTarget2]) { rt.samples = samples; rt.dispose(); }
+  setLevel(i) {
+    const n = Math.max(0, Math.min(LEVELS.length - 1, Math.round(+i || 0)));
+    const L = LEVELS[n];
+    this.level = n;
+    this.quality = L.name;
+    this.bloom.enabled = L.bloom > 0;
+    if (this._sceneTarget.samples !== L.msaa) { this._sceneTarget.samples = L.msaa; this._sceneTarget.dispose(); }
+    this._size = '';
     this.resize();
     return this;
   }
+  /** 'high', 'low' or 'min': the named levels (0, 3 and 6). */
+  setQuality(tier) {
+    const i = LEVELS.findIndex((L) => L.name === tier);
+    return this.setLevel(i < 0 ? 0 : i);
+  }
+  /** Buffer pixels per CSS pixel that a level gives on this screen. */
+  pixelRatioAt(level) { return Math.min(this._dpr, LEVELS[level].dpr); }
+  /** Compiles every shader the scene needs without blocking the page (resolves when they are ready). */
+  precompile() { return this.renderer.compileAsync(this.scene, this.camera); }
   /** How lit the gold core is, 0 dark to 1 full gold. null (the default) follows the opening. */
   setIgnite(t) { this.state.ignite = t === null || t === undefined ? null : clamp01(+t || 0); this._applyPose(); return this; }
-  /** Screen position in CSS pixels of a point given in the space of `object` (default: the turning ball). */
-  project(point, object = this.spin) {
-    this.scene.updateMatrixWorld();
-    const v = new THREE.Vector3(point[0], point[1], point[2]);
-    object.localToWorld(v);
-    const depth = v.distanceTo(this.camera.position);
+  /**
+   * Screen position in CSS pixels of a point given in the space of `object` (default: the turning ball).
+   * Pass `out` to have it filled instead of a new object.
+   */
+  project(point, object = this.spin, out = {}) {
+    object.updateWorldMatrix(true, false);
+    const v = this._v3.set(point[0], point[1], point[2]).applyMatrix4(object.matrixWorld);
+    out.depth = v.distanceTo(this.camera.position);
     v.project(this.camera);
-    const w = this.canvas.clientWidth || window.innerWidth, h = this.canvas.clientHeight || window.innerHeight;
-    return { x: (v.x * 0.5 + 0.5) * w, y: (0.5 - v.y * 0.5) * h, depth };
+    out.x = (v.x * 0.5 + 0.5) * this._w; out.y = (0.5 - v.y * 0.5) * this._h;
+    return out;
   }
   /** CSS pixels per mm at the camera target. */
   pxPerMm() {
-    const h = this.canvas.clientHeight || window.innerHeight;
-    return h / (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * this._dist);
+    return this._h / (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * this._dist);
   }
   /** Studio yaw and pitch in radians (the cursor drives this, eased). */
   setStudio(yaw, pitch, immediate = false) {
@@ -600,29 +646,45 @@ export class BallEngine {
     const s = this.studio;
     this.scene.environmentRotation.set(s.pitch, s.yaw, 0);
     this.finish.uniforms.uTime.value = this.still ? 0.37 : (performance.now() / 1000) % 100;
-    this.renderer.info.reset();
+    const info = this.renderer.info;
+    info.reset();
     this.composer.render();
+    this.lastCalls = info.render.calls; this.lastTriangles = info.render.triangles;
     this.frames++;
     this._dirty = false;
   }
   /** Draw calls and triangles of the last frame (all passes) and of the visible geometry alone. */
   stats() {
-    const i = this.renderer.info.render;
     let meshes = 0, tris = 0, draws = 0;
     this.scene.traverseVisible((o) => {
       if (!o.isMesh) return;
       meshes++;
       const g = o.geometry;
-      tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
+      const n = o.isInstancedMesh ? o.count : 1;
+      tris += n * (g.index ? g.index.count : g.attributes.position.count) / 3;
       draws += Array.isArray(o.material) ? g.groups.length : 1;
     });
-    return { frameCalls: i.calls, frameTriangles: i.triangles, sceneMeshes: meshes, sceneDrawCalls: draws, sceneTriangles: tris, programs: this.renderer.info.programs.length };
+    const b = this.renderer.getDrawingBufferSize(new THREE.Vector2());
+    return { frameCalls: this.lastCalls, frameTriangles: this.lastTriangles, sceneMeshes: meshes, sceneDrawCalls: draws, sceneTriangles: tris,
+      programs: this.renderer.info.programs.length, level: this.level, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [b.x, b.y] };
   }
+  /** Fits every buffer to the canvas, the screen's pixel ratio and the quality level. Does nothing if none of them changed. */
   resize() {
-    const w = this.canvas.clientWidth || window.innerWidth, h = this.canvas.clientHeight || window.innerHeight;
+    const w = this._w = this.canvas.clientWidth || window.innerWidth, h = this._h = this.canvas.clientHeight || window.innerHeight;
+    if (!this._fixedDpr) this._dpr = Math.min(window.devicePixelRatio || 1, 2);   // the window may have moved to another screen
+    const L = LEVELS[this.level];
+    const pr = Math.min(this._dpr, L.dpr);
+    const size = `${w}x${h}@${pr}/${this.level}`;
+    if (size === this._size) return;
+    this._size = size;
+    this.renderer.setPixelRatio(pr);
     this.renderer.setSize(w, h, false);
+    this.composer.setPixelRatio(pr);         // sizes the composer's buffers (and the bloom's) to w * pr
     this.composer.setSize(w, h);
-    if (this.quality === 'low') { const pr = this.renderer.getPixelRatio(); this.bloom.setSize(w * pr / 2, h * pr / 2); }
+    // The bloom is worked out from a picture the size of the window in CSS pixels, whatever the
+    // pixel ratio: the glow is as wide on a 2x screen as on a 1x one, and costs a quarter.
+    if (L.bloom > 0) this.bloom.setSize(Math.max(2, Math.round(w * L.bloom)), Math.max(2, Math.round(h * L.bloom)));
+    this.renderer.transmissionResolutionScale = Math.min(1, L.glass / pr);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.backdrop.material.uniforms.uAspect.value = w / h;
@@ -653,6 +715,8 @@ export class BallEngine {
     this.scene.add(this.backdrop);
   }
 
+  // Every repeated part is one instanced mesh (one draw call per material), placed in the space
+  // of the turning ball. The halves and the panels move by rewriting their instances' positions.
   _buildBall() {
     const M = this.mats, R = SPEC.radius;
     const faces = this.faces = truncatedIcosahedron(R);
@@ -667,6 +731,7 @@ export class BallEngine {
       linerSteel: linerGeometry(true), linerGlass: linerGeometry(false),
       stud: studGeometry(),
       core: new THREE.SphereGeometry(SPEC.coreRadius, 64, 48),
+      cylinder: new THREE.CylinderGeometry(1, 1, 1, 40, 1, false),
     };
 
     this.root = new THREE.Group();      // pointer drag
@@ -675,55 +740,69 @@ export class BallEngine {
     this.tilt.rotation.set(THREE.MathUtils.degToRad(LOOK.tilt.x), 0, THREE.MathUtils.degToRad(LOOK.tilt.z), 'ZXY');
     this.scene.add(this.root); this.root.add(this.tilt); this.tilt.add(this.spin);
 
+    // The two halves hold no meshes: they are the frames of reference for project() (they move with the split).
     this.halves = { blitz: new THREE.Group(), draft: new THREE.Group() };
     this.halves.blitz.name = 'blitz'; this.halves.draft.name = 'draft';
     this.spin.add(this.halves.blitz, this.halves.draft);
     this.variantParts = { steel: [], glass: [] };
     this.panels = [];
 
-    const basis = new THREE.Matrix4();
+    const inst = (geometry, material, count, variant) => {
+      const m = new THREE.InstancedMesh(geometry, material, count);
+      m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      m.frustumCulled = false;          // the instances move; the ball is nearly always in view
+      this.spin.add(m);
+      if (variant) this.variantParts[variant].push(m);
+      return m;
+    };
+    const nHex = faces.filter((f) => f.n === 6).length, nPen = faces.length - nHex;
+    const P = this.parts = {
+      // steel variant: brushed steel hexagons, smoked glass pentagons
+      hexSolid: inst(geo.hexSolid, [M.steelFace, M.steelEdge], nHex, 'steel'),
+      penSolid: inst(geo.penSolid, [M.smokeFace, M.smokeEdge], nPen, 'steel'),
+      // glass variant: a polished steel bezel with a pane set into it
+      hexBezel: inst(geo.hexBezel, [M.frameFace, M.frameEdge], nHex, 'glass'),
+      penBezel: inst(geo.penBezel, [M.frameFace, M.frameEdge], nPen, 'glass'),
+      hexPane: inst(geo.hexPane, [M.clearFace, M.clearEdge], nHex, 'glass'),
+      penPane: inst(geo.penPane, [M.tintFace, M.tintEdge], nPen, 'glass'),
+      linerSteel: inst(geo.linerSteel, [M.liner, M.linerRim], 2, 'steel'),
+      linerGlass: inst(geo.linerGlass, [M.rimFace, M.rimEdge], 2, 'glass'),
+      studs: inst(geo.stud, M.stud, 8),
+      tubes: inst(geo.cylinder, M.tube, 6),
+    };
+
+    const m4 = new THREE.Matrix4();
     const maxY = Math.max(...faces.map((f) => Math.abs(f.normal.y)));
+    let iHex = 0, iPen = 0;
     for (const f of faces) {
-      const half = f.centre.y > 0 ? 'blitz' : 'draft';
-      const g = new THREE.Group();
-      g.quaternion.setFromRotationMatrix(basis.makeBasis(f.X, f.Y, f.normal));
       const hex = f.n === 6;
-      // steel variant: brushed steel hexagon, smoked glass pentagon
-      const sMesh = new THREE.Mesh(hex ? geo.hexSolid : geo.penSolid, hex ? [M.steelFace, M.steelEdge] : [M.smokeFace, M.smokeEdge]);
-      // glass variant: polished steel bezel with a pane set into it
-      const bezel = new THREE.Mesh(hex ? geo.hexBezel : geo.penBezel, [M.frameFace, M.frameEdge]);
-      const glass = new THREE.Mesh(hex ? geo.hexPane : geo.penPane, hex ? [M.clearFace, M.clearEdge] : [M.tintFace, M.tintEdge]);
-      g.add(sMesh, bezel, glass);
-      this.variantParts.steel.push(sMesh);
-      this.variantParts.glass.push(bezel, glass);
-      this.halves[half].add(g);
-      this.panels.push({ group: g, glass, normal: f.normal.clone(), half, hex, order: 1 - Math.abs(f.normal.y) / maxY });
+      const slot = hex ? iHex++ : iPen++;
+      m4.makeBasis(f.X, f.Y, f.normal);
+      for (const k of hex ? ['hexSolid', 'hexBezel', 'hexPane'] : ['penSolid', 'penBezel', 'penPane']) P[k].setMatrixAt(slot, m4);
+      this.panels.push({ normal: f.normal.clone(), half: f.centre.y > 0 ? 'blitz' : 'draft', sign: f.centre.y > 0 ? 1 : -1, hex, slot, order: 1 - Math.abs(f.normal.y) / maxY });
     }
 
-    // liners, studs and the sliding tube of each half
+    // Parts that ride with a half: [instanced mesh, instance, +1 Blitz or -1 Draft, height at rest].
+    this._riders = [];
+    const ride = (mesh, i, sign, matrix) => { mesh.setMatrixAt(i, matrix); this._riders.push({ a: mesh.instanceMatrix.array, o: i * 16 + 13, sign, y: matrix.elements[13] }); };
+    const turned = new THREE.Matrix4().makeRotationX(Math.PI);   // the Draft half is the Blitz half turned over (a turn, not a mirror, so normals stay outward)
+    // liners
+    for (const k of ['linerSteel', 'linerGlass']) { ride(P[k], 0, 1, m4.identity()); ride(P[k], 1, -1, turned); }
+    // studs on the rims: 3 on Blitz, 5 on Draft, their domes pointing at the other half
     const studCount = { blitz: 3, draft: 5 };
     const studR = (SPEC.flangeInner + SPEC.linerRadius) / 2;
-    for (const name of ['blitz', 'draft']) {
-      const inner = new THREE.Group();
-      if (name === 'draft') inner.rotation.x = Math.PI;      // a turn, not a mirror, so normals stay outward
-      const ls = new THREE.Mesh(geo.linerSteel, [M.liner, M.linerRim]);
-      const lg = new THREE.Mesh(geo.linerGlass, [M.rimFace, M.rimEdge]);
-      this.variantParts.steel.push(ls); this.variantParts.glass.push(lg);
-      inner.add(ls, lg);
-      for (let i = 0; i < studCount[name]; i++) {
-        const a = (i / studCount[name]) * TAU + 0.3;
-        const st = new THREE.Mesh(geo.stud, M.stud);
-        st.rotation.x = Math.PI;                              // dome points at the other half
-        st.position.set(studR * Math.cos(a), 0, studR * Math.sin(a));
-        inner.add(st);
-      }
-      const tube = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, 60, 40, 1, false), M.tube);
-      tube.position.y = 71;
-      const collar = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, 3, 40), M.tube);
-      collar.position.y = 42.5;
-      inner.add(tube, collar);
-      this.halves[name].add(inner);
+    let iStud = 0;
+    for (const name of ['blitz', 'draft']) for (let i = 0; i < studCount[name]; i++) {
+      const a = (i / studCount[name]) * TAU + 0.3;
+      const x = studR * Math.cos(a), z = studR * Math.sin(a);
+      if (name === 'blitz') ride(P.studs, iStud++, 1, m4.copy(turned).setPosition(x, 0, z));
+      else ride(P.studs, iStud++, -1, m4.identity().setPosition(x, 0, -z));
     }
+    // the sliding tube and its collar in each half, and the two collars on the core (which stay put)
+    const cyl = (radius, height, y) => m4.makeScale(radius, height, radius).setPosition(0, y, 0);
+    ride(P.tubes, 0, 1, cyl(4.2, 60, 71)); ride(P.tubes, 1, 1, cyl(6.5, 3, 42.5));
+    ride(P.tubes, 2, -1, cyl(4.2, 60, -71)); ride(P.tubes, 3, -1, cyl(6.5, 3, -42.5));
+    P.tubes.setMatrixAt(4, cyl(5.2, 4, SPEC.coreRadius + 1.2)); P.tubes.setMatrixAt(5, cyl(5.2, 4, -SPEC.coreRadius - 1.2));
 
     // the core: still while the halves travel, turns with the ball
     this.coreGroup = new THREE.Group();
@@ -731,14 +810,10 @@ export class BallEngine {
     const rod = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 198, 24), M.rod);
     this.rod = rod;
     this.coreGroup.add(this.core, rod);
-    for (const s of [1, -1]) {
-      const c = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 5.2, 4, 32), M.tube);
-      c.position.y = s * (SPEC.coreRadius + 1.2);
-      this.coreGroup.add(c);
-    }
     this.coreLight = new THREE.PointLight(0xffc860, 0, 0, 2);
     this.coreGroup.add(this.coreLight);
     this.spin.add(this.coreGroup);
+    this._posed = '';                   // the split and explode the instances were last written for
   }
 
   _buildPost() {
@@ -747,6 +822,12 @@ export class BallEngine {
     const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
     const c = this.composer = new EffectComposer(r, target);
     c.setPixelRatio(r.getPixelRatio());
+    // The scene is always drawn into the composer's read buffer (the passes below swap the two
+    // buffers an even number of times a frame). Only that one needs multisampling and depth:
+    // the other only ever receives a full-screen pass.
+    this._sceneTarget = c.readBuffer;
+    c.writeBuffer.samples = 0;
+    c.writeBuffer.depthBuffer = false;
     c.addPass(new RenderPass(this.scene, this.camera));
     const b = LOOK.bloom;
     this.bloom = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), b.strength, b.radius, b.threshold);
@@ -786,12 +867,26 @@ export class BallEngine {
     this.halves.blitz.position.y = s;
     this.halves.draft.position.y = -s;
     this.spin.rotation.y = turn;
-    for (const p of this.panels) {
-      // staggered: the pole panels leave first, the equator band last
-      const t = ease(clamp01((explode - p.order * 0.45) / 0.55));
-      const lift = SPEC.explodeLift * t * (p.hex ? 1 : 1.3);
-      p.group.position.copy(p.normal).multiplyScalar(lift);
-      p.glass.position.z = 9 * t;          // glass variant: the pane lifts clear of its bezel
+    // The instances are rewritten only when the split or the explode has changed (a turn alone moves nothing inside the ball).
+    const posed = split + '/' + explode;
+    if (posed !== this._posed) {
+      this._posed = posed;
+      const P = this.parts;
+      for (const p of this.panels) {
+        // staggered: the pole panels leave first, the equator band last
+        const t = ease(clamp01((explode - p.order * 0.45) / 0.55));
+        const lift = SPEC.explodeLift * t * (p.hex ? 1 : 1.3);
+        const n = p.normal, o = p.slot * 16 + 12;
+        const x = n.x * lift, y = n.y * lift + p.sign * s, z = n.z * lift;
+        const solid = (p.hex ? P.hexSolid : P.penSolid).instanceMatrix.array;
+        const bezel = (p.hex ? P.hexBezel : P.penBezel).instanceMatrix.array;
+        const pane = (p.hex ? P.hexPane : P.penPane).instanceMatrix.array;
+        solid[o] = bezel[o] = x; solid[o + 1] = bezel[o + 1] = y; solid[o + 2] = bezel[o + 2] = z;
+        const g = 9 * t;                    // glass variant: the pane lifts clear of its bezel
+        pane[o] = x + n.x * g; pane[o + 1] = y + n.y * g; pane[o + 2] = z + n.z * g;
+      }
+      for (const r of this._riders) r.a[r.o] = r.y + r.sign * s;
+      for (const k in P) P[k].instanceMatrix.needsUpdate = true;
     }
     const L = LOOK.coreLight, I = LOOK.ignite;
     const k = this.state.ignite === null ? Math.max(ease(Math.min(split, 1)), explode * 0.6) : this.state.ignite;
@@ -813,9 +908,9 @@ export class BallEngine {
     const free = this._cam;
     const v = free || VIEWS[this.state.view];
     const cam = this.camera;
-    const dir = new THREE.Vector3(...v.dir).normalize();
-    const target = new THREE.Vector3();
-    if (free) target.set(...free.target);
+    const dir = this._v1.set(v.dir[0], v.dir[1], v.dir[2]).normalize();
+    const target = this._v2.set(0, 0, 0);
+    if (free) target.set(free.target[0], free.target[1], free.target[2]);
     if (v.target === 'seam') {
       // the panel corner (hexagon, hexagon, pentagon) that faces the camera most
       this.scene.updateMatrixWorld(true);
@@ -834,12 +929,12 @@ export class BallEngine {
     cam.position.copy(target).addScaledVector(dir, dist);
     cam.lookAt(target);
     // Slide the picture sideways without changing the perspective (the ball at 62% across).
-    const w = this.canvas.clientWidth || window.innerWidth, h = this.canvas.clientHeight || window.innerHeight;
+    const w = this._w, h = this._h;       // measured in resize(), never here: reading the canvas's size every frame forces a layout
     if (free && (free.shift[0] || free.shift[1])) cam.setViewOffset(w, h, -free.shift[0] * w, -free.shift[1] * h, w, h);
     else if (cam.view) cam.clearViewOffset();
     cam.updateMatrixWorld();
     // keep the glow pool behind the ball
-    const c = new THREE.Vector3(0, 0, 0).project(cam);
+    const c = this._v3.set(0, 0, 0).project(cam);
     this.backdrop.material.uniforms.uCentre.value.set(c.x * 0.5 + 0.5, c.y * 0.5 + 0.5);
     this._dirty = true;
   }

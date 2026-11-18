@@ -231,7 +231,7 @@ ul, ol { list-style: none; }
     background-position: calc(50vw - var(--fx) * var(--s) * var(--u) * 2400 / 1080) calc((var(--bh) / 2 - var(--fy) * var(--s)) * var(--u));
     -webkit-mask-image: linear-gradient(180deg, transparent, #000 16%, #000 80%, transparent); mask-image: linear-gradient(180deg, transparent, #000 16%, #000 80%, transparent); }
   #hero::before { -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent); mask-image: linear-gradient(180deg, #000 80%, transparent); }
-  #hero::before, #end::before { background-image: url("poster/beat-1.jpg"); --s: 104; --fx: .628; --fy: .57; --bh: 78; }
+  #hero::before, #end::before { background-image: url("poster/beat-1.jpg"); --s: 104; --fx: .628; --fy: .57; --bh: 84; }
   /* full time is a close-up in the picture's right-hand corner: the picture fills the band from the right and fades out to the left */
   #full-time::before { background-image: url("poster/beat-2.jpg"); --s: 70; --bh: 70; background-position: right top;
     -webkit-mask-image: linear-gradient(90deg, transparent calc(100% - 96 * var(--u)), #000 calc(100% - 40 * var(--u))), linear-gradient(180deg, transparent, #000 16%, #000 80%, transparent);
@@ -249,12 +249,14 @@ ul, ol { list-style: none; }
   .lead { font-size: 17px; }
 
   /* the cards and the packs: one row, wider than the phone, scrolled sideways, a card at a time */
-  .js .mode, .js .beat.on .mode { position: static; opacity: 1 !important; visibility: visible; transform: none; width: auto; margin: 12px 0 0; transition: none; }
-  .mode .icon { aspect-ratio: auto; overflow-x: auto; overflow-y: hidden; padding: 28px 12px 22px; scroll-snap-type: x mandatory; scroll-padding-inline: 20px;
+  .js .mode, .js .beat.on .mode { position: static; opacity: 1 !important; visibility: visible; transform: none; width: auto; margin: 0; transition: none; }
+  .mode .icon { aspect-ratio: auto; overflow-x: auto; overflow-y: hidden; padding: 44px 12px 22px; scroll-snap-type: x mandatory; scroll-padding-inline: 20px;
     -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scrollbar-width: none; }
   .mode .icon::-webkit-scrollbar { display: none; }
   .mode .packs { position: relative; inset: auto; width: 840px; aspect-ratio: 760 / 350; }
-  .draft-icon > svg { inset: 28px auto auto 12px; width: 840px; height: auto; }
+  .draft-icon > svg { inset: 44px auto auto 12px; width: 840px; height: auto; }
+  /* room for the team's lock, which hangs off the right end of the row */
+  .draft-icon::after { content: ""; position: absolute; left: 852px; top: 0; width: 24px; height: 1px; }
   .blitz-icon .packs { width: 760px; }
   .mode .pack { scroll-snap-align: center; }
   .callouts { margin: 6px 20px 0; gap: 8px 24px; }
@@ -270,6 +272,8 @@ ul, ol { list-style: none; }
 /* a tablet is wide enough for the whole row */
 @media (min-width: 700px) and (max-width: 900px) {
   .mode .icon { margin-inline: 20px; overflow: visible; padding: 28px 0 12px; }
+  .draft-icon > svg { top: 28px; }
+  .draft-icon::after { display: none; }
   .mode .packs, .draft-icon > svg { width: 100%; }
   .draft-icon > svg { left: 0; }
 }

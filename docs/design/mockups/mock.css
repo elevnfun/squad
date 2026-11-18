@@ -854,3 +854,12 @@ main:has(> .rays) { position: relative; }   /* the rays sit inside <main>, so th
     radial-gradient(ellipse 60% 480px at 92% 1620px, rgba(200,204,212,.09), rgba(200,204,212,0) 72%);
     background-size: 100% 1900px; background-repeat: repeat-y; }
 }
+
+/* reduced motion: sealed packs keep only the gold rim glow on hover/focus; no lift, tilt or sheen sweep */
+@media (prefers-reduced-motion: reduce) {
+  .pkt-body { transition: none; }
+  .pkt.sealed:hover .pkt-body, .pkt.sealed:focus-visible .pkt-body, .pkt.sealed.hot .pkt-body { transform: perspective(620px) translateY(0) rotateX(0) rotateY(0);
+    filter: drop-shadow(0 16px 16px rgba(0,0,0,.6)) drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 16px rgba(242,193,78,.55)); }
+  .pkt.sealed:hover .pkt-sheen, .pkt.sealed:focus-visible .pkt-sheen, .pkt.sealed.hot .pkt-sheen { opacity: 0; animation: none; }
+}
+@media (max-width: 700px) { .sl .nm { white-space: normal; text-overflow: clip; line-height: 1.25; } }

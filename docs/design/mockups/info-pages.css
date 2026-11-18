@@ -135,3 +135,16 @@
 .behind .steps { flex-basis: 100%; margin-top: 4px; }
 .behind .steps li { font-weight: 400; border-top: 1px solid var(--line); }
 @media (max-width: 700px) { .behind .inner { padding-left: 12px; } }
+
+/* FAQ jump list: always open and inert on desktop (looks exactly like the plain list); a collapsed <details> on a phone */
+.jd > summary { display: block; list-style: none; pointer-events: none; }
+.jd > summary::-webkit-details-marker { display: none; }
+@media (max-width: 700px) {
+  .jump { padding: 4px 16px; border-radius: 16px; }
+  .jd > summary { display: flex; align-items: center; justify-content: space-between; min-height: 48px; pointer-events: auto; cursor: pointer; }
+  .jd > summary::after { content: "+"; font-size: 24px; font-weight: 500; line-height: 1; color: var(--steel); }
+  .jd[open] > summary::after { content: "\2212"; }
+  .jd > summary:focus-visible { outline-offset: -2px; }
+  .jump .small { margin: 4px 0 12px; }
+  .ip-side { margin-bottom: 24px; }
+}
