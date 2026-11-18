@@ -143,3 +143,28 @@ Reporting
 - How: one script swaps the old link for a real button and injects the panel; the top bar stays above the dimmed page so "Close ×" is still visible; `#menu` / `#guest-menu` force it open for captures.
 - Changed: first capture clipped the wallet row (a column rule overrode the row layout) and the new button sat 4px off the old "Menu +"; fixed and re-compared `today.png` full page.
 - Rule for next time: after replacing an existing control, diff its position against the old screenshot, and check the panel's bottom edge at 1440x900.
+
+## 2026-11-18 · head agent · review of News and How to play
+- Verdict: approve with changes. Facts are right; six fixes (weekly prize written as "$500" first,
+  "a matchday" not "a day", lead text clear of the rays, the league filter, gold used as decoration,
+  a stretched badge).
+- Measured: the News lead text sits on a ray at 1024 and drops to 4.4:1.
+- Rule for next time: click every control you add and screenshot the result; a filter that hides
+  cards must leave the layout tidy. Keep header text clear of the rays at 1024 as well as 1440.
+
+## 2026-11-18 · head agent · review of FAQ, About and Roadmap
+- Verdict: approve with changes. FAQ is close to done; About said "no entry fee" and "prize is
+  paid"; Roadmap listed live predictions, which the owner parked.
+- Rule for next time: search your copy for the banned phrases before reporting ("entry fee",
+  "is paid", "are sent", "72-hour"), and never show a parked feature as coming.
+- Rule for next time: anything shaped like a button must do something; plain facts are plain text.
+
+## 2026-11-18 · head agent · review of the side menu
+- Verdict: approve with changes. Focus trap, Escape, scrim, focus return and reduced motion all
+  work. Faults found only by using it: the page behind scrolls and the panel comes away from the
+  bar; at 390 "Close ×" is pushed off screen.
+- Rule for next time: a menu holds only what the bar does not already show (no second wallet
+  chip, Winnings or Connect button), and an overlay is tested scrolled, at 390 and at a short
+  window, not only in the opening screenshot.
+- Shared bug for the lead: in `mock.css` the reduced-motion rule for `.rays i` loses to the
+  `:nth-child` rules above it, so the rays still drift under reduced motion on every page.
