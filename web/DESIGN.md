@@ -349,9 +349,9 @@ same fade. Everything else is a 200 ms fade or instant, with final numbers shown
 2. **Shootout leaderboard** (settled): a section of the Shootout page, not a board in Ranks.
 3. **Prize amounts** (settled): SOL as the main figure with the dollar value in `--muted` beside
    it; the weekly prize as "$500" with its SOL equivalent.
-4. **SideRays outside the home page** (awaiting the owner, who likes them and asked for a
-   recommendation): until decided, on the info pages only. A comparison of Today with and without
-   rays in the top band is in `docs/design/mockups/shots/`.
+4. **SideRays outside the home page** (settled): on the info pages, and in the top band behind
+   the page title on Today, Ranks and Chat. Soft and slow, fading out before the data panels and
+   never behind tables or text blocks. Static under reduced motion. Off on the home page.
 5. **Without a wallet** (settled, crucial): guest mode. Every screen and feature works without
    connecting, including building squads and trying Draft; nothing is saved. The top bar shows the
    gold "Connect wallet" until connected, then the wallet chip. Save buttons read "Connect wallet
@@ -359,3 +359,10 @@ same fade. Everything else is a 200 ms fade or instant, with final numbers shown
 6. **Prizes** (settled): winners collect on a Winnings view opened from the wallet chip. Half is
    collectable at once; the rest is a locked balance released 20% per withdrawal, one withdrawal
    every 24 hours, frozen while the wallet is below its required holding. No "72-hour" wording.
+7. **Draft board** (settled): dark steel with muted green pitch lines and a soft green centre
+   glow. Gold only for the captain. The plain green pitch is retired.
+8. **Draft reveal panel** (settled): the panel showing the three players of the pack just opened
+   stays, under the packs.
+9. **Frozen winnings** (settled): a red "FROZEN" badge with a glyph, the timer shown paused and
+   the Withdraw button disabled. Red is therefore used for two things only: LIVE and FROZEN. The
+   gold "Get $ELEVN" button stays as the one gold button in that view.

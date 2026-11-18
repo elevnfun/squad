@@ -81,6 +81,10 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
     with no defence built. Draft is the luck mode, Blitz the skill mode. Legal review comes last.
   - Design: no blue light; Shootout leaderboard on the Shootout page; SOL main figure with dollars
     in small grey text. The glint on the Blitz cards passes behind the players.
+  - Product screens (2026-11-18): Draft board is steel with green pitch lines; light rays sit in the
+    top band of Today, Ranks and Chat; the Draft reveal panel stays; a frozen Winnings balance shows
+    a red FROZEN badge and keeps the gold Get $ELEVN button. The locked balance has no floor. The
+    freeze rule is 150,000 $ELEVN for every prize.
   - Do not start section 3 (the build) until the owner says so.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 
