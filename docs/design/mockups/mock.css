@@ -640,13 +640,14 @@ main:has(> .rays) { position: relative; }   /* the rays sit inside <main>, so th
   -webkit-mask: linear-gradient(180deg, transparent 0, #000 9%, #000 58%, rgba(0,0,0,.4) 86%, transparent 100%); mask: linear-gradient(180deg, transparent 0, #000 9%, #000 58%, rgba(0,0,0,.4) 86%, transparent 100%); }
 .rays i { position: absolute; top: -50px; height: 520px; transform-origin: 50% 0; filter: blur(12px);
   background: linear-gradient(180deg, rgba(240,243,248,.78), rgba(240,243,248,.34) 55%, rgba(232,235,240,0)); }
-.rays i:nth-child(1) { left: 62%; width: 38px; transform: rotate(44deg); opacity: .62; animation: ray 34s ease-in-out infinite alternate; }
-.rays i:nth-child(2) { left: 70%; width: 90px; transform: rotate(38deg); opacity: .55; animation: ray 46s ease-in-out -9s infinite alternate; }
-.rays i:nth-child(3) { left: 78%; width: 34px; transform: rotate(50deg); opacity: .68; animation: ray 38s ease-in-out -20s infinite alternate; }
-.rays i:nth-child(4) { left: 85%; width: 120px; transform: rotate(33deg); opacity: .46; animation: ray 52s ease-in-out -4s infinite alternate; }
-.rays i:nth-child(5) { left: 94%; width: 48px; transform: rotate(42deg); opacity: .58; animation: ray 41s ease-in-out -14s infinite alternate; }
+.rays i:nth-child(1) { left: 68%; width: 38px; transform: rotate(44deg); opacity: .62; animation: ray 34s ease-in-out infinite alternate; }
+.rays i:nth-child(2) { left: 75%; width: 90px; transform: rotate(38deg); opacity: .55; animation: ray 46s ease-in-out -9s infinite alternate; }
+.rays i:nth-child(3) { left: 82%; width: 34px; transform: rotate(50deg); opacity: .68; animation: ray 38s ease-in-out -20s infinite alternate; }
+.rays i:nth-child(4) { left: 88%; width: 120px; transform: rotate(33deg); opacity: .46; animation: ray 52s ease-in-out -4s infinite alternate; }
+.rays i:nth-child(5) { left: 95%; width: 48px; transform: rotate(42deg); opacity: .58; animation: ray 41s ease-in-out -14s infinite alternate; }
 @keyframes ray { from { translate: -18px 0; } to { translate: 22px 0; } }
 @media (prefers-reduced-motion: reduce) { .rays i { animation: none; } }
 
 @media (max-width: 1100px) { .wfigs { grid-template-columns: 1fr; } .fig { border-left: 0; border-top: 1px solid var(--line); padding: 24px; } .fig:first-child { border-top: 0; } .wcols { grid-template-columns: 1fr; } .wcols > div + div { border-left: 0; border-top: 1px solid var(--line); } .wcols > div { padding: 24px; } .wbar { padding: 16px 24px; } .wbar .hint { margin-left: 0; text-align: left; } .wnote { margin: 0 24px 24px; flex-wrap: wrap; } .rays i:nth-child(-n+2) { display: none; } }
 @media (max-width: 700px) { .wchip a + a { padding: 0 12px 0 10px; } .hrow { grid-template-columns: 1fr auto; row-gap: 6px; } .hrow .dt { grid-column: 1 / -1; order: 3; } .strip { flex-wrap: wrap; gap: 6px 12px; } .strip .msg { flex: 1 1 100%; } .msg { grid-template-columns: 1fr; gap: 4px; } .nav .right .btn-gold { padding: 0 14px; } .banner { text-align: left; } .composer { flex-wrap: wrap; }  }
+@media (max-width: 700px) { .rays { height: 150px; } .rays i:nth-child(2n) { display: none; } .rays i { opacity: .45 !important; } }
