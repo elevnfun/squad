@@ -214,3 +214,13 @@ Reporting
 - How: all phone rules sit in `@media (max-width: 700px)` blocks, so 1440 and 1024 captures stayed pixel-identical (checked before/after with and without reduced motion). Contrast measured on rendered pixels with the text hidden, worst case over the brightest 2% of each text box.
 - Changed: `isMobile` pages report `innerWidth` as the widened layout width, so the first overflow check looked clean while three pages overflowed; use the real `scrollWidth` and a fixed width. Fixed bars float mid-page in full-page captures; resize the viewport to the page height first. A rule meant for the top-bar chip also hit a chip drawn inside How to play; scope phone rules under `.nav`.
 - Rule for next time: pages with inline styles need a class hook before they can be made responsive; add one rather than fighting the style attribute. A `<details>` that must look static on desktop needs the label wrapped so the line height stays identical.
+
+## 2026-11-18 · head agent · review of the phone view
+- Verdict: approve with two small changes. All 18 screens work at 390 and 430 (no sideways scroll,
+  no text under 12px, tab bar and menu correct). Desktop is pixel-identical before and after on
+  every screen except one line on Blitz pick, where a span added for the phone widened a gap.
+- Rule for next time: a wrapper added to the HTML for one width changes every width; when the
+  parent is a flex row with a gap, the new span becomes its own item. Diff desktop renders after
+  any HTML change, not only CSS ones.
+- Rule for next time: a full-page capture draws a fixed bar wherever the first screen ended. Hide
+  or un-fix fixed bars for full-page shots, and discount contrast readings taken under them.
