@@ -186,26 +186,51 @@ Three places:
   before any weekly prize is paid.
 - SOL prizes for Blitz and Draft stay on devnet until the legal review signs off in writing.
 
-### 5.1 Owner's decisions, 2026-11-17 (these replace anything above that disagrees)
+### 5.1 Owner's decisions, 2026-11-17 and 2026-11-18 (these replace anything above that disagrees)
 
-- **Prize release replaces the 72-hour hold.** [Owner] Prizes are credited to the winner's balance
-  on the site and withdrawn from there. Half of every prize can be withdrawn at once. The other
-  half joins the wallet's locked balance, and a share of that locked balance (about 15%, perhaps
-  20%) unlocks each day. Each new win adds its locked half to the same balance. Owner's example:
-  wins of 2, 2 and 3 SOL on three days give 1, 1 and 1.5 SOL at once, and 1 + 1 + 1.5 SOL into the
-  locked balance. The aim is to keep winners playing. [Open] the details listed under
-  "Still to confirm" below. The old lines above about the 72-hour hold are withdrawn.
-- **Prizes are paid 15 minutes after full time**, to allow for corrections from the data
-  provider. [Owner] [Open] whether this is per fixture or after the day's last fixture, and how
-  it sits with the review switch.
-- **Buying, winning and selling on the same day is allowed.** It is not treated as a problem;
-  people may buy, sell and play freely. [Owner]
-- **Several wallets per person are allowed.** More wallets mean more players and squads on the
-  boards. No defence is to be built. [Owner]
-- **Draft is the luck mode, Blitz is the skill mode.** Personal packs are random on purpose, as
-  in football card games. [Owner]
-- **Legal review comes last**, after everything else. [Owner]
-- **The payout wallet will be tested** before any real prize is sent. [Owner]
+**Prize release (replaces the 72-hour hold everywhere).** [Owner]
+- It applies to every prize: Blitz daily, the Blitz weekly $500 and the Draft weekly prize.
+- Prizes are not sent automatically. A winner's prize appears on the site and the winner presses
+  a button, which asks their wallet to sign a transaction. Checking in daily is intended.
+- Half of each prize can be collected at once ("Collect").
+- The other half goes into the wallet's locked balance. Once every 24 hours the player may
+  withdraw 20% of whatever is in the locked balance at that moment ("Withdraw").
+- The 24-hour timer starts the first time the wallet ever collects, and restarts at each
+  withdrawal. Missed days do not add up: one withdrawal per 24 hours.
+- New wins add their locked half to the same balance. Owner's example: day 1 wins 2 SOL, collects
+  1 SOL, 1 SOL locked. Day 2 wins 2 SOL, collects 1 SOL, the locked balance is 2 SOL, so the next
+  withdrawal is 0.4 SOL.
+- If the wallet no longer holds its required $ELEVN, the locked balance and its timer freeze
+  until it holds again. Nothing is forfeited. This is crucial: it stops withdraw, sell, buy back,
+  withdraw again.
+- [Proposed, needs a yes] Because each withdrawal is 20% of what is left, the locked balance never
+  quite empties (1 SOL goes 0.2, 0.16, 0.128 and so on; about 89% is out after 10 withdrawals).
+  Proposal: once the locked balance is below 0.05 SOL, the whole remainder can be withdrawn.
+- [Proposed, needs a yes] "Required $ELEVN" for the freeze means the Blitz requirement (150,000),
+  whichever mode the prize came from, so there is one rule.
+
+**When a result is final.** [Owner]
+- A matchday's result is final 15 minutes after the day's last match ends, to allow for errors
+  in the data provider, the database or the statistics. Prizes become collectable then.
+- At the start the review switch is on: the owner looks at each result and releases it by hand.
+  Later it is switched off and prizes become collectable automatically at the 15-minute mark.
+  Either way the winner still presses Collect.
+
+**Playing without a wallet.** [Owner, crucial]
+- A visitor can use the whole site without connecting a wallet: browse, build Blitz squads, try
+  the Draft screen, read Ranks and Chat. Nothing is saved.
+- Connecting a wallet unlocks saving squads and creating a username. Prizes and posting in chat
+  need the wallet and the tokens as before.
+
+**Other rulings.** [Owner]
+- Buying, winning and selling on the same day is allowed; people may buy, sell and play freely.
+- Several wallets per person are allowed. More wallets mean more players and squads on the
+  boards. No defence is to be built.
+- Draft is the luck mode and Blitz the skill mode. Personal packs are random on purpose.
+- Legal review comes last, after everything else.
+- The payout wallet will be tested before any real prize is sent.
+- Design: no blue light (steel, white light and gold only); the Shootout leaderboard is on the
+  Shootout page; prize amounts show SOL as the main figure with dollars in small grey text.
 
 ## 6. Home page scroll story
 
@@ -289,8 +314,7 @@ Settled by the owner on 2026-11-14:
   leaderboard section; info pages stay in the side menu; notifications are for later.
 - Section 2 design work goes through the Higgsfield MCP together with the references.
 
-Still to confirm (prize release, section 5.1): which prizes it covers; whether the daily unlock
-is a share of what is still locked or of the amount first locked; 15% or 20%; whether unlocking
-needs anything from the player; whether the wallet must still hold its tokens to withdraw; and
-whether the 15-minute payout is per fixture or per day. Details of the payout wallet are worked
-out in the build section.
+Still to confirm: the two [Proposed] lines in section 5.1 (emptying a small locked balance; which
+holding freezes it), and on the design side the light rays, the Draft board and the Draft reveal
+panel. Section 3 note: collecting and withdrawing need a claim flow from the payout wallet, which
+replaces "prizes are sent" in the older sections above.

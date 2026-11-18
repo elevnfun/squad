@@ -67,12 +67,21 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
   The Blitz fixture cards also use one shared Higgsfield image (`art/card.png`); their hover effect is
   built in code to match the pack's hover video (owner: no second video). The bigger ball on the Blitz
   and Draft beats stays; the placeholder kickoff times stay.
-- Rules changed on 2026-11-17 (blueprint section 5.1; these replace older lines above):
-  the 72-hour hold is replaced by prize release (half of each prize withdrawable at once, the rest
-  joins a locked balance that unlocks by a daily share, about 15%; details still open). Prizes are
-  paid 15 minutes after full time. Buying, winning and selling the same day is allowed. Several
-  wallets per person are allowed, with no defence built. Draft is the luck mode, Blitz the skill
-  mode. Legal review comes last. Do not start section 3 (the build) until the owner says so.
+- Rules changed on 2026-11-17 and 2026-11-18 (blueprint section 5.1; these replace older lines above):
+  - Prize release replaces the 72-hour hold, for every prize. Winners press Collect on the site
+    (a wallet-signed transaction); nothing is sent automatically. Half is collectable at once. The
+    other half joins a locked balance; once every 24 hours the player may withdraw 20% of what is
+    locked. The timer starts at the wallet's first-ever collect and restarts at each withdrawal.
+    If the wallet drops below its required $ELEVN, the locked balance and timer freeze.
+  - A result is final 15 minutes after the day's last match. The owner reviews by hand at the start
+    (review switch on); later it is automatic. The winner still presses Collect.
+  - Guest mode (crucial): the whole site works without a wallet (browse, build squads, try Draft),
+    but nothing is saved. Connecting unlocks saving and a username.
+  - Buying, winning and selling the same day is allowed. Several wallets per person are allowed,
+    with no defence built. Draft is the luck mode, Blitz the skill mode. Legal review comes last.
+  - Design: no blue light; Shootout leaderboard on the Shootout page; SOL main figure with dollars
+    in small grey text. The glint on the Blitz cards passes behind the players.
+  - Do not start section 3 (the build) until the owner says so.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 
 Background: `docs/blueprint/reference/six-formats.md`. Every game number lives in `config.toml`.

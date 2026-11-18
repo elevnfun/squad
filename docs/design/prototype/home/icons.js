@@ -230,7 +230,7 @@ function drawGlint(x, w, h, u) {
   const on = seg(k, 0, 0.1) * (1 - seg(k, 0.88, 1));             // it comes up at the lower left and goes out at the upper right
   if (on > 0.002) {
     const p = stripeAt(Math.pow(k, 1.25)), cx = p.x * w, cy = p.y * h;
-    const size = w * (0.5 + 0.5 * Math.sin(Math.PI * Math.pow(k, 0.85))), a = (o) => (o * on).toFixed(3);
+    const size = w * 1.3 * (0.5 + 0.5 * Math.sin(Math.PI * Math.pow(k, 0.85)))   /* 1.3: the owner asked for a larger glint */, a = (o) => (o * on).toFixed(3);
     // the stripe, lit around the glint (longer along the stripe than across it)
     if (stripeLight) {
       x.globalAlpha = on; x.drawImage(stripeLight, 0, 0, w, h); x.globalAlpha = 1;
@@ -254,7 +254,7 @@ function drawGlint(x, w, h, u) {
   for (const [sx, sy, from, to] of SPARKS) {
     const f = (u - from) / (to - from);
     if (f <= 0 || f >= 1) continue;
-    const o = Math.pow(Math.sin(Math.PI * f), 0.8) * (0.72 + 0.28 * Math.sin(f * 21)), cx = sx * w, cy = sy * h, r = w * 0.06 * (0.6 + 0.4 * o);
+    const o = Math.pow(Math.sin(Math.PI * f), 0.8) * (0.72 + 0.28 * Math.sin(f * 21)), cx = sx * w, cy = sy * h, r = w * 0.075 * (0.6 + 0.4 * o);
     const stops = [[0, `rgba(255,236,196,${o.toFixed(3)})`], [0.3, `rgba(255,196,110,${(o * 0.5).toFixed(3)})`], [1, 'rgba(255,170,80,0)']];
     glow(x, cx, cy, r, 0.13, 0, stops); glow(x, cx, cy, r, 0.13, Math.PI / 2, stops);
     glow(x, cx, cy, r * 0.62, 0.1, Math.PI / 4, stops); glow(x, cx, cy, r * 0.62, 0.1, -Math.PI / 4, stops);

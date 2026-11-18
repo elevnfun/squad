@@ -343,19 +343,19 @@ same fade. Everything else is a 200 ms fade or instant, with final numbers shown
 - Selection, caret and scrollbars themed from the palette.
 - Checked at 1920, 1440 and 1024, then 390. Long wallet names and four-digit points must fit.
 
-## Defaults, awaiting the owner
+## Owner's rulings, 2026-11-18
 
-Each of these is the recommended option, used as the default so the build is not blocked. None
-is settled; the owner can overrule any of them.
-
-1. **A cool light on the home canvas** (default, awaiting the owner): no neon anywhere in the
-   interface; one dim cool blue (`#7FB2D6`) is allowed in the studio reflections on the home
-   canvas only.
-2. **Where the Shootout leaderboard lives** (default, awaiting the owner): a section of the
-   Shootout page, not a fourth board in Ranks.
-3. **How prize amounts are written** (default, awaiting the owner): SOL as the main figure with
-   the dollar value in `--muted` beside it; the weekly prize as "$500" with its SOL equivalent.
-4. **SideRays outside the home page** (default, awaiting the owner): on the info pages only; off
-   on Today, Ranks, Chat and every other product screen.
-5. **What a visitor sees without a wallet** (default, awaiting the owner): Today, Ranks and Chat
-   are readable while logged out, with "Connect wallet" as the only gold button.
+1. **Light on the home canvas** (settled): steel, white light and gold only. No blue anywhere.
+2. **Shootout leaderboard** (settled): a section of the Shootout page, not a board in Ranks.
+3. **Prize amounts** (settled): SOL as the main figure with the dollar value in `--muted` beside
+   it; the weekly prize as "$500" with its SOL equivalent.
+4. **SideRays outside the home page** (awaiting the owner, who likes them and asked for a
+   recommendation): until decided, on the info pages only. A comparison of Today with and without
+   rays in the top band is in `docs/design/mockups/shots/`.
+5. **Without a wallet** (settled, crucial): guest mode. Every screen and feature works without
+   connecting, including building squads and trying Draft; nothing is saved. The top bar shows the
+   gold "Connect wallet" until connected, then the wallet chip. Save buttons read "Connect wallet
+   to save" in the outlined style. Connecting unlocks saving and a username.
+6. **Prizes** (settled): winners collect on a Winnings view opened from the wallet chip. Half is
+   collectable at once; the rest is a locked balance released 20% per withdrawal, one withdrawal
+   every 24 hours, frozen while the wallet is below its required holding. No "72-hour" wording.
