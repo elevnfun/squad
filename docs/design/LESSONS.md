@@ -180,3 +180,7 @@ Reporting
 ## 2026-11-18 · info-news agent · review changes to News and How to play
 - Changed: filtered news lopsided because items sat in two fixed columns (now one CSS-columns flow); lead text sat on a ray (44ch cap, 30ch at 1024; measured 7.65:1 at 1440, 7.75:1 at 1024 on rendered pixels); gold used for plain rank numbers (now steel); fact cards repeated steps 1 and 3 (removed); "daily"/"a day" used for the Blitz rhythm (now matchday).
 - Rule for next time: lists that can be filtered use one flow, never hand-split columns; gold only means a paid place or the captain; measure lead contrast at 1024 as well as 1440.
+
+## 2026-11-18 · info-pages agent · public roadmap and X link
+- Changed: Roadmap now leads with one "Building the platform" (Now) stage whose closed drop-down holds the internal stages; public stages follow. About's X button points to the real account and opens in a new tab with a screen-reader note.
+- Rule for next time: a public page shows what players need; internal stages go behind a closed `<details>`, as a plain list, not a card inside a card.
