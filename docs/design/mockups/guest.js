@@ -5,7 +5,7 @@
   var btn = '<a class="btn btn-gold btn-sm" href="connect.html">Connect wallet</a>';
   var ban = '<div class="banner" role="note">You\'re trying elevn as a guest. Connect a wallet to save your squads and play for prizes.</div>';
   function apply() {
-    var g = location.hash === '#guest';
+    var g = /(^|[#-])guest(-|$)/.test(location.hash);
     document.body.classList.toggle('guest', g);
     right.firstElementChild.outerHTML = g ? btn : saved;
     var b = document.getElementById('gb');
