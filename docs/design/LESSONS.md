@@ -224,3 +224,9 @@ Reporting
   any HTML change, not only CSS ones.
 - Rule for next time: a full-page capture draws a fixed bar wherever the first screen ended. Hide
   or un-fix fixed bars for full-page shots, and discount contrast readings taken under them.
+
+## 2026-11-18 · home-cards agent · Blitz "one from each club" rule and the home page phone view
+- Did: the three fixture cards now stand their players in a HOME column and an AWAY column (2+1, 1+2, 2+1, captain on either side) with Barlow Condensed labels under the columns; the phone view (900px and under) is one block per beat: that beat's still of the ball on top, words below, cards and packs in a sideways row with snap, "+" menu button in the bar.
+- How: the side labels went at the bottom of the card because the artwork's stripe crosses the top right; the phone stills are the existing `poster/beat-N.jpg` files placed with CSS variables (picture height, ball position, band height), so no script change was needed. Tap gives the hover state through focus.
+- Changed: text over a dimmed live ball was replaced by stills above the text (lowest contrast now 5.55:1, measured on pixels); a contrast script that samples a button's whole box reads the page behind its rounded corners, so sample inside the pill.
+- Rule for next time: on a phone put pictures above the words, not behind them; and when another agent is editing the scripts at the same time, a capture that times out is retried before anything is "fixed".
