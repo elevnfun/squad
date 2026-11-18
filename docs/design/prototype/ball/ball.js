@@ -97,7 +97,9 @@ function outline(n, rc, cr, segEdge, segCorner) {
 // and pushes every vertex onto its sphere, so the panel is curved, not flat.
 // Strips run "outward then down", which with a counter-clockwise outline gives
 // outward-facing triangles all the way round the section.
-function sweepPanel(face, rings, { capStart = null, capEnd = null, closed = false, segEdge = 10, segCorner = 4 } = {}) {
+// 6 steps along an edge keep it within 0.07 mm of its sphere (under a pixel in the close-up);
+// 3 round each corner.
+function sweepPanel(face, rings, { capStart = null, capEnd = null, closed = false, segEdge = 6, segCorner = 3 } = {}) {
   const { n, rc, h } = face;
   const ap = rc * Math.cos(Math.PI / n);
   const base = outline(n, rc, SPEC.cornerRadius, segEdge, segCorner);
@@ -144,19 +146,19 @@ function sweepPanel(face, rings, { capStart = null, capEnd = null, closed = fals
 }
 
 // A solid curved panel: satin face, rounded polished bevel, radial side wall, back face.
-function solidPanel(face, { R, T, inset, bevel, topRings = 8, backBevel = 0.3 }) {
+function solidPanel(face, { R, T, inset, bevel, topRings = 5, backRings = 2, backBevel = 0.3 }) {
   const ap = face.rc * Math.cos(Math.PI / face.n);
   const rings = [];
   const dTop = inset + bevel;
   for (let k = 1; k <= topRings; k++) rings.push({ d: ap - ((ap - dTop) * k) / topRings, r: R, g: k < topRings ? FACE : EDGE });
-  const nb = 4;
+  const nb = 3;
   for (let j = 1; j <= nb; j++) {
     const a = (j / nb) * Math.PI / 2;
     rings.push({ d: inset + bevel * (1 - Math.sin(a)), r: R - bevel * (1 - Math.cos(a)), g: EDGE });
   }
   rings.push({ d: inset, r: R - T + backBevel, g: EDGE });
   rings.push({ d: inset + backBevel, r: R - T, g: FACE });
-  for (let k = 3; k >= 1; k--) rings.push({ d: ap - ((ap - inset - backBevel) * k) / 4, r: R - T, g: FACE });
+  for (let k = backRings; k >= 1; k--) rings.push({ d: ap - ((ap - inset - backBevel) * k) / (backRings + 1), r: R - T, g: FACE });
   return sweepPanel(face, rings, { capStart: FACE, capEnd: FACE });
 }
 
@@ -167,7 +169,7 @@ function bezelPanel(face, { R, T, inset, width, bevel }) {
   rings.push({ d: w - bevel, r: R, g: FACE });
   rings.push({ d: (w + inset) / 2, r: R, g: FACE });
   rings.push({ d: inset + bevel, r: R, g: EDGE });
-  const nb = 4;
+  const nb = 3;
   for (let j = 1; j <= nb; j++) {
     const a = (j / nb) * Math.PI / 2;
     rings.push({ d: inset + bevel * (1 - Math.sin(a)), r: R - bevel * (1 - Math.cos(a)), g: EDGE });
@@ -657,7 +659,7 @@ export class BallEngine {
     const hexF = faces.find((f) => f.n === 6), penF = faces.find((f) => f.n === 5);
     const solid = { R, T: SPEC.panelThickness, inset: SPEC.seam / 2, bevel: SPEC.bevel };
     const bez = { R, T: SPEC.panelThickness, inset: SPEC.seam / 2, width: SPEC.bezelWidth, bevel: 0.8 };
-    const pane = { R: R - 1.1, T: 3.5, inset: SPEC.seam / 2 + SPEC.bezelWidth + 0.12, bevel: 0.35, topRings: 6 };
+    const pane = { R: R - 1.1, T: 3.5, inset: SPEC.seam / 2 + SPEC.bezelWidth + 0.12, bevel: 0.35, topRings: 4 };
     const geo = this.geo = {
       hexSolid: solidPanel(hexF, solid), penSolid: solidPanel(penF, solid),
       hexBezel: bezelPanel(hexF, bez), penBezel: bezelPanel(penF, bez),

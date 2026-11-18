@@ -216,6 +216,7 @@ ul, ol { list-style: none; }
   .wrap { width: calc(100% - 40px); }
   .links, .menu-t { display: none; }
   .nav .right { gap: 8px; }
+  .nav { background: rgba(14,16,20,.86); }
   .logo { display: inline-block; line-height: 44px; }
   .btn, .btn-sm { height: 44px; }
   .menu { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--edge-control); font-size: 22px; font-weight: 500; line-height: 1; }
@@ -237,8 +238,8 @@ ul, ol { list-style: none; }
     mask-image: linear-gradient(90deg, transparent calc(100% - 96 * var(--u)), #000 calc(100% - 40 * var(--u))), linear-gradient(180deg, transparent, #000 16%, #000 80%, transparent);
     -webkit-mask-composite: source-in; mask-composite: intersect; }
   #two::before { background-image: url("poster/beat-3.jpg"); --s: 84; --fx: .615; --fy: .525; --bh: 84; }
-  #blitz::before { background-image: url("poster/beat-4.jpg"); --s: 132; --fx: .668; --fy: .355; --bh: 72; }
-  #draft::before { background-image: url("poster/beat-5.jpg"); --s: 120; --fx: .68; --fy: .345; --bh: 72; }
+  #blitz::before { background-image: url("poster/beat-4.jpg"); --s: 86; --fx: .668; --fy: .355; --bh: 46; }
+  #draft::before { background-image: url("poster/beat-5.jpg"); --s: 78; --fx: .68; --fy: .345; --bh: 46; }
   #access::before { background-image: url("poster/beat-6.jpg"); --s: 100; --fx: .625; --fy: .585; --bh: 74; }
 
   .words, .js .words, .js .beat.on .words { position: static; opacity: 1 !important; visibility: visible; transform: none; margin: 0; padding-top: 8px; width: min(var(--copy), 100%); transition: none; }
@@ -254,6 +255,7 @@ ul, ol { list-style: none; }
   .mode .icon::-webkit-scrollbar { display: none; }
   .mode .packs { position: relative; inset: auto; width: 840px; aspect-ratio: 760 / 350; }
   .draft-icon > svg { inset: 28px auto auto 12px; width: 840px; height: auto; }
+  .blitz-icon .packs { width: 760px; }
   .mode .pack { scroll-snap-align: center; }
   .callouts { margin: 6px 20px 0; gap: 8px 24px; }
   .pack-num { font-size: 13px !important; }
