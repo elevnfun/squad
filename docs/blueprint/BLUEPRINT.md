@@ -203,11 +203,12 @@ Three places:
 - If the wallet no longer holds its required $ELEVN, the locked balance and its timer freeze
   until it holds again. Nothing is forfeited. This is crucial: it stops withdraw, sell, buy back,
   withdraw again.
-- [Proposed, needs a yes] Because each withdrawal is 20% of what is left, the locked balance never
-  quite empties (1 SOL goes 0.2, 0.16, 0.128 and so on; about 89% is out after 10 withdrawals).
-  Proposal: once the locked balance is below 0.05 SOL, the whole remainder can be withdrawn.
-- [Proposed, needs a yes] "Required $ELEVN" for the freeze means the Blitz requirement (150,000),
-  whichever mode the prize came from, so there is one rule.
+- The locked balance never quite empties, because each withdrawal is 20% of what is left (1 SOL
+  goes 0.2, 0.16, 0.128 and so on). This is intended: a player who keeps winning always has the
+  instant half, and the locked part is a bonus for holding. No floor and no "withdraw the rest"
+  rule. [Owner]
+- One rule for the freeze: the wallet must hold the Blitz requirement (150,000 $ELEVN), whichever
+  mode the prize came from. [Owner]
 
 **When a result is final.** [Owner]
 - A matchday's result is final 15 minutes after the day's last match ends, to allow for errors
@@ -314,7 +315,6 @@ Settled by the owner on 2026-11-14:
   leaderboard section; info pages stay in the side menu; notifications are for later.
 - Section 2 design work goes through the Higgsfield MCP together with the references.
 
-Still to confirm: the two [Proposed] lines in section 5.1 (emptying a small locked balance; which
-holding freezes it), and on the design side the light rays, the Draft board and the Draft reveal
+Still to confirm, on the design side only: the light rays, the Draft board and the Draft reveal
 panel. Section 3 note: collecting and withdrawing need a claim flow from the payout wallet, which
 replaces "prizes are sent" in the older sections above.
