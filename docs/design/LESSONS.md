@@ -172,3 +172,7 @@ Reporting
 ## 2026-11-18 · info-pages agent · review changes
 - Changed: "paid" became "collected" in About; Live predictions removed from the public roadmap; panel-inside-panel and monospace removed; league pills made plain text; gold inline link made a normal link; status key dropped; Build list numbered; two FAQ items and the cancelled-match rule added; side menu wired in.
 - Rule for next time: public pages never promise a parked item, never say prizes are "paid"/"sent" (winners collect), and use no inline styles or fonts outside Sora and Barlow Condensed.
+
+## 2026-11-18 · menu agent · review fixes
+- Changed: the panel showed colour from the page because `var(--glass)` already contains its own translucent colour layer, so a solid fill placed after it was ignored; used an explicit gradient over a solid #0b0c0e. Also removed what the bar already shows (wallet block, Winnings, MENU title), locked page scroll, made the button icon-only at 390, and fixed three shared faults (rays under reduced motion, 38px bar targets, wrong current tab on Shootout/Connect).
+- Rule for next time: a token that bundles several background layers cannot be reused as one layer; and check with pixel samples, not by eye, that a panel is really opaque.

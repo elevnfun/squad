@@ -5,7 +5,7 @@ body.menu-open .nav { z-index: 60; }
 html.menu-lock { overflow: hidden; }
 .menu-scrim { position: fixed; inset: 0; z-index: 50; background: rgba(4,5,7,.62); opacity: 0; visibility: hidden; transition: opacity var(--dur-normal, 240ms) var(--ease), visibility 0s linear var(--dur-normal, 240ms); }
 .menu-panel { position: fixed; z-index: 55; top: var(--menu-top, 0px); right: 0; bottom: 0; width: min(420px, 100vw); display: flex; flex-direction: column; overflow-y: auto;
-  background: var(--glass), rgba(10,11,13,.99); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)), #0b0c0e; backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
   box-shadow: inset 1px 0 0 var(--steel-edge), inset 0 1px 0 rgba(255,255,255,.2), -28px 0 56px -22px rgba(0,0,0,.8);
   transform: translateX(100%); visibility: hidden; transition: transform var(--dur-normal, 300ms) var(--ease), visibility 0s linear var(--dur-normal, 300ms); }
 body.menu-open .menu-scrim { opacity: 1; visibility: visible; transition-delay: 0s; }
