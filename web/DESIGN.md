@@ -368,3 +368,7 @@ same fade. Everything else is a 200 ms fade or instant, with final numbers shown
 9. **Frozen winnings** (settled): a red "FROZEN" badge with a glyph, the timer shown paused and
    the Withdraw button disabled. Red is therefore used for two things only: LIVE and FROZEN. The
    gold "Get $ELEVN" button stays as the one gold button in that view.
+10. **Naming** (settled): "Blitz matchday" for the board and its prize, never "daily". "Daily" is only
+    the 24-hour withdrawal cooldown.
+11. **Guest "Connect wallet"** (settled): gold when it is the only gold button on the page; outlined
+    when the page already shows a gold button (for example Shoot on Penalty Shootout).

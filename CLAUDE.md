@@ -89,6 +89,9 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
     with the internal stages in a drop-down. Penalty Shootout keeps its small link in the side menu.
   - How agents work: builders own separate files, report to one head agent that reviews against the
     owner's interests, and record what they learned in `docs/design/LESSONS.md` (read it first).
+  - Naming (2026-11-18): the Blitz board and prize are called "Blitz matchday" everywhere, never
+    "daily". "Daily" is used only for the 24-hour withdrawal cooldown. Where a page already has a gold
+    button (for example Shoot on Penalty Shootout), the guest "Connect wallet" is the outlined one.
   - Do not start section 3 (the build) until the owner says so.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 

@@ -209,6 +209,10 @@ Three places:
 - One rule for the freeze: the wallet must hold the Blitz requirement (150,000 $ELEVN), whichever
   mode the prize came from. [Owner]
 
+**Naming.** [Owner] The Blitz board and its prize are called "Blitz matchday" on the site, never
+"daily"; where older sections say "daily board" or "daily prize", read "matchday". "Daily" is used
+only for the 24-hour withdrawal cooldown.
+
 **When a result is final.** [Owner]
 - A matchday's result is final 15 minutes after the day's last match ends, to allow for errors
   in the data provider, the database or the statistics. Prizes become collectable then.
