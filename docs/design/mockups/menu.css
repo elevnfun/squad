@@ -1,5 +1,5 @@
 /* Side menu for the elevn mockups. Needs mock.css. Injected by menu.js. */
-.menu-btn { font: inherit; border: 0; background: none; cursor: pointer; display: inline-flex; align-items: center; height: 40px; font-size: 14px; font-weight: 500; color: var(--steel); padding: 0 12px; border-radius: 999px; transition: color 150ms var(--ease), background 150ms var(--ease); }
+.menu-btn { font: inherit; border: 0; background: none; cursor: pointer; display: inline-flex; align-items: center;  gap: 4px; height: 40px; font-size: 14px; font-weight: 500; color: var(--steel); padding: 0 12px; border-radius: 999px; transition: color 150ms var(--ease), background 150ms var(--ease); }
 .menu-btn:hover, .menu-btn[aria-expanded="true"] { color: var(--text); background: rgba(255,255,255,.07); }
 body.menu-open .nav { z-index: 60; }
 .menu-scrim { position: fixed; inset: 0; z-index: 50; background: rgba(4,5,7,.62); opacity: 0; visibility: hidden; transition: opacity 240ms var(--ease), visibility 0s linear 240ms; }

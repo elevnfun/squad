@@ -137,3 +137,9 @@ Reporting
 - How: copied the top bar from today.html, reused .ph/.word/.rays/.glass from mock.css, wrote only new class names in info-pages.css.
 - Changed: my timeline class `.tl` already existed in mock.css as an underline link style, so every line was underlined; renamed to `.rtl`. A shared scratchpad script name was overwritten by another agent, so use a unique script name.
 - Rule for next time: grep mock.css for a class name before using it, and keep capture scripts under your own unique filename.
+
+## 2026-11-18 · menu agent · side menu
+- Did: `menu.js` + `menu.css`, a glass side panel opened from the top bar's "Menu +", added to the 14 existing screens.
+- How: one script swaps the old link for a real button and injects the panel; the top bar stays above the dimmed page so "Close ×" is still visible; `#menu` / `#guest-menu` force it open for captures.
+- Changed: first capture clipped the wallet row (a column rule overrode the row layout) and the new button sat 4px off the old "Menu +"; fixed and re-compared `today.png` full page.
+- Rule for next time: after replacing an existing control, diff its position against the old screenshot, and check the panel's bottom edge at 1440x900.
