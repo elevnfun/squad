@@ -85,6 +85,10 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
     top band of Today, Ranks and Chat; the Draft reveal panel stays; a frozen Winnings balance shows
     a red FROZEN badge and keeps the gold Get $ELEVN button. The locked balance has no floor. The
     freeze rule is 150,000 $ELEVN for every prize.
+  - The X account is https://x.com/elevndotfun. The public Roadmap shows the stages players will see,
+    with the internal stages in a drop-down. Penalty Shootout keeps its small link in the side menu.
+  - How agents work: builders own separate files, report to one head agent that reviews against the
+    owner's interests, and record what they learned in `docs/design/LESSONS.md` (read it first).
   - Do not start section 3 (the build) until the owner says so.
 - Above all: do not overcomplicate the platform or let it get jumbled.
 

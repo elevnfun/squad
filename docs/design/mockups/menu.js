@@ -26,7 +26,7 @@
   p.setAttribute('role', 'dialog'); p.setAttribute('aria-modal', 'true'); p.setAttribute('aria-label', 'Menu'); p.tabIndex = -1;
   p.innerHTML = '<div class="mp-in">' +
     '<nav aria-label="Menu"><ul class="mp-main">' + main + '</ul></nav>' +
-    '<div class="mp-foot"><a href="shootout.html"' + here('shootout.html') + '>Penalty Shootout' + mark('shootout.html') + '</a><a href="https://x.com/" target="_blank" rel="noopener">X<span class="sr-only"> (opens in a new tab)</span> <span aria-hidden="true">↗</span></a></div></div>';
+    '<div class="mp-foot"><a href="shootout.html"' + here('shootout.html') + '>Penalty Shootout' + mark('shootout.html') + '</a><a href="https://x.com/elevndotfun" target="_blank" rel="noopener">X<span class="sr-only"> (opens in a new tab)</span> <span aria-hidden="true">↗</span></a></div></div>';
   document.body.appendChild(scrim); document.body.appendChild(p);
   var nav = document.querySelector('header.nav'), isOpen = false;
 
