@@ -168,3 +168,7 @@ Reporting
   window, not only in the opening screenshot.
 - Shared bug for the lead: in `mock.css` the reduced-motion rule for `.rays i` loses to the
   `:nth-child` rules above it, so the rays still drift under reduced motion on every page.
+
+## 2026-11-18 · info-pages agent · review changes
+- Changed: "paid" became "collected" in About; Live predictions removed from the public roadmap; panel-inside-panel and monospace removed; league pills made plain text; gold inline link made a normal link; status key dropped; Build list numbered; two FAQ items and the cancelled-match rule added; side menu wired in.
+- Rule for next time: public pages never promise a parked item, never say prizes are "paid"/"sent" (winners collect), and use no inline styles or fonts outside Sora and Barlow Condensed.

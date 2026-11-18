@@ -46,11 +46,9 @@
 .modecard .facts { list-style: none; padding: 0; margin: 4px 0 0; }
 .modecard .facts li { padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; color: var(--text); }
 .sec-h { font-size: 13px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--steel); margin: 64px 0 16px; line-height: 1.2; }
-.leagues { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin: 0; }
-.leagues li { display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--edge-control); background: var(--row); font-size: 15px; font-weight: 600; }
-.linkrow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; border-radius: 20px; padding: 20px 24px; }
-.linkrow .contract { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0; padding: 10px 14px; border: 1px dashed var(--edge-control); border-radius: 12px; background: var(--row); }
-.linkrow .contract code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 14px; color: var(--steel); overflow-wrap: anywhere; }
+.leagues { font-size: 20px; font-weight: 600; letter-spacing: -.01em; color: var(--text); }
+.linkrow { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.linkrow p { color: var(--muted); font-size: 16px; }
 .chip-tag { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--edge-control); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--steel); white-space: nowrap; }
 
 /* ---------- Roadmap ---------- */
@@ -87,8 +85,6 @@
 .rtl.lt > li { grid-template-columns: 56px minmax(0, 1fr); padding-bottom: 14px; }
 .rtl.lt > li::before { display: none; }
 .rtl.lt > li .mk { justify-self: center; }
-.keyline { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: 14px; color: var(--muted); }
-.keyline span { display: inline-flex; align-items: center; gap: 8px; }
 
 @media (max-width: 1100px) {
   .ip-main, .ip-narrow { grid-column: 1 / -1; }
@@ -118,3 +114,9 @@
   .rtl.lt > li { grid-template-columns: 40px minmax(0, 1fr); }
   .rtl.lt .mk { margin: 0; width: 32px; height: 32px; }
 }
+
+.txl { color: var(--text); font-weight: 600; text-decoration: underline; text-decoration-color: var(--edge-control); text-underline-offset: 3px; }
+.txl:hover { text-decoration-color: var(--steel); }
+.stage ol.steps { list-style: none; counter-reset: st; padding: 0; margin: 16px 0 0; }
+.stage ol.steps li { counter-increment: st; display: flex; gap: 14px; }
+.stage ol.steps li::before { content: counter(st); color: var(--accent); font-weight: 700; min-width: 16px; }
