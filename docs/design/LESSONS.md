@@ -199,3 +199,12 @@ Reporting
 - How: the column headers carry the tier, so each player chip needs only name, position, club and a word plus tick for "In five"; sealed packs are one dashed row each. The pitch rows were placed from the measured line and label heights.
 - Changed: the first board put the midfield line through two names and the DEF label on the bottom line (pitch rows are absolutely placed, so any height change needs the rows moved); the rules list wrapped in a half-width column, so it became a 3x2 strip.
 - Rule for next time: when shrinking an absolutely positioned board, re-place every row and crop-check the lines against the labels; when a text list wraps, change the container, not the words.
+
+## 2026-11-18 · head agent · review of the shortened Draft screen
+- Verdict: approve with one small change (the "READY" badge in the rules strip renders as indented
+  text at 1440 and 1920). Height 3,684px to 1,785px with every rule and number intact, no overflow,
+  no text under 12px, contrast and control edges pass, guest state correct.
+- What made it work: nothing was deleted to save height. Lists became rows (one row per pack),
+  panels were merged (packs and reveal on one shelf), and two columns replaced a stack.
+- Rule for next time: to shorten a page, merge and re-flow first; cut content only when it is said
+  twice. Check each small badge at every width, not only the one you built at.
