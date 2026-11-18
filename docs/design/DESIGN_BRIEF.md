@@ -116,3 +116,11 @@ there. The phone view must still work and be usable, but it is adapted from the 
 not the other way round. This replaces the earlier phone-first assumption in the blueprint and
 in `web/DESIGN.md`.
 
+## How agents work together (owner's instruction, 2026-11-18)
+
+- Work is split among several building agents, one owner per file so they never overwrite each other.
+- Every builder reports to one head agent. The head agent checks the work against the owner's
+  interests, the blueprint, `web/DESIGN.md` and the ECC design skills, and sends back what to keep,
+  change and improve. The builder applies it before the work goes to the owner.
+- Agents do not remember earlier runs. `docs/design/LESSONS.md` is the shared memory: every agent
+  reads it first and adds what it did, how, and what it had to change.
