@@ -124,3 +124,11 @@ in `web/DESIGN.md`.
   change and improve. The builder applies it before the work goes to the owner.
 - Agents do not remember earlier runs. `docs/design/LESSONS.md` is the shared memory: every agent
   reads it first and adds what it did, how, and what it had to change.
+- Token discipline (owner's instruction, 2026-11-18): agents never see the chat. Each gets one
+  self-contained brief from the lead, written so the work does not have to be redone: the exact
+  files it owns, the facts and numbers it needs written out in the brief (so it does not have to
+  read the whole blueprint), a short reading list (the files it will edit, `LESSONS.md`, and only
+  the named sections of other documents), what "done" looks like, and how to check it. Layout and
+  styling work goes to Sonnet; the 3D engine and the head agent's reviews stay on Fable. When the
+  head agent's context grows large, start a fresh one from the checklist in `LESSONS.md` rather
+  than resuming the old one.
