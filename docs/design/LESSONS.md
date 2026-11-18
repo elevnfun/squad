@@ -131,3 +131,9 @@ Reporting
 - How: reused mock.css pieces (top bar, glass, .word, .tok, .cap, .lock, .pos) and put the rest in info-news.css / info-how.css; the three news kinds differ by shape (plain card, filled data card, thin outlined headline row) and by a text label plus glyph, never colour alone.
 - Changed: SOL amounts wrapped onto two lines in the narrow Collect/Locked boxes; fixed with nowrap. Weekly prize now leads with SOL, dollars grey.
 - Rule for next time: any amount in a small box needs white-space: nowrap; check the 390 shot for wraps in figure boxes.
+
+## 2026-11-18 · info-pages agent · FAQ, About, Roadmap mockups
+- Did: three read-style pages (accordion FAQ with jump list, About with two mode cards, vertical Roadmap with Done/Now/Next/Later marks), own stylesheet info-pages.css.
+- How: copied the top bar from today.html, reused .ph/.word/.rays/.glass from mock.css, wrote only new class names in info-pages.css.
+- Changed: my timeline class `.tl` already existed in mock.css as an underline link style, so every line was underlined; renamed to `.rtl`. A shared scratchpad script name was overwritten by another agent, so use a unique script name.
+- Rule for next time: grep mock.css for a class name before using it, and keep capture scripts under your own unique filename.
