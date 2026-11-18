@@ -568,8 +568,8 @@ export class BallEngine {
   setVariant(name) {
     const v = name === 'glass' ? 'glass' : 'steel';
     this.state.variant = v;
-    for (const o of this.variantParts.steel) o.visible = v === 'steel';
-    for (const o of this.variantParts.glass) o.visible = v === 'glass';
+    // The other variant's parts are taken out of the scene, not only hidden, so that its shaders are never compiled.
+    for (const k of ['steel', 'glass']) for (const o of this.variantParts[k]) { if (k === v) this.spin.add(o); else this.spin.remove(o); }
     this._applyPose();
     return this;
   }
@@ -752,7 +752,7 @@ export class BallEngine {
       m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       m.frustumCulled = false;          // the instances move; the ball is nearly always in view
       this.spin.add(m);
-      if (variant) this.variantParts[variant].push(m);
+      if (variant) { this.variantParts[variant].push(m); this.spin.remove(m); }   // setVariant puts the right set in
       return m;
     };
     const nHex = faces.filter((f) => f.n === 6).length, nPen = faces.length - nHex;
@@ -896,7 +896,7 @@ export class BallEngine {
     const M = this.mats, base = M.gold;
     M.core.color.set(I.dark).lerp(base.color, kk);
     M.core.roughness = I.darkRough + (base.roughness - I.darkRough) * kk;
-    M.core.clearcoat = base.clearcoat * kk;
+    M.core.clearcoat = Math.max(1e-4, base.clearcoat * kk);   // never exactly 0: that would be a different shader, compiled in the middle of the scroll
     M.core.emissiveIntensity = I.emissive * kk * kk;
     M.stud.color.set(I.dark).lerp(base.color, kk);
     M.stud.emissiveIntensity = I.studEmissive * kk * kk;
