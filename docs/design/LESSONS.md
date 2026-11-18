@@ -125,3 +125,9 @@ Reporting
 ## 2026-11-18 · mockup agent · rays and contrast
 - Changed: stronger rays dropped one line of text to 3.9:1; shafts were moved and shortened.
 - Rule for next time: measure contrast on the rendered pixels after any backdrop change.
+
+## 2026-11-18 · info-news agent · News and How to play mockups
+- Did: news.html (lead item, three visibly different item kinds, league filter chips) and how-to-play.html (8 numbered steps with small visuals), each with its own css.
+- How: reused mock.css pieces (top bar, glass, .word, .tok, .cap, .lock, .pos) and put the rest in info-news.css / info-how.css; the three news kinds differ by shape (plain card, filled data card, thin outlined headline row) and by a text label plus glyph, never colour alone.
+- Changed: SOL amounts wrapped onto two lines in the narrow Collect/Locked boxes; fixed with nowrap. Weekly prize now leads with SOL, dollars grey.
+- Rule for next time: any amount in a small box needs white-space: nowrap; check the 390 shot for wraps in figure boxes.

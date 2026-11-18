@@ -53,3 +53,4 @@
   .hw-end { margin-bottom: 64px; }
   .hw-pk { gap: 16px; }
 }
+.hw-col b { white-space: nowrap; font-size: 20px; } .hw-col .usd { font-size: 14px; }
