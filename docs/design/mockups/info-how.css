@@ -1,8 +1,4 @@
 /* How to play mockup. Extra rules only; the shared look is in mock.css. */
-.hw-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-bottom: 24px; }
-.hw-facts .glass { padding: 24px 28px; border-radius: 20px; }
-.hw-facts .small { margin-top: 8px; color: var(--muted); }
-.hw-facts .eyebrow { color: var(--text); }
 .hw-steps { list-style: none; margin: 0; padding: 8px 40px; border-radius: 24px; }
 .hw-step { display: grid; grid-template-columns: 64px minmax(0, 1fr) 360px; column-gap: 32px; align-items: center; padding: 36px 0; border-top: 1px solid var(--line); }
 .hw-step:first-child { border-top: 0; }
@@ -13,7 +9,7 @@
 .hw-list li { margin-top: 6px; }
 .hw-list li::marker { color: var(--steel); }
 .hw-v { display: flex; justify-content: flex-start; align-items: center; min-width: 0; flex-wrap: wrap; gap: 12px; }
-.lbl { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.hw-v .lbl { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
 .hw-tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
 .hw-tiers > div, .hw-col > div { padding: 14px 16px; border: 1px solid var(--steel-edge); border-radius: 12px; background: var(--sheen), var(--row); }
 .hw-tiers b, .hw-col b { font-size: 22px; font-weight: 700; letter-spacing: -.01em; display: block; }
@@ -40,7 +36,6 @@
 .hw-end { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: 32px 0 128px; flex-wrap: wrap; }
 
 @media (max-width: 1100px) {
-  .hw-facts { grid-template-columns: 1fr; }
   .hw-steps { padding: 8px 28px; }
   .hw-step { grid-template-columns: 56px minmax(0, 1fr); row-gap: 20px; }
   .hw-v { grid-column: 2; }

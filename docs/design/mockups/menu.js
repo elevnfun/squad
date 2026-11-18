@@ -42,12 +42,15 @@
   function open(fromHash, byKey) {
     if (isOpen) return; isOpen = true;
     p.style.setProperty('--menu-top', Math.max(0, nav.getBoundingClientRect().bottom) + 'px');
+    var sb = window.innerWidth - document.documentElement.clientWidth;   // the scrollbar the lock is about to hide
+    if (sb > 0) document.documentElement.style.paddingRight = sb + 'px';   // so the page does not shift
     document.documentElement.classList.add('menu-lock'); document.body.classList.add('menu-open'); btn.setAttribute('aria-expanded', 'true'); btn.innerHTML = LABEL_CLOSE;
     if (!fromHash) setHash(true);
     var f = focusables(); (byKey && f[0] ? f[0] : p).focus({ preventScroll: true });
   }
   function close(noFocus) {
     if (!isOpen) return; isOpen = false;
+    document.documentElement.style.paddingRight = '';
     document.documentElement.classList.remove('menu-lock'); document.body.classList.remove('menu-open'); btn.setAttribute('aria-expanded', 'false'); btn.innerHTML = LABEL_OPEN;
     setHash(false); if (!noFocus) btn.focus();
   }
