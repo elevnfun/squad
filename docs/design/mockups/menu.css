@@ -30,3 +30,6 @@ body.menu-open .menu-panel { transform: none; visibility: visible; transition-de
 @media (max-width: 700px) { .menu-btn { min-width: 40px; padding: 0 10px; font-size: 20px; } .menu-btn .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .menu-panel { width: 100vw; } .menu-panel .mp-in { padding: 24px 20px; } .menu-panel .mp-main .t { font-size: 30px; } }
 @media (prefers-reduced-motion: reduce) { .menu-panel, .menu-scrim { transition: none !important; } }
 .menu-panel:focus, .menu-panel:focus-visible { outline: none; }
+
+/* keep the page from shifting sideways when the scroll lock hides the scrollbar */
+html { scrollbar-gutter: stable; }
