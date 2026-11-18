@@ -9,25 +9,25 @@ body.menu-open .nav { z-index: 60; }
   transform: translateX(100%); visibility: hidden; transition: transform 300ms var(--ease), visibility 0s linear 300ms; }
 body.menu-open .menu-scrim { opacity: 1; visibility: visible; transition-delay: 0s; }
 body.menu-open .menu-panel { transform: none; visibility: visible; transition-delay: 0s; }
-.menu-panel .mp-in { padding: 32px 32px 28px; display: flex; flex-direction: column; flex: 1; min-height: min-content; }
-.menu-panel .mp-title { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 40px; line-height: .9; letter-spacing: .06em; color: transparent; -webkit-text-stroke: 1.1px rgba(244,244,241,.88); margin: 0 0 24px; user-select: none; }
+.menu-panel .mp-in { padding: 24px 32px 24px; display: flex; flex-direction: column; flex: 1; min-height: min-content; }
+.menu-panel .mp-title { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 40px; line-height: .9; letter-spacing: .06em; color: transparent; -webkit-text-stroke: 1.1px rgba(244,244,241,.88); margin: 0 0 16px; user-select: none; }
 .menu-panel ul { list-style: none; margin: 0; padding: 0; }
-.menu-panel .mp-main a { display: block; padding: 14px 0; border-top: 1px solid var(--line); border-radius: 0; }
+.menu-panel .mp-main a { display: block; padding: 11px 12px; margin: 0 -12px; border-top: 1px solid var(--line); border-radius: 0; }
 .menu-panel .mp-main li:last-child a { border-bottom: 1px solid var(--line); }
 .menu-panel .mp-main .t { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 34px; line-height: 1.05; color: var(--text); }
 .menu-panel .mp-main .d { display: block; margin-top: 2px; font-size: 14px; line-height: 1.45; color: var(--muted); }
 .menu-panel .mp-main a:hover { background: rgba(255,255,255,.05); }
 .menu-panel .here { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--steel); }
 .menu-panel .here::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-.menu-panel .mp-more { margin-top: 28px; }
+.menu-panel .mp-more { margin-top: 20px; }
 .menu-panel .mp-more .eyebrow { display: block; margin-bottom: 8px; }
-.menu-panel .mp-more a { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; font-size: 15px; font-weight: 500; color: var(--steel); border-radius: 6px; }
+.menu-panel .mp-more a { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; margin: 0 -12px; font-size: 15px; font-weight: 500; color: var(--steel); border-radius: 6px; }
 .menu-panel .mp-more a:hover { color: var(--text); }
 .menu-panel .mp-more .ext { font-size: 13px; font-weight: 400; color: var(--muted); }
-.menu-panel .mp-wallet { margin-top: auto; padding-top: 28px; }
+.menu-panel .mp-wallet { margin-top: auto; padding-top: 20px; }
 .menu-panel .mp-wallet > div { border-top: 1px solid var(--steel-edge); padding-top: 20px; flex-direction: column; align-items: flex-start; gap: 14px; }
 .menu-panel .mp-wallet p { margin: 0; font-size: 14px; color: var(--muted); }
-.menu-panel .mp-wallet .row { align-items: center; justify-content: space-between; gap: 12px; }
+.menu-panel .mp-wallet .row { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
 .menu-panel .mp-wallet .chip { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 16px 0 10px; border-radius: 999px; border: 1px solid var(--edge-control); font-size: 14px; font-weight: 500; }
 .menu-panel .mp-wallet .chip svg { flex: none; }
 .menu-panel .mp-wallet .plain { font-size: 14px; font-weight: 500; color: var(--steel); padding: 8px 10px; border-radius: 999px; text-decoration: underline; text-underline-offset: 3px; }
@@ -39,5 +39,5 @@ body.menu-open .menu-panel { transform: none; visibility: visible; transition-de
 .menu-panel:not(.is-conn) div[data-g] { display: flex; }
 .menu-panel a:focus-visible, .menu-panel button:focus-visible, .menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .menu-panel .mp-main a:focus-visible { outline-offset: -3px; }
-@media (max-width: 700px) { .menu-panel { width: 100vw; } .menu-panel .mp-in { padding: 24px 20px; } .menu-panel .mp-main .t { font-size: 30px; } }
+@media (max-width: 700px) { .menu-btn { padding: 0 8px; } .menu-panel { width: 100vw; } .menu-panel .mp-in { padding: 24px 20px; } .menu-panel .mp-main .t { font-size: 30px; } }
 @media (prefers-reduced-motion: reduce) { .menu-panel, .menu-scrim { transition: none !important; } }
