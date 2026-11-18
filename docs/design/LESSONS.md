@@ -176,3 +176,7 @@ Reporting
 ## 2026-11-18 · menu agent · review fixes
 - Changed: the panel showed colour from the page because `var(--glass)` already contains its own translucent colour layer, so a solid fill placed after it was ignored; used an explicit gradient over a solid #0b0c0e. Also removed what the bar already shows (wallet block, Winnings, MENU title), locked page scroll, made the button icon-only at 390, and fixed three shared faults (rays under reduced motion, 38px bar targets, wrong current tab on Shootout/Connect).
 - Rule for next time: a token that bundles several background layers cannot be reused as one layer; and check with pixel samples, not by eye, that a panel is really opaque.
+
+## 2026-11-18 · info-news agent · review changes to News and How to play
+- Changed: filtered news lopsided because items sat in two fixed columns (now one CSS-columns flow); lead text sat on a ray (44ch cap, 30ch at 1024; measured 7.65:1 at 1440, 7.75:1 at 1024 on rendered pixels); gold used for plain rank numbers (now steel); fact cards repeated steps 1 and 3 (removed); "daily"/"a day" used for the Blitz rhythm (now matchday).
+- Rule for next time: lists that can be filtered use one flow, never hand-split columns; gold only means a paid place or the captain; measure lead contrast at 1024 as well as 1440.
