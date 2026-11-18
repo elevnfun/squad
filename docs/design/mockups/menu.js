@@ -4,7 +4,7 @@
   var old = document.querySelector('.nav .right a.menu'); if (!old) return;
   var btn = document.createElement('button');
   btn.type = 'button'; btn.className = 'menu-btn'; btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-controls', 'side-menu'); btn.setAttribute('aria-haspopup', 'dialog');
-  var LABEL_OPEN = 'Menu <span aria-hidden="true">+</span>', LABEL_CLOSE = 'Close <span aria-hidden="true">×</span>';
+  var LABEL_OPEN = '<span class="lbl">Menu </span><span aria-hidden="true">+</span>', LABEL_CLOSE = '<span class="lbl">Close </span><span aria-hidden="true">×</span>';
   btn.innerHTML = LABEL_OPEN;
   old.replaceWith(btn);
 
@@ -24,26 +24,12 @@
   var scrim = document.createElement('div'); scrim.className = 'menu-scrim'; scrim.setAttribute('aria-hidden', 'true');
   var p = document.createElement('div'); p.className = 'menu-panel'; p.id = 'side-menu';
   p.setAttribute('role', 'dialog'); p.setAttribute('aria-modal', 'true'); p.setAttribute('aria-label', 'Menu'); p.tabIndex = -1;
-  p.innerHTML = '<div class="mp-in"><p class="mp-title" aria-hidden="true">Menu</p>' +
+  p.innerHTML = '<div class="mp-in">' +
     '<nav aria-label="Menu"><ul class="mp-main">' + main + '</ul></nav>' +
-    '<div class="mp-more"><span class="eyebrow">More</span><ul>' +
-    '<li><a href="shootout.html"' + here('shootout.html') + '>Penalty Shootout' + mark('shootout.html') + '</a></li>' +
-    '<li data-c><a href="winnings.html"' + here('winnings.html') + '>Winnings' + mark('winnings.html') + '</a></li>' +
-    '<li><a href="https://x.com/" target="_blank" rel="noopener">X <span class="ext">Opens in a new tab ↗</span></a></li></ul></div>' +
-    '<div class="mp-wallet">' +
-    '<div data-g><p>You\'re browsing as a guest</p><a class="btn btn-line" href="connect.html">Connect wallet</a></div>' +
-    '<div data-c class="row"><span class="chip"></span><a class="plain" href="today.html#guest">Disconnect</a></div></div></div>';
+    '<div class="mp-foot"><a href="shootout.html"' + here('shootout.html') + '>Penalty Shootout' + mark('shootout.html') + '</a><a href="https://x.com/" target="_blank" rel="noopener">X<span class="sr-only"> (opens in a new tab)</span> <span aria-hidden="true">↗</span></a></div></div>';
   document.body.appendChild(scrim); document.body.appendChild(p);
   var nav = document.querySelector('header.nav'), isOpen = false;
 
-  function connected() { return !document.body.classList.contains('guest') && !!document.querySelector('.nav .right .wchip'); }
-  function sync() {
-    var c = connected(); p.classList.toggle('is-conn', c);
-    if (c) {
-      var w = document.querySelector('.nav .right .wchip'), s = w.querySelector('span'), sv = w.querySelector('svg');
-      p.querySelector('.chip').innerHTML = (sv ? sv.outerHTML : '') + '<span>' + (s ? s.textContent : '') + '</span>';
-    }
-  }
   function focusables() {
     return [].slice.call(p.querySelectorAll('a[href], button')).filter(function (e) { return e.getClientRects().length > 0; });
   }
@@ -53,19 +39,19 @@
     var h = parts.length ? '#' + parts.join('-') : '';
     if (h !== location.hash) history.replaceState(null, '', location.pathname + location.search + h);
   }
-  function open(fromHash) {
-    if (isOpen) return; isOpen = true; sync();
+  function open(fromHash, byKey) {
+    if (isOpen) return; isOpen = true;
     p.style.setProperty('--menu-top', Math.max(0, nav.getBoundingClientRect().bottom) + 'px');
-    document.body.classList.add('menu-open'); btn.setAttribute('aria-expanded', 'true'); btn.innerHTML = LABEL_CLOSE;
+    document.documentElement.classList.add('menu-lock'); document.body.classList.add('menu-open'); btn.setAttribute('aria-expanded', 'true'); btn.innerHTML = LABEL_CLOSE;
     if (!fromHash) setHash(true);
-    var f = focusables(); (f[0] || p).focus({ preventScroll: true });
+    var f = focusables(); (byKey && f[0] ? f[0] : p).focus({ preventScroll: true });
   }
   function close(noFocus) {
     if (!isOpen) return; isOpen = false;
-    document.body.classList.remove('menu-open'); btn.setAttribute('aria-expanded', 'false'); btn.innerHTML = LABEL_OPEN;
+    document.documentElement.classList.remove('menu-lock'); document.body.classList.remove('menu-open'); btn.setAttribute('aria-expanded', 'false'); btn.innerHTML = LABEL_OPEN;
     setHash(false); if (!noFocus) btn.focus();
   }
-  btn.addEventListener('click', function () { isOpen ? close() : open(); });
+  btn.addEventListener('click', function (e) { isOpen ? close() : open(false, e.detail === 0); });
   scrim.addEventListener('click', function () { close(); });
   document.addEventListener('keydown', function (e) {
     if (!isOpen) return;
@@ -77,7 +63,7 @@
   });
   function fromHash() {
     var want = location.hash.replace('#', '').split('-').indexOf('menu') > -1;
-    if (want && !isOpen) open(true); else if (!want && isOpen) close(true); else if (isOpen) sync();
+    if (want && !isOpen) open(true); else if (!want && isOpen) close(true); 
   }
   window.addEventListener('hashchange', fromHash); fromHash();
 })();

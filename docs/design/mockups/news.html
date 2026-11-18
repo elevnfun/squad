@@ -2,11 +2,11 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>News · elevn mockup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="info-news.css"></head>
+<link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="info-news.css"><link rel="stylesheet" href="menu.css"><script src="menu.js" defer></script></head>
 <body>
 <div class="devnet">Devnet test: prizes shown in this mockup are sample test SOL</div>
 <header class="nav"><div class="wrap">
-<a class="logo" href="index.html">elevn<i></i></a>
+<a class="logo" href="home.html">elevn<i></i></a>
 <nav class="links" aria-label="Main"><a href="today.html">Today</a><a href="ranks.html">Ranks</a><a href="chat.html">Chat</a></nav>
 <div class="right"><div class="wchip"><a href="#"><svg width="22" height="22" viewBox="0 0 22 22" role="img" aria-label="Blitz and Draft unlocked"><circle cx="11" cy="11" r="8.5" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2.5"/><path d="M11 2.5 A8.5 8.5 0 0 1 11 19.5" fill="none" stroke="#f2c14e" stroke-width="2.5"/><path d="M11 19.5 A8.5 8.5 0 0 1 11 2.5" fill="none" stroke="#f2c14e" stroke-width="2.5" stroke-dasharray="26.7" stroke-dashoffset="0" opacity=".55"/></svg><span>7xKp…q9Fa</span></a><a href="winnings.html">Winnings</a></div><a class="menu" href="#">Menu +</a></div>
 </div></header>
@@ -21,7 +21,6 @@
 <button class="fchip" type="button" aria-pressed="false" data-f="ll">La Liga</button>
 <button class="fchip" type="button" aria-pressed="false" data-f="bl">Bundesliga</button>
 </div>
-<p class="small muted nw-key"><span class="kd k-w">Our write-up</span><span class="kd k-d">elevn match data</span><span class="kd k-h">Headline</span></p>
 </div>
 
 <article class="glass nw-lead" data-l="pl">
@@ -33,14 +32,13 @@
 </div>
 <div class="nw-lead-side" aria-label="Matchday figures">
 <span class="eyebrow">Result</span>
-<div class="nw-score"><span>Away side</span><b>2</b><i>–</i><b>1</b><span>Home side</span></div>
+<div class="nw-score"><span>Home side</span><b>1</b><i>–</i><b>2</b><span>Away side</span></div>
 <span class="badge ft">Full time</span>
 <p class="small muted">Sample fixture. Names are placeholders.</p>
 </div>
 </article>
 
-<div class="g nw-grid">
-<div class="col" style="--n:6"><div class="stack" style="--gap:24px" id="colA">
+<div class="nw-flow" id="flow">
 
 <article class="card nw-item w" data-l="ll">
 <div class="nw-meta"><span class="kind k-w">Our write-up</span><span class="lg">La Liga</span><span class="tm">3 hours ago</span></div>
@@ -78,8 +76,7 @@
 <p class="nw-src"><span>Sky Sports</span><span class="tm">Yesterday</span></p>
 </article>
 
-</div></div>
-<div class="col" style="--n:6"><div class="stack" style="--gap:24px" id="colB">
+
 
 <article class="card nw-item h" data-l="pl">
 <div class="nw-meta"><span class="kind k-h">Headline</span><span class="lg">Premier League</span></div>
@@ -120,7 +117,7 @@
 </ul>
 </article>
 
-</div></div></div>
+</div>
 <p class="small muted nw-end">Showing the latest items. Every write-up names its source and links to it; headlines link out to the publisher. Nothing here is a copy of an article.</p>
 </main>
 <footer class="foot-note"><div class="wrap"><span>Design mockup. Sample data: every headline, result, name and amount on this page is invented.</span><span>Sample rate used: 1 SOL = $160</span></div></footer>
@@ -128,4 +125,4 @@
 document.querySelectorAll('.fchip').forEach(function(b){b.addEventListener('click',function(){
  document.querySelectorAll('.fchip').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
  var f=b.dataset.f;document.querySelectorAll('[data-l]').forEach(function(e){e.hidden=!(f==='all'||e.dataset.l===f)});});});
-</script></body></html>
+</script><script src="guest.js"></script></body></html>

@@ -49,7 +49,7 @@
 
 .nw-rank { list-style: none; margin: 8px 0 0; padding: 0; }
 .nw-rank li { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
-.nw-rank .r { font-weight: 700; color: var(--accent); }
+.nw-rank .r { font-weight: 700; color: var(--steel); }
 .nw-rank .n { font-weight: 600; }
 .nw-rank small { display: block; font-size: 13px; font-weight: 400; color: var(--muted); }
 .nw-rank .v { text-align: right; font-weight: 700; }
@@ -72,3 +72,15 @@
   .nw-grid .col { margin-bottom: 0; }
   .nw-end { margin-bottom: 64px; }
 }
+
+.ph .lead { max-width: 44ch; }
+.nw-lead-side .badge { align-self: flex-start; }
+.nw-flow { column-count: 2; column-gap: 24px; }
+.nw-flow > article { break-inside: avoid; margin: 0 0 24px; }
+.nw-item.h { position: relative; min-height: 64px; }
+.nw-hl::after { content: ""; position: absolute; inset: 0; border-radius: 12px; }
+.nw-hl:focus-visible { outline: none; }
+.nw-item.h:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
+.nw-item.h:hover { border-color: var(--steel); }
+@media (max-width: 1100px) { .nw-flow { column-count: 1; } }
+@media (max-width: 1100px) { .ph .lead { max-width: 30ch; } }

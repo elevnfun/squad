@@ -54,3 +54,6 @@
   .hw-pk { gap: 16px; }
 }
 .hw-col b { white-space: nowrap; font-size: 20px; } .hw-col .usd { font-size: 14px; }
+.ph .lead { max-width: 44ch; }
+@media (max-width: 1100px) { .ph .lead { max-width: 30ch; } }
+@media (max-width: 700px) { .ph .lead { max-width: none; } h1.word { font-size: 52px; } }
