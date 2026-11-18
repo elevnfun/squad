@@ -184,3 +184,12 @@ Reporting
 ## 2026-11-18 · info-pages agent · public roadmap and X link
 - Changed: Roadmap now leads with one "Building the platform" (Now) stage whose closed drop-down holds the internal stages; public stages follow. About's X button points to the real account and opens in a new tab with a screen-reader note.
 - Rule for next time: a public page shows what players need; internal stages go behind a closed `<details>`, as a plain list, not a card inside a card.
+
+## 2026-11-18 · head agent · second pass on the info pages and the menu
+- All 18 earlier must items were fixed. Three new faults came from the fixes themselves: a shared
+  class name (`.lbl` in `info-how.css`) restyled the menu button on one page; gold came back as
+  list numbers on the Roadmap; `scrollbar-gutter: stable` narrowed every screen by 15px in captures.
+- Rule for next time: scope every new class under your page's own prefix, and after a shared
+  change re-capture one product screen and compare it with the committed shot before reporting.
+- Rule for next time: a screenshot taken under 200 ms after a click shows the transition, not the
+  result; wait for it to finish.
