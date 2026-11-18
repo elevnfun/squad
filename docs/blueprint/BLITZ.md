@@ -1,5 +1,13 @@
 # Matchday Blitz: revised rules and payouts
 
+**Read this first (2026-11-18).** The body of this file is the owner's original note and is out of
+date in places. Where it disagrees with `CLAUDE.md` or `BLUEPRINT.md` section 5.1, those win. In
+particular: prizes are SOL on devnet (not USDC); every board pays the top 5 at 50 / 25 / 12 / 8 / 5
+percent, so the weekly $500 is $250 / $125 / $60 / $40 / $25 (not top 10, not $200 / $100 / $50);
+there is no 72-hour hold; prizes are collected by the winner (half at once, the rest released 20%
+per withdrawal every 24 hours), never sent automatically; a result is final 15 minutes after the
+day's last match.
+
 **Owner's update, 2026-11-14 (overrides the text below):** every prize is paid in SOL while the
 site is on devnet, the weekly $500 included as its SOL equivalent; the weekly prize comes from
 creator fees when they cover it and from project funds when they don't.

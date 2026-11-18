@@ -72,7 +72,7 @@ Every Higgsfield credit needs the owner's yes before it is spent.
 | `--live` | `#FF5A52` | LIVE only, black label | 6.4 on bg |
 | `--ok` / `--danger` | `#3DDC84` / `#FF6B63` | Points gained or lost, errors, an unmet rule | 11.0 / 7.1 on bg |
 | `--wash` | `#221E12` | Your own row, notices | text 15.1, muted 7.0 |
-| `--pitch` / `--pitch-2` | `#1B4D2E` / `#1F5533` | The five-a-side board and its mowing stripe, nowhere else | White text 9.8 / 8.7. No muted text on grass |
+| `--pitch` / `--pitch-2` | `#1B4D2E` / `#1F5533` | Retired as a fill (2026-11-18). The Draft board is dark steel; green survives only as muted pitch lines and a soft centre glow | n/a |
 
 Edges and glass:
 
@@ -231,8 +231,9 @@ After the story one plain prizes band scrolls up over the stage (top 5, 50 / 25 
 - **The Draft packs:** five tall foil packs (2:3) in a row, all using the one shared artwork,
   labelled PACK 1 to PACK 5 in code. On hover or keyboard focus, only while the packs stand
   closed: the pack lifts and tilts towards the cursor, one sheen sweeps across (900 ms), the rim
-  glows gold, the hover video fades in, and the other four dim. This is the only element on the
-  site that tilts or shines.
+  glows gold, the hover video fades in, and the other four dim. The Blitz fixture cards share
+  this hover, with a glint drawn in code that runs along the card's stripe and passes behind the
+  players. These two are the only elements on the site that tilt or shine.
 - **Sound** exists in the hero only, made with Web Audio (no files), and is off until the visitor
   asks for it (a completed hold or the speaker button). The choice is remembered. Not built yet.
 - **Narrow screens (900px and under):** the words flow as a normal page over a dimmed still of
@@ -248,7 +249,7 @@ Mockups: `docs/design/mockups/` (`mock.css` holds these tokens as used).
   glass rail in columns 9 to 12 with the next kickoff countdown, your place and the prize line.
 - **Blitz pick:** fixtures in columns 1 to 4, the squad builder in 5 to 9, the live board in 10
   to 12; all three follow the chosen fixture. Below 1200px the board stacks under the other two.
-- **Draft:** the five packs, the pool of 15, the five-a-side board on `--pitch` with its rule
+- **Draft:** the five packs, the pool of 15, the five-a-side board (dark steel with muted green pitch lines) with its rule
   checks listed beside it.
 - **Ranks:** the board in columns 1 to 8 (tabs: Blitz daily, Blitz weekly, Draft weekly), your
   prizes in 9 to 12.
@@ -271,7 +272,7 @@ shimmer), error and empty states.
 | Banked card | Glass, a gold seam along the top; fixture, "+34 banked", rank line, "in the money" chip | Full time (provisional), banked, banked outside the money |
 | Pack | The shared foil artwork with its number 1 to 5 in code | Sealed, opening, opened; "Open all" |
 | Pack-reveal card | Player, club, position, price band | Shown, chosen for the five, unused, swapped in |
-| Five-a-side board | A `--pitch` board with five slots; rule checks beside it | Empty, invalid (the unmet rule in `--danger` with its words), ready, locked, scoring |
+| Five-a-side board | A dark steel board with muted green pitch lines and five slots; rule checks beside it | Empty, invalid (the unmet rule in `--danger` with its words), ready, locked, scoring |
 | Countdown | Eyebrow, then Barlow digits in a `--row` well | Days, hours and minutes, under an hour (seconds), "Locked", next matchday |
 | Prize row | Place, share, amount, wallet | Projected, under review, sent (link to the transfer), rolled forward, held back by the prize rules |
 | Empty | One sentence and one useful action | No squads, no draft, no prizes, board empty |
@@ -306,7 +307,8 @@ No raw durations in component code; use the tokens.
 - The bar, headings, the grid and band edges never move.
 - Not allowed anywhere: parallax, shimmer, confetti, card flips, rarity glows, sparks, cursor
   effects, tilt-on-hover. The two exceptions are both on the home page and listed above: the
-  cursor turns the studio light, and a closed Draft pack tilts and shines on hover.
+  cursor turns the studio light, and the closed Draft packs and the Blitz fixture cards tilt and
+  shine on hover.
 - React Bits pieces kept, restyled to these tokens: StaggeredMenu (side menu), GlideSelect
   (dropdowns), CountUp (numbers), AnimatedList (lists), LatticeLoader (a whole page loading).
 

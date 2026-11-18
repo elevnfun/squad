@@ -64,8 +64,8 @@ document of 2026-11-14). It replaces every earlier Blitz rule. In short:
 - Each squad goes Live, then Full time (provisional), then Banked about 15 minutes after full
   time, with a reveal card. The board shows the prize line and "If the day ended now you'd win
   $X". Banked points are final. [Owner]
-- Daily prize: the top 5 on the daily board, credited and sent when the last fixture of the
-  matchday is banked. [Owner]
+- Daily prize: the top 5 on the daily board. The result is final 15 minutes after the day's last
+  match and the winners then press Collect (section 5.1). [Owner]
 - Weekly prize: a fixed $500 (paid as its SOL equivalent on devnet) for the top 5, on the sum
   of a player's best 3 daily totals that week. [Owner]
 - Ties: the player with more captain points wins. If that is equal too, the tied players
@@ -164,9 +164,8 @@ Three places:
   weekly board. [Owner]
 - The split is steep, with 1st and 2nd far ahead [Owner]: 50% / 25% / 12% / 8% / 5% on all
   three boards, which makes the weekly $500 pay $250 / $125 / $60 / $40 / $25. [Owner]
-- Blitz daily prizes are sent at day close, one transfer per winner, only if the wallet still
-  holds the requirement; a failed transfer falls back to the daily batch. [Owner] Details in
-  `docs/blueprint/BLITZ.md`.
+- Blitz daily prizes become collectable 15 minutes after the day's last match; the winner presses
+  Collect (section 5.1). Nothing is sent automatically. [Owner]
 - The 72-hour hold does not apply to Blitz daily prizes. It applies to the weekly prizes: the
   Blitz weekly prize and the Draft prize. [Owner]
 - Draft uses the same holding rule as Blitz: the wallet must hold its requirement (300,000)
@@ -179,8 +178,8 @@ Three places:
   reduces the daily pots. [Owner] It must go to the legal review.
 - Sending at day close without the owner signing needs a key on the server: a separate payout
   wallet holding about a week of prizes, never the fee wallet. [Owner]
-- Draft prizes are credited and sent when the week's last matchday closes, the same way as the
-  Blitz weekly prize. The 14-part vesting goes with Season; no Season prizes are owed.
+- Draft prizes become collectable when the week's last matchday is final, the same way as the
+  Blitz weekly prize, and are collected under section 5.1. The 14-part vesting goes with Season; no Season prizes are owed.
 - One prize per wallet per board.
 - The 72-hour holding rule is in config.toml but not enforced in code. It must be enforced
   before any weekly prize is paid.
