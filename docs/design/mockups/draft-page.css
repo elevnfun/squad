@@ -138,3 +138,6 @@
 }
 .dp-frame .pitchbox .ln { top: 16px; bottom: 16px; }
 .dp-frame .pl .tok { margin-bottom: 6px; }
+
+/* the READY badge beside the rule checks: an outlined pill, like the other status badges */
+.dp-rules .badge { border: 1px solid var(--edge-control); color: var(--steel); background: transparent; }
