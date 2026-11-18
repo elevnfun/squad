@@ -208,3 +208,9 @@ Reporting
   panels were merged (packs and reveal on one shelf), and two columns replaced a stack.
 - Rule for next time: to shorten a page, merge and re-flow first; cut content only when it is said
   twice. Check each small badge at every width, not only the one you built at.
+
+## 2026-11-18 · phone agent · phone polish of the product and info mockups
+- Did: one-row top bar (compact chip, Winnings moved into the menu's quiet row on phones), a shared bottom tab bar (`tabbar.js`, built from the top bar's own links), single-column rules for every screen, FAQ jump list as a `<details>`, banked and connect dialogs that fit 390x844, softer rays and page bloom on phones; reduced-motion pack hover override.
+- How: all phone rules sit in `@media (max-width: 700px)` blocks, so 1440 and 1024 captures stayed pixel-identical (checked before/after with and without reduced motion). Contrast measured on rendered pixels with the text hidden, worst case over the brightest 2% of each text box.
+- Changed: `isMobile` pages report `innerWidth` as the widened layout width, so the first overflow check looked clean while three pages overflowed; use the real `scrollWidth` and a fixed width. Fixed bars float mid-page in full-page captures; resize the viewport to the page height first. A rule meant for the top-bar chip also hit a chip drawn inside How to play; scope phone rules under `.nav`.
+- Rule for next time: pages with inline styles need a class hook before they can be made responsive; add one rather than fighting the style attribute. A `<details>` that must look static on desktop needs the label wrapped so the line height stays identical.
