@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 import websockets
 from solders.pubkey import Pubkey
 
-from . import holdings
+from . import holdings, winnings
 from .chain import TOKEN_PROGRAMS, Rpc, mint_address, parse_token_account, ws_url
 from .config import CFG
 from .db import connect
@@ -34,14 +34,17 @@ def is_address(wallet):
 
 def players(conn):
     # simulation databases hold made-up wallets; only real addresses can be watched
-    return {r[0] for r in conn.execute("SELECT DISTINCT wallet FROM squads WHERE season = %s", (SEASON,)).fetchall()
-            if is_address(r[0])}
+    # also every wallet with a locked winnings balance: selling below the line must freeze it at once
+    return {r[0] for r in conn.execute(
+        """SELECT wallet FROM squads WHERE season = %s UNION SELECT wallet FROM winnings WHERE locked_lamports > 0""",
+        (SEASON,)).fetchall() if is_address(r[0])}
 
 
 def check(conn, rpc, wallet, now=None):
     """Re-read a player's balance and apply the freeze rule. Returns newly frozen [(squad, gameweek)]."""
     bal = holdings.balance(wallet, rpc)
     frozen = holdings.enforce(conn, wallet, bal, now)
+    winnings.sync_freeze(conn, wallet, bal, now)
     conn.commit()
     if frozen:
         print(f"{datetime.now():%H:%M:%S} {wallet[:4]}…{wallet[-4:]} holds {bal:,.0f}: froze squads {[s for s, _ in frozen]}")

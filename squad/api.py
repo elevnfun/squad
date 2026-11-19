@@ -5,23 +5,25 @@ send it as `Authorization: Bearer <token>`. Reads are public except a squad's un
 draft and its picks for a gameweek that has not locked yet (only the owner sees those).
 """
 
+import asyncio
 import hmac
 import os
 import threading
 import time
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from dataclasses import asdict
 from datetime import datetime, timezone
 
 from typing import Literal
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Path, Query, Request
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Path, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
 
-from . import auth, chain, chat, faucet, game, holdings, payouts, profiles
+from . import auth, chain, chat, contests, faucet, game, holdings, jobs, payouts, pots, profiles, winnings
 from .config import CFG, launch_leagues
 from .db import DEFAULT_URL
 
@@ -41,9 +43,32 @@ def db():
         yield conn
 
 
+def rpc():
+    return chain.Rpc()
+
+
+def _run_jobs():
+    with pool().connection() as conn:
+        jobs.run_once(conn, rpc())
+
+
+async def _job_loop():
+    while True:
+        try:
+            await asyncio.to_thread(_run_jobs)
+        except Exception as e:
+            print(f"job round failed: {e!r}")
+        await asyncio.sleep(jobs.EVERY)
+
+
 @asynccontextmanager
 async def lifespan(app):
+    task = asyncio.create_task(_job_loop()) if os.environ.get("RUN_JOBS") == "1" else None
     yield
+    if task:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
     if _pool is not None:
         _pool.close()
 
@@ -168,12 +193,16 @@ def me(wallet=Depends(current_wallet), conn=Depends(db)):
     unpaid = set(holdings.unpaid_squads(conn, wallet, bal)) if holdings.enabled() else set()
     profile = profiles.get(conn, wallet)
     can_chat, chat_reason = chat.can_post(conn, wallet)
+    won = winnings.status(conn, wallet)
     return {"wallet": wallet, "balance": bal, "requirement": holdings.requirement(),
             "squads_allowed": holdings.squads_allowed(bal), "is_admin": wallet == chain.fee_wallet(),
             "faucet": {"amount": faucet.F["amount"], "claimed": faucet.claimed(conn, wallet)} if faucet.enabled() else None,
             "username": profile["username"] if profile else None,
             "username_next_change": profile["next_change"] if profile else None,
             "chat": {"can_post": can_chat, "reason": chat_reason},
+            "access": {"blitz": bal >= CFG["blitz"]["requirement"], "draft": bal >= CFG["draft"]["requirement"]},
+            "winnings": {"ready_sol": won["ready"] / chain.LAMPORTS, "locked_sol": won["locked"] / chain.LAMPORTS,
+                         "frozen": won["frozen"]},
             "squads": [{"id": i, "league": slugs.get(lg), "slot": s, "name": n, "frozen_at": fz, "unpaid": i in unpaid,
                         "can_delete": not played} for i, lg, s, n, fz, played in squads]}
 
@@ -728,6 +757,208 @@ class SignedTxs(BaseModel):
 def admin_submit(batch_id: int, body: SignedTxs, _=Depends(admin_wallet), conn=Depends(db)):
     results = payouts.submit(conn, chain.Rpc(), batch_id, body.signed)
     return {"results": [{"idx": i, "result": r} for i, r in results], "batch": batch_json(conn, batch_id)}
+
+
+# ------------------------------------------------------- elevn 2.0: contests and winnings ---
+def sol(lamports):
+    return lamports / chain.LAMPORTS
+
+
+def read_balance(wallet, live=False):
+    """The wallet's $ELEVN balance, or None when it cannot be read."""
+    try:
+        return holdings.balance(wallet) if live else shown_balance(wallet)
+    except Exception:
+        return None
+
+
+def sync_freeze(conn, wallet):
+    bal = read_balance(wallet, live=True)
+    if bal is not None:
+        winnings.sync_freeze(conn, wallet, bal)
+        conn.commit()
+
+
+def winnings_json(st):
+    return {"ready_lamports": st["ready"], "ready_sol": sol(st["ready"]), "locked_lamports": st["locked"],
+            "locked_sol": sol(st["locked"]), "frozen": st["frozen"]}
+
+
+@app.get("/api/today")
+def today(wallet=Depends(optional_wallet), conn=Depends(db)):
+    """What a visitor sees today. Works without a wallet; access and winnings are null for a guest."""
+    out = {"now": datetime.now(timezone.utc),
+           "contests": [{**c, "pot_sol": sol(c["pot_lamports"])} for c in contests.current(conn)],
+           "access": None, "winnings": None}
+    if wallet:
+        bal = read_balance(wallet)
+        out["access"] = {"balance": bal, "blitz": bal is not None and bal >= CFG["blitz"]["requirement"],
+                         "draft": bal is not None and bal >= CFG["draft"]["requirement"],
+                         "blitz_requirement": CFG["blitz"]["requirement"],
+                         "draft_requirement": CFG["draft"]["requirement"]}
+        out["winnings"] = winnings_json(winnings.status(conn, wallet))
+    return out
+
+
+def contest_row(conn, contest_id):
+    row = conn.cursor(row_factory=dict_row).execute("SELECT * FROM contests WHERE id = %s", (contest_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "No such contest")
+    return row
+
+
+def contest_json(c):
+    return {"id": c["id"], "kind": c["kind"], "day": c["day"], "week_start": c["week_start"], "state": c["state"],
+            "locks_at": c["locks_at"], "final_at": c["final_at"], "pot_lamports": c["pot_lamports"],
+            "pot_sol": sol(c["pot_lamports"])}
+
+
+@app.get("/api/contests/{contest_id}")
+def contest_detail(contest_id: int, conn=Depends(db)):
+    c = contest_row(conn, contest_id)
+    ids = [f["id"] for f in contests.fixtures_of(conn, c)]
+    rows = conn.execute("""SELECT f.id, f.kickoff, f.status, hc.name, f.home_goals, ac.name, f.away_goals
+                           FROM fixtures f JOIN clubs hc ON hc.id = f.home_club_id JOIN clubs ac ON ac.id = f.away_club_id
+                           WHERE f.id = ANY(%s) ORDER BY f.kickoff, f.id""", (ids,)).fetchall()
+    return {**contest_json(c), "fixtures": [{"id": i, "kickoff": ko, "status": st, "home": h, "home_goals": hg,
+                                             "away": a, "away_goals": ag} for i, ko, st, h, hg, a, ag in rows]}
+
+
+def board_rows(conn, c):
+    """Every result of a contest, ranked. A live board is rebuilt first; places are filled in on the fly
+    unless the contest is final (then the stored places stand, ties included)."""
+    if c["state"] not in ("final", "rolled"):
+        contests.build_results(conn, c["id"])
+        conn.commit()
+    rows = contests.board(conn, c["id"], 1_000_000)
+    if c["state"] not in ("final", "rolled"):
+        rows.sort(key=lambda r: (-r["points"], -r["captain_points"], r["wallet"]))
+        prev = None
+        for i, r in enumerate(rows, 1):
+            key = (r["points"], r["captain_points"])
+            r["place"] = rows[i - 2]["place"] if prev == key else i
+            prev = key
+    return rows
+
+
+@app.get("/api/contests/{contest_id}/board")
+def contest_board(contest_id: int, limit: int = 50, wallet=Depends(optional_wallet), conn=Depends(db)):
+    c = contest_row(conn, contest_id)
+    rows = board_rows(conn, c)
+    users = profiles.names(conn, [r["wallet"] for r in rows])
+
+    def line(r):
+        return {"place": r["place"], "wallet": r["wallet"], "username": users.get(r["wallet"]),
+                "points": float(r["points"]), "captain_points": float(r["captain_points"]),
+                "prize_lamports": r["prize_lamports"], "prize_sol": sol(r["prize_lamports"]),
+                "you": r["wallet"] == wallet}
+    lines = [line(r) for r in rows]
+    return {"contest": contest_json(c), "rows": lines[:max(1, min(limit, 500))],
+            "you": next((x for x in lines if x["you"]), None), "entrants": len(rows)}
+
+
+@app.get("/api/winnings")
+def my_winnings(wallet=Depends(current_wallet), conn=Depends(db)):
+    sync_freeze(conn, wallet)
+    st = winnings.status(conn, wallet)
+    hist = winnings.history(conn, wallet)
+    info = {r[0]: r[1:] for r in conn.execute("SELECT id, kind, day, week_start FROM contests WHERE id = ANY(%s)",
+                                              ([h["contest_id"] for h in hist if h["contest_id"]],)).fetchall()}
+    for h in hist:
+        h["ready_sol"], h["locked_sol"] = sol(h["ready_delta"]), sol(h["locked_delta"])
+        kind, day, ws = info.get(h["contest_id"], (None, None, None))
+        h["contest"] = {"kind": kind, "day": day, "week_start": ws} if kind else None
+    return {**st, "ready_lamports": st["ready"], "ready_sol": sol(st["ready"]), "locked_lamports": st["locked"],
+            "locked_sol": sol(st["locked"]), "withdrawable_lamports": st["withdrawable"],
+            "withdrawable_sol": sol(st["withdrawable"]), "history": hist,
+            "requirement": winnings.FREEZE_BELOW}
+
+
+@app.post("/api/winnings/submit")
+def winnings_submit(body: dict = Body(...), wallet=Depends(current_wallet), conn=Depends(db)):
+    try:
+        return winnings.submit(conn, rpc(), wallet, int(body["event_id"]), str(body["transaction"]))
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(400, "Send the claim's event_id and the signed transaction")
+    except winnings.ClaimError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post("/api/winnings/{kind}/prepare")
+def winnings_prepare(kind: Literal["collect", "withdraw"], wallet=Depends(current_wallet), conn=Depends(db)):
+    sync_freeze(conn, wallet)
+    try:
+        out = winnings.prepare(conn, rpc(), wallet, kind)
+    except winnings.ClaimError as e:
+        conn.commit()
+        raise HTTPException(400, str(e))
+    conn.commit()
+    return out
+
+
+def prize_preview(conn, c, sol_usd):
+    """The pot a release would use and the prizes it would credit, computed without writing prizes."""
+    kind = c["kind"]
+    if kind == "blitz_week":
+        if not (sol_usd and sol_usd > 0):
+            return None, None
+        pot = round(CFG["blitz"]["weekly_prize_usd"] / sol_usd * chain.LAMPORTS)
+    else:
+        name = f"pot:{pots.MODE_OF[kind]}"
+        have = payouts.bucket(conn, name)
+        pot = c["pot_lamports"]
+        if not pot:
+            extra = payouts.bucket(conn, "pot:unassigned")
+            if extra > 0:       # as pots.allocate would move it
+                blitz = extra * round(CFG["boards"]["mode_split"]["blitz"] * 100) // 100
+                have += blitz if kind == "blitz_matchday" else extra - blitz
+            short = pots.minimum(kind) - have
+            if short > 0:
+                have += min(short, max(payouts.bucket(conn, "reserve"), 0))
+            pot = have
+        pot = min(pot, max(have, 0))
+    ranked = [(r["wallet"], r["points"], r["captain_points"]) for r in board_rows(conn, c)]
+    return pot, pots.split(pot, ranked)
+
+
+def prizes_json(prizes):
+    return [{"wallet": w, "place": p, "lamports": lam, "sol": sol(lam)} for w, p, lam in prizes]
+
+
+@app.get("/api/admin/contests")
+def admin_contests(sol_usd: float | None = None, _=Depends(admin_wallet), conn=Depends(db)):
+    cur = conn.cursor(row_factory=dict_row)
+    review = cur.execute("SELECT * FROM contests WHERE state = 'review' ORDER BY final_at, id").fetchall()
+    done = cur.execute("SELECT * FROM contests WHERE state IN ('final', 'rolled') ORDER BY id DESC LIMIT 10").fetchall()
+    out = []
+    for c in review:
+        pot, prizes = prize_preview(conn, c, sol_usd)
+        rows = board_rows(conn, c)
+        users = profiles.names(conn, [r["wallet"] for r in rows[:10]])
+        out.append({**contest_json(c), "entrants": len(rows), "preview_pot_lamports": pot,
+                    "preview_pot_sol": sol(pot) if pot is not None else None,
+                    "preview_prizes": prizes_json(prizes) if prizes is not None else None,
+                    "board": [{"place": r["place"], "wallet": r["wallet"], "username": users.get(r["wallet"]),
+                               "points": float(r["points"]), "captain_points": float(r["captain_points"])}
+                              for r in rows[:10]]})
+    conn.commit()
+    return {"review": out, "recent": [contest_json(c) for c in done]}
+
+
+class ReleaseIn(BaseModel):
+    sol_usd: float | None = None
+
+
+@app.post("/api/admin/contests/{contest_id}/release")
+def admin_release(contest_id: int, body: ReleaseIn, admin=Depends(admin_wallet), conn=Depends(db)):
+    contest_row(conn, contest_id)
+    try:
+        prizes = contests.release(conn, contest_id, admin, sol_usd=body.sol_usd)
+    except ValueError as e:
+        conn.rollback()
+        raise HTTPException(400, str(e))
+    conn.commit()
+    return {"prizes": prizes_json(prizes), "contest": contest_json(contest_row(conn, contest_id))}
 
 
 @app.get("/api/health")
