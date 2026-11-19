@@ -8,8 +8,8 @@ and how to start the next section without re-reading the old conversation.
 | Section | State |
 |---|---|
 | 1. Blueprint | Done. `docs/blueprint/BLUEPRINT.md` (v9). Section 5.1 holds the newest rules and wins over older text. |
-| 2. Design | Reopened on 2026-11-19 by the owner's eight points; changes are live, four small decisions pending (below). |
-| 3. Build | Not started. A plan for step 1 is written (`docs/build/FOUNDATIONS_PLAN.md`) and awaits his approval. Nothing in `web/` (except `web/DESIGN.md`) or the backend has been changed. |
+| 2. Design | Done (2026-11-19), including the owner's eight points. |
+| 3. Build | Started 2026-11-19. Step 1 (foundations) is under way: see "Section 3 (the build): progress". |
 | 4. Trial and error | Not started. |
 
 Before writing any build code, get the owner's approval of the foundations plan (see "Open with
@@ -44,24 +44,41 @@ with `get_artifact` first to get the live version id.
 
 ## Open with the owner
 
-Section 2 was signed off on 2026-11-19, then reopened the same day by eight points of feedback.
-All eight are done, reviewed and live on the screens link: dollars removed beside SOL (the weekly
-$500 stays in dollars), full squads on the Blitz pick screen (a club switch on the phone), the
-Banked poster with the captain figure, the Draft tier rule (at most 2 Top and 2 Mid) and free
-shapes with a shape badge and no picker, the old option pages removed. The rules are written into
-blueprint 5.1 and `CLAUDE.md`.
+Section 2 (design) is complete: the owner's eight points of 2026-11-19 are all live on the screens
+link, including the minimal Banked poster with the shared captain figure (`art/captain.png`, 1
+Higgsfield credit spent; the other three options are in `art/captain-options/`). On 2026-11-19 he
+said: start building, with a team of agents on a cheaper model (Sonnet builders; the lead reviews).
 
-Still open:
-1. **The Banked captain figure.** One shared image for every captain (anonymous steel footballer,
-   portrait 2:3, figure in the central 75% of the width, head in the top third, near-black
-   background fading to black). Four Higgsfield tries cost 1 credit in all (0.25 each). He chose
-   the poster but has not yet said yes to the spend; no credits spent. It drops into `.bkc-art` in
-   `banked.html` as `art/captain.png` (an HTML comment marks the place); then remove the
-   placeholder strip.
-2. **His last look at the screens**, then his word that every issue is solved.
-3. **The build:** he will say "start" only after every design issue is solved.
-   `docs/build/FOUNDATIONS_PLAN.md` is written and its three assumptions are confirmed. The plan
-   must gain the Draft tier limit before building.
+Nothing is waiting on him. He may still prefer another of the four captain figures.
+
+## Section 3 (the build): progress
+
+Step 1, foundations (`docs/build/FOUNDATIONS_PLAN.md`):
+
+| Piece | State |
+|---|---|
+| Config numbers and 8 new tables (`config.toml`, `db/schema.sql`) | Done, reviewed |
+| Prize pots (`squad/pots.py`) | Done, reviewed |
+| Winnings ledger, Collect and Withdraw (`squad/winnings.py`) | Done, reviewed. Tested on LiteSVM only, not real devnet |
+| Contest calendar, finality, release (`squad/contests.py`) | Done, reviewed |
+| API routes, minute job, watcher freeze (`squad/api.py`, `squad/jobs.py`, `squad/watcher.py`) | With a builder |
+| Web shell and Today (`web/`) | With a builder |
+| Ranks page, Winnings page, admin release screen | Not started |
+
+Then steps 2 to 8 of blueprint section 8: Blitz, Draft, Shootout, retire Season, home page, News,
+tutorial. Each gets its own short plan.
+
+Known gaps to close later:
+- While Season squads exist, fee income goes to Season's pots; Blitz and Draft get only the reserve
+  top-ups until Season is retired (step 5) or `payouts.record_income` is changed.
+- A match's end time is estimated as kickoff + 2 hours (`contests.ended_at`) until real full-time
+  times are stored, so "final 15 minutes after the last match" is approximate.
+- The weekly $500 needs a SOL price: the owner enters it at release while the review switch is on.
+- A claim costs the player 10,000 lamports (two signatures). A wallet that claims while frozen waits
+  a full 24 hours after unfreezing.
+- Tests: run `scripts/db-container.sh` first (Postgres on 5433). Each new test file uses its own
+  database name so builders can run tests at the same time. The web needs `npx -y pnpm@8 install
+  --frozen-lockfile` (pnpm 10 cannot read the lockfile).
 
 Smaller loose ends, only if he raises them: the X thread and bio drafts predate this week's rule
 changes; the logo's fold-in animation has no home now the intro video is retired; `scroll.mp4`
