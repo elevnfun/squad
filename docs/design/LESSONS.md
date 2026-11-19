@@ -38,7 +38,8 @@ Facts and rules
    over older text (the body of `BLITZ.md` still says USDC, top 10 and $200 / $100 / $50; all
    wrong). Blitz: 3 squads of 3 on 3 chosen fixtures, at least 1 from each club, a mandatory ×2
    captain, each squad locks at its own kickoff, 150,000 $ELEVN. Draft: 5 packs of 3, a
-   five-a-side with at least 1 DEF, 1 MID, 1 ATT, no goalkeepers, at most 2 per club, opens
+   five-a-side with at least 1 DEF, 1 MID, 1 ATT (any shape, no picker), no goalkeepers, at most 2
+   per club, at most 2 Top and 2 Mid, opens
    Tuesday, locks at Friday's first kickoff, scores Friday to Monday, 300,000 in all. Every board
    pays the top 5 at 50 / 25 / 12 / 8 / 5; the weekly $500 is $250 / $125 / $60 / $40 / $25.
 2. Prize wording is the current rule: final 15 minutes after the day's last match, the winner

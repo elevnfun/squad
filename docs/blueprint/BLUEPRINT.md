@@ -226,6 +226,12 @@ only for the 24-hour withdrawal cooldown.
 - Connecting a wallet unlocks saving squads and creating a username. Prizes and posting in chat
   need the wallet and the tokens as before.
 
+**Draft team rules added 2026-11-19.** [Owner]
+- Tier limit: a five holds at most 2 Top and at most 2 Mid players, so at least one Budget player
+  always plays. Budget players are unlimited. Pack generation must leave every wallet a legal five.
+- Shapes: any shape with at least 1 defender, 1 midfielder and 1 attacker is allowed (1-2-2, 2-2-1,
+  2-1-2, 1-3-1, 3-1-1, 1-1-3). There is no formation picker; the board follows the five picked.
+
 **Other rulings.** [Owner]
 - Buying, winning and selling on the same day is allowed; people may buy, sell and play freely.
 - Several wallets per person are allowed. More wallets mean more players and squads on the

@@ -97,7 +97,12 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
   - Naming (2026-11-18): the Blitz board and prize are called "Blitz matchday" everywhere, never
     "daily". "Daily" is used only for the 24-hour withdrawal cooldown. Where a page already has a gold
     button (for example Shoot on Penalty Shootout), the guest "Connect wallet" is the outlined one.
-  - Do not start section 3 (the build) until the owner says so.
+  - Draft (2026-11-19): a five holds at most 2 Top and at most 2 Mid players (Budget unlimited).
+    Any shape with at least 1 defender, 1 midfielder and 1 attacker; no formation picker, the board
+    follows the picks. The Blitz pick screen lists each club's full matchday squad. The Banked
+    screen is the poster with the captain figure (one shared Higgsfield figure, name in text).
+  - Do not start section 3 (the build) until the owner says so. He will say so only after every
+    open design issue is solved (2026-11-19).
 - Above all: do not overcomplicate the platform or let it get jumbled.
 
 Background: `docs/blueprint/reference/six-formats.md`. Every game number lives in `config.toml`.
