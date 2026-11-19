@@ -63,12 +63,12 @@ Step 1, foundations (`docs/build/FOUNDATIONS_PLAN.md`). Backend suite: 216 passe
 | Contest calendar, finality, release (`squad/contests.py`) | Done, reviewed |
 | API routes, minute job, watcher freeze (`squad/api.py`, `squad/jobs.py`, `squad/watcher.py`) | Done, reviewed |
 | Web shell and Today (`web/src/components/Header.tsx`, `TabBar.tsx`, `elevn2.css`, `today/`) | Done; head review passed, its five fixes applied (the fixes themselves were not re-reviewed) |
-| Ranks page (`web/src/app/(site)/ranks/`) | Built. Head review was running when the session ended: check `docs/design/LESSONS.md` for its verdict ("review of the Ranks and Winnings pages") and apply it |
+| Ranks page (`web/src/app/(site)/ranks/`) | Built. Head review: approve with changes, NOT yet applied: `docs/build/REVIEW_RANKS_WINNINGS.md` (one blocker: boards show a 0 SOL pot before release) |
 | Winnings page (`web/src/app/(site)/winnings/`) | Built. Same head review. Signing with a real wallet has never been exercised |
 | Admin release screen (`web/src/app/(site)/admin/Release.tsx`) | Built, checked by the lead on screenshots. No head review yet |
 
 Next, in order:
-1. Read the head agent's verdict on Ranks and Winnings and apply its required changes.
+1. Apply `docs/build/REVIEW_RANKS_WINNINGS.md` (7 changes to Ranks, 6 to Winnings), then a fresh head review.
 2. Run every new page against the REAL API in the container (so far every page was checked against
    mocked routes only): start Postgres (`scripts/db-container.sh`), load the schema, start the API
    with `RUN_JOBS=1` and `HOLDINGS_DEV_BALANCE`, insert a few fixtures, entries and scores, release a
@@ -82,6 +82,10 @@ Open with the owner:
 - When the locked half appears: the server credits it at release; the Winnings mockup said it
   "joins Locked when you collect". The lead recommended "at release"; no answer yet.
 - The link for "Get $ELEVN" (the page falls back to jup.ag).
+- Before a result is released, should boards and the Today cards show an estimated pot (a small
+  server change; the lead recommends this) or "Set at full time" with percentages only?
+- After a cancelled signature a claim is held for up to 5 minutes before it can be retried:
+  acceptable, or should the server free it at once?
 
 Known gaps to close later:
 - While Season squads exist, fee income goes to Season's pots; Blitz and Draft get only the reserve
