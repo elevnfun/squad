@@ -157,7 +157,7 @@ cameras are in `VIEWS`.
 
 | | Before (2026-11-17) | Now |
 |---|---|---|
-| Meshes visible | 83 | 11 |
+| Meshes visible | 83 | 10 |
 | Draw calls, the scene once | 149 | 15 |
 | Triangles, the scene once | 155,042 | 85,266 |
 | Draw calls per frame, all passes | 249 | 41 |
