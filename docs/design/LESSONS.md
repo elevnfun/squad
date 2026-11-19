@@ -341,3 +341,30 @@ Reporting
 - How: one build script wrote B, C and the compare sheet from A's markup so facts stay identical; effects sit in absolutely placed layers behind `.bk-in`, fading out above the first text line.
 - Changed: the first placeholder figure read as a flat blob; added hair, jaw, collar and a gold rim by offsetting a steel copy over a gold copy. The compare sheet overflowed until grid columns got `minmax(0,..)` and the cards got `zoom`.
 - Rule for next time: contrast checks on the rendered pixels must hide text and measure the backdrop, but skip elements that carry their own fill (buttons, caps, crests) or they report false failures.
+
+## 2026-11-19 · head agent · review of the owner's eight points
+- Dollars: approved. Every remaining `$` is the fixed $500, its split or the sample-rate note on a
+  page that still shows 3.13 SOL; no gaps or dangling punctuation on today, ranks, winnings #1 to
+  #5 or connect; no dead `.usd` rule (home, how-to-play and ranks still use it). Tidy-up: the
+  comment at `mock.css` line 620 still names the deleted draft-steel-green page.
+- Draft: approve with changes. Both sample fives obey every rule (2 Top, 2 Mid, 1 Budget; guest
+  1 / 2 / 2; five different clubs), ticks, board and shape label agree, seven checks on one line
+  each at ten widths. To change: the Step 3 help is 5 lines at 1440 and 7 at 1101 and repeats the
+  checks under the board, so shorten it; on the phone the centre circle runs through "Rice" and
+  "Szoboszlai" (shrink it to 44px under 700px).
+- Blitz pick: approve with changes. Full squads in two columns in one scroll box is the right
+  answer. To change: "One from each club" on 17 rows is noise and makes those rows 53px against
+  42px, so the Leipzig column shows empty space where the cut-off row should be and looks
+  finished after the defenders; say it once in the club heading and only dim the rows. Add a
+  fade at the bottom of the scroll box. Three names are cut with "…" at 1280 and two at 901; let
+  names wrap. Headings jump from h2 to h4. Weak on the phone: 19 Leverkusen rows inside a nested
+  scroll before Leipzig starts.
+- Banked: A, B and C are all sound to show the owner; nothing animates. B as built fails
+  legibility: the gold title falls to 2.1:1 where the card texture and rays pass behind it. With
+  the texture and streak removed and the rays at 0.55 it measures 3.8:1. C answers "add a
+  player" best, but there is no per-player art, so in practice it is one shared figure for every
+  captain; that is the owner's call.
+- Index: approved; every link resolves. The "Pick squads" note still says "player tiles".
+- Rule for next time: a reason that applies to a whole column is said once at the column's head,
+  never on every row. Any effect placed behind a title is measured against its brightest pixel
+  with the text hidden. A builder who has not looked at its final screenshots has not finished.
