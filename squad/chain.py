@@ -164,3 +164,25 @@ def jupiter_swap_tx(user, lamports, mint, slippage_bps=100):
     req = urllib.request.Request(f"{base}/swap", data=body, headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=20) as r:
         return json.loads(r.read())["swapTransaction"], quote
+
+
+# ------------------------------------------------- winnings claims (squad/winnings.py) ---
+def claim_transfer_tx(payout, player, lamports, blockhash):
+    """Unsigned transaction: one SOL transfer payout -> player, the PLAYER pays the fee.
+    Two required signers: the player (fee payer, first) and the payout wallet (second)."""
+    payout, player = Pubkey.from_string(str(payout)), Pubkey.from_string(str(player))
+    ix = transfer(TransferParams(from_pubkey=payout, to_pubkey=player, lamports=int(lamports)))
+    return Transaction.new_unsigned(Message.new_with_blockhash([ix], player, blockhash))
+
+
+def _signature_status(self, signature):
+    """'confirmed', 'failed' or None (unknown / not yet seen) for a transaction signature."""
+    st = self.call("getSignatureStatuses", [[signature], {"searchTransactionHistory": True}])["value"][0]
+    if not st:
+        return None
+    if st.get("err"):
+        return "failed"
+    return "confirmed" if st.get("confirmationStatus") in ("confirmed", "finalized") else None
+
+
+Rpc.signature_status = _signature_status
