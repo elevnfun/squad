@@ -4,6 +4,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SideRays from "@/components/side-rays/SideRays";
 import TestSeasonBar from "@/components/TestSeason";
+import TabBar from "@/components/TabBar";
+import "@/components/elevn2.css";
 
 // The full site: nav, footer, wallet sign-in and the SideRays light. The teaser (app/teaser) has none of these.
 export default function SiteLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -19,6 +21,7 @@ export default function SiteLayout({ children }: Readonly<{ children: React.Reac
         <main className="mx-auto w-full max-w-[1360px] px-6 pb-24 lg:px-20">{children}</main>
         <Footer />
         <TestSeasonBar />
+        <TabBar />
       </Providers>
     </>
   );

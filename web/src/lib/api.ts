@@ -127,3 +127,22 @@ export const fmtM = (n: number | null | undefined) => (n == null ? "-" : `${n.to
 export const fmtPts = (n: number | null | undefined) => (n == null ? "-" : Number.isInteger(n) ? `${n}` : n.toFixed(1));
 export const fmtSol = (n: number) => `${n.toFixed(n >= 1 ? 2 : 4)} SOL`;
 export const shortWallet = (w: string) => `${w.slice(0, 4)}…${w.slice(-4)}`;
+
+// ---- elevn 2.0: contests, Today, boards and winnings (squad/api.py: /api/today, /api/contests, /api/winnings) ----
+export type ContestKind = "blitz_matchday" | "blitz_week" | "draft_week";
+export type ContestState = "open" | "live" | "review" | "final" | "rolled";
+export type Contest = { id: number; kind: ContestKind; day: string | null; week_start: string; state: ContestState;
+  locks_at: string | null; pot_lamports: number; pot_sol: number; first_kickoff: string | null; fixtures: number };
+export type Today = { now: string; contests: Contest[];
+  access: { balance: number | null; blitz: boolean; draft: boolean; blitz_requirement: number; draft_requirement: number } | null;
+  winnings: { ready_lamports: number; ready_sol: number; locked_lamports: number; locked_sol: number; frozen: boolean } | null };
+export type BoardRow = { place: number | null; wallet: string; username: string | null; points: number; captain_points: number;
+  prize_lamports: number; prize_sol: number; you: boolean };
+export type Board = { contest: Contest; rows: BoardRow[]; you: BoardRow | null; entrants: number };
+export type WinningsEvent = { id: number; kind: "credit" | "collect" | "withdraw"; ready_sol: number; locked_sol: number;
+  contest_id: number | null; contest_kind?: ContestKind; day?: string | null; week_start?: string; signature: string | null;
+  status: "pending" | "confirmed" | "failed"; created_at: string };
+export type Winnings = { ready_lamports: number; ready_sol: number; locked_lamports: number; locked_sol: number;
+  withdrawable_lamports: number; withdrawable_sol: number; frozen: boolean; first_collect_at: string | null;
+  next_withdraw_at: string | null; seconds_to_withdraw: number | null; can_collect: boolean; collect_reason: string | null;
+  can_withdraw: boolean; withdraw_reason: string | null; requirement: number; history: WinningsEvent[] };

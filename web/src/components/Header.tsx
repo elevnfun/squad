@@ -2,150 +2,193 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { DEV_LOGIN, useAuth } from "./auth";
 import { shortWallet } from "@/lib/api";
-import { Select } from "./ui";
 import StaggeredMenu from "./staggered-menu/StaggeredMenu";
 import UsernameDialog from "./UsernameDialog";
 
-// A near-empty nav (after lamportrobotics.com): no bar at the top, the page's background runs under it.
-// From desktop width the pages you play on sit in the bar (Leagues, Chat, How to play) and the Menu holds
-// the four reading pages. On phones and tablets the Menu holds it all: the leagues and Chat as big words,
-// the reading pages in a small row under them. The logo is the way home; Payouts is in the wallet menu.
-type Page = { label: string; path: string };
-const LEAGUES: Page[] = [
-  { label: "Premier League", path: "/premier-league" },
-  { label: "La Liga", path: "/la-liga" },
-  { label: "Bundesliga", path: "/bundesliga" },
-];
-const CHAT: Page = { label: "Chat", path: "/chat" };
-const HOW: Page = { label: "How to play", path: "/how-to-play" };
-const READ: Page[] = [
-  { label: "About", path: "/about" },
-  { label: "Roadmap", path: "/roadmap" },
-  { label: "News", path: "/news" },
-  { label: "FAQ", path: "/faq" },
-];
+// The elevn 2.0 bar (web/DESIGN.md "Navigation", mockups in docs/design/mockups): the logo, three places (Today,
+// Ranks, Chat), then the wallet: a gold "Connect wallet" for a guest, or the wallet chip joined to Winnings. "Menu +"
+// is the StaggeredMenu, drawn over the bar's right edge (see elevn2.css), and holds the reading pages and a small
+// Penalty Shootout link. On a phone the three places move to the bottom tab bar (TabBar.tsx).
+// The bar slides away while scrolling down and returns on the way up; the owner's design file says it should stay
+// put, so switching that off is this one line.
+const HIDE_ON_SCROLL = true;
 
-// true from desktop width (Tailwind's lg), where the bar has room for the links; false while rendering on the server
-const WIDE = "(min-width: 1024px)";
-function useWide(): boolean {
+const PLACES = [
+  { label: "Today", path: "/today" },
+  { label: "Ranks", path: "/ranks" },
+  { label: "Chat", path: "/chat" },
+];
+const MENU = [
+  { label: "News", link: "/news" },
+  { label: "How to play", link: "/how-to-play" },
+  { label: "FAQ", link: "/faq" },
+  { label: "About", link: "/about" },
+  { label: "Roadmap", link: "/roadmap" },
+];
+// what a wallet unlocks (config.toml [blitz] and [draft]; /api/today sends the same numbers to the Today page)
+const BLITZ_NEEDS = 150_000;
+const DRAFT_NEEDS = 300_000;
+
+function useMedia(query: string): boolean {
   return useSyncExternalStore(
-    (change) => { const m = window.matchMedia(WIDE); m.addEventListener("change", change); return () => m.removeEventListener("change", change); },
-    () => window.matchMedia(WIDE).matches,
+    (change) => { const m = window.matchMedia(query); m.addEventListener("change", change); return () => m.removeEventListener("change", change); },
+    () => window.matchMedia(query).matches,
     () => false);
 }
 
-export default function Header() {
-  const { wallet, token, signIn, signingIn, signOut, error, demoSignIn, me, openUsername } = useAuth();
+// the ring on the chip: half gold once Blitz is unlocked, all gold once Draft is too
+function Ring({ blitz, draft }: { blitz: boolean; draft: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+      <circle cx="11" cy="11" r="8.5" fill="none" stroke="rgba(255,255,255,.4)" strokeWidth="2.5" />
+      {blitz && <path d="M11 2.5 A8.5 8.5 0 0 1 11 19.5" fill="none" stroke="#f2c14e" strokeWidth="2.5" />}
+      {draft && <path d="M11 19.5 A8.5 8.5 0 0 1 11 2.5" fill="none" stroke="#f2c14e" strokeWidth="2.5" />}
+    </svg>
+  );
+}
+
+function WalletChip({ label, balance }: { label: string; balance: number | null }) {
+  const { wallet, me, signOut, openUsername } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  // On the home page the opening screen has no header: it slides in once that screen has folded away.
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const blitz = balance != null && balance >= BLITZ_NEEDS;
+  const draft = balance != null && balance >= DRAFT_NEEDS;
+  const unlocked = draft ? "Blitz and Draft unlocked" : blitz ? "Blitz unlocked" : balance == null ? "Holding not shown" : "Nothing unlocked yet";
+
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [open]);
+  useEffect(() => { if (open) box.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus(); }, [open]);
+
+  const close = (back = true) => { setOpen(false); if (back) trigger.current?.focus(); };
+  const items = [
+    { id: "username", label: me?.username ? "Change username" : "Pick username", run: () => { close(false); openUsername(); } },
+    { id: "copy", label: copied ? "Copied" : "Copy address", run: () => {
+      if (!wallet) return;
+      navigator.clipboard?.writeText(wallet).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {}); } },
+    ...(me?.is_admin ? [{ id: "payouts", label: "Payouts", run: () => { close(false); router.push("/admin"); } }] : []),
+    { id: "disconnect", label: "Disconnect", run: () => { close(false); signOut(); } },
+  ];
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") { e.preventDefault(); close(); return; }
+    if (e.key === "Tab") { setOpen(false); return; }
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Home" && e.key !== "End") return;
+    const els = [...(box.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+    if (!els.length) return;
+    e.preventDefault();
+    const i = els.indexOf(document.activeElement as HTMLElement);
+    const next = e.key === "Home" ? 0 : e.key === "End" ? els.length - 1 : (i + (e.key === "ArrowDown" ? 1 : els.length - 1)) % els.length;
+    els[next].focus();
+  };
+
+  return (
+    <div className="e2-wallet" ref={box} onKeyDown={onKey}>
+      <div className="e2-wchip">
+        <button ref={trigger} type="button" aria-haspopup="menu" aria-expanded={open} aria-controls="e2-wallet-pop"
+          aria-label={`Wallet ${label}, ${unlocked}`} onClick={() => setOpen((o) => !o)}>
+          <Ring blitz={blitz} draft={draft} />
+          <span className="e2-who" aria-hidden="true">{label}</span>
+        </button>
+        <Link href="/winnings" aria-current={pathname === "/winnings" ? "page" : undefined}>Winnings</Link>
+      </div>
+      {open && (
+        <div id="e2-wallet-pop" className="e2-pop">
+          <div className="e2-pop-hold">
+            <b>{balance == null ? "Holding not shown" : `${balance.toLocaleString("en-GB")} $ELEVN`}</b>
+            <span>{unlocked}</span>
+          </div>
+          <div role="menu" aria-label="Wallet" className="e2-wmenu">
+            {items.map((it) => (
+              <button key={it.id} role="menuitem" type="button" tabIndex={-1} onClick={it.run}>{it.label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Header() {
+  const { wallet, token, signIn, signingIn, error, demoSignIn, me } = useAuth();
+  const pathname = usePathname();
+  // On the home page the opening screen has no bar: it slides in once that screen has folded away.
   const home = pathname === "/";
   const [past, setPast] = useState(false);
-  const [copied, setCopied] = useState(false);
-  // on the home page the nav is bare over the hero, and a bar fades in behind it from "Pick your league" on
-  const [solid, setSolid] = useState(false);
-  // every other page: the nav slides away while scrolling down and comes back on the way up,
-  // bare at the very top and on a blurred backing further down so it never sits on top of text
+  // every other page: the bar slides away while scrolling down and comes back on the way up
   const [tucked, setTucked] = useState(false);
   useEffect(() => {
-    if (home) { setTucked(false); return; }
+    if (home || !HIDE_ON_SCROLL) { setTucked(false); return; }
     let lastY = window.scrollY;
     const check = () => {
       const y = window.scrollY;
-      setSolid(y > 8);
       if (Math.abs(y - lastY) < 6) return;
       setTucked(y > lastY && y > 72);
       lastY = y;
     };
-    check();
     window.addEventListener("scroll", check, { passive: true });
     return () => window.removeEventListener("scroll", check);
   }, [home]);
   useEffect(() => {
     if (!home) return;
-    const check = () => {
-      setPast(window.scrollY >= window.innerHeight * 0.7);
-      const leagues = document.getElementById("leagues");
-      setSolid(Boolean(leagues && leagues.getBoundingClientRect().top <= 80));
-    };
+    const check = () => setPast(window.scrollY >= window.innerHeight * 0.7);
     check();
     window.addEventListener("scroll", check, { passive: true });
     return () => window.removeEventListener("scroll", check);
   }, [home]);
-  const hidden = (home && !past) || tucked;   // the home page's opening screen has no header
+  const hidden = (home && !past) || tucked;
 
-  const wide = useWide();
+  const phone = useMedia("(max-width: 700px)");
   const at = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
-  const league = LEAGUES.find((l) => at(l.path))?.path ?? "";
-  const menuItems = wide ? READ : [...LEAGUES, CHAT];
-  const menuMore = wide ? [] : [HOW, ...READ];
   const signedIn = Boolean(wallet && token);
-
-  const walletMenu = [
-    { value: "squads", label: "My squads", tag: me ? `${me.squads.length} of ${me.squads_allowed}` : undefined },
-    { value: "username", label: me?.username ? "Change username" : "Pick username" },
-    { value: "copy", label: copied ? "Copied" : "Copy address" },
-    ...(me?.is_admin ? [{ value: "payouts", label: "Payouts" }] : []),
-    { value: "disconnect", label: "Disconnect" },
-  ];
-  const onWallet = (value: string) => {
-    if (value === "squads") router.push("/#leagues");
-    if (value === "username") openUsername();
-    if (value === "payouts") router.push("/admin");
-    if (value === "disconnect") signOut();
-    if (value === "copy" && wallet) {
-      navigator.clipboard?.writeText(wallet).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {});
-    }
-  };
+  const label = me?.username ?? (wallet ? shortWallet(wallet) : "");
+  // on a phone the chip drops its Winnings half, so the menu carries it
+  const small = [...(signedIn && phone ? [{ label: "Winnings", link: "/winnings" }] : []), { label: "Penalty Shootout", link: "/shootout" }];
 
   const account = signedIn ? (
-    <Select label="Wallet" value="" placeholder={me?.username ?? shortWallet(wallet!)} options={walletMenu} onChange={onWallet} align="right" menuWidth={200} />
+    <WalletChip label={label} balance={me ? me.balance : null} />
   ) : (
     <>
-      {DEV_LOGIN && <button onClick={demoSignIn} className="btn btn-sm text-muted hover:text-text">Demo</button>}
-      <button onClick={signIn} disabled={signingIn} className="btn btn-secondary btn-sm">
-        {signingIn ? "Check your wallet…" : "Sign in"}
+      {DEV_LOGIN && <button type="button" onClick={demoSignIn} className="e2-demo">Demo</button>}
+      <button type="button" onClick={signIn} disabled={signingIn} className="e2-btn e2-btn-gold e2-btn-sm e2-connect">
+        {signingIn ? "Check your wallet…" : "Connect wallet"}
       </button>
     </>
   );
 
   return (
     <>
-      <header className={`fixed inset-x-0 top-0 z-20 border-b transition-[transform,background-color,border-color,backdrop-filter] duration-500 ${hidden ? "-translate-y-full" : ""} ${
-        solid ? "border-line bg-bg/80 backdrop-blur-md" : "border-transparent bg-transparent"}`}>
-        <div className="mx-auto flex h-[72px] max-w-[1360px] items-center gap-4 px-6 lg:gap-8 lg:px-20">
-          <Link href="/" className="text-2xl font-extrabold tracking-[-0.03em]" aria-label="elevn home">
-            elevn<span className="text-highlight">.</span>
-          </Link>
-          <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
-            <Select bare label="Leagues" value={league} placeholder="Leagues" menuWidth={200}
-              options={LEAGUES.map((l) => ({ value: l.path, label: l.label }))} onChange={(path) => router.push(path)} />
-            {[CHAT, HOW].map((n) => (
-              <Link key={n.path} href={n.path} aria-current={at(n.path) ? "page" : undefined}
-                className="relative inline-flex h-10 items-center rounded-full px-3 text-[14px] font-medium text-muted transition-colors duration-150 hover:bg-white/[.06] hover:text-text aria-[current=page]:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                {n.label}
-                {/* the page you're on: a gold dot under its name */}
-                {at(n.path) && <span aria-hidden="true" className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-accent" />}
-              </Link>
+      <header className={`e2-nav${hidden ? " e2-nav--hidden" : ""}`}>
+        <div className="e2-wrap e2-nav-in">
+          <Link href={signedIn ? "/today" : "/"} className="e2-logo" aria-label="elevn home">elevn<i aria-hidden="true" /></Link>
+          <nav aria-label="Main" className="e2-links">
+            {PLACES.map((p) => (
+              <Link key={p.path} href={p.path} aria-current={at(p.path) ? "page" : undefined}>{p.label}</Link>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2 pr-[120px]">{account}</div>
+          <div className="e2-right">{account}</div>
         </div>
-        {error && <p className="mx-auto max-w-[1360px] px-6 pb-2 text-sm text-danger lg:px-20">{error}</p>}
+        {error && <div className="e2-nav-err-wrap"><p role="alert" className="e2-wrap e2-nav-err">{error}</p></div>}
       </header>
-      {/* everywhere but the home page, content starts below the nav */}
-      {!home && <div aria-hidden="true" className="h-[72px]" />}
+      {/* everywhere but the home page, content starts below the bar */}
+      {!home && <div aria-hidden="true" className="e2-nav-space" />}
       <UsernameDialog />
-      {/* React Bits' StaggeredMenu, themed in globals.css (.elevn-menu); what it holds depends on the width, see the top */}
-      <StaggeredMenu isFixed position="right" displaySocials={menuMore.length > 0} displayItemNumbering={false}
+      {/* React Bits' StaggeredMenu, themed in globals.css (.elevn-menu) and elevn2.css: "Menu +" and the reading pages */}
+      <StaggeredMenu isFixed position="right" displaySocials displayItemNumbering={false}
         className={`elevn-menu ${hidden ? "elevn-menu--hidden" : ""}`}
-        colors={["#1b1e23", "#f2c14e"]} accentColor="#f2c14e" menuButtonColor="#f4f4f1" openMenuButtonColor="#f4f4f1"
+        colors={["#131519", "#1b1e23"]} accentColor="#f2c14e" menuButtonColor="#c9ccd1" openMenuButtonColor="#f4f4f1"
         logoUrl="/favicon.ico"
-        items={menuItems.map((n) => ({ label: n.label, link: n.path }))}
-        socialsTitle="Learn the game" socialItems={menuMore.map((n) => ({ label: n.label, link: n.path }))} />
+        items={MENU.map((n) => ({ label: n.label, link: n.link }))}
+        socialsTitle="Also" socialItems={small} />
     </>
   );
 }
