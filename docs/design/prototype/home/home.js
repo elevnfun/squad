@@ -6,6 +6,8 @@ import { BallEngine, SPEC, LEVELS } from '../ball/ball.js';
 import { blitzIcon, draftIcon } from './icons.js';
 
 const q = new URLSearchParams(location.search);
+// the published link passes only a #name, so #stats works like ?stats=1 there
+if (/(^|[#-])stats(-|$)/.test(location.hash)) q.set('stats', '1');
 const num = (k, d) => (q.has(k) && isFinite(parseFloat(q.get(k))) ? parseFloat(q.get(k)) : d);
 const STILL = q.get('still') === '1';                       // capture mode: no time-based motion at all
 const REDUCED = q.get('reduced') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
