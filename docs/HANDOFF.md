@@ -8,7 +8,7 @@ and how to start the next section without re-reading the old conversation.
 | Section | State |
 |---|---|
 | 1. Blueprint | Done. `docs/blueprint/BLUEPRINT.md` (v9). Section 5.1 holds the newest rules and wins over older text. |
-| 2. Design | Done. Signed off by the owner on 2026-11-19. |
+| 2. Design | Reopened on 2026-11-19 by the owner's eight points; changes are live, four small decisions pending (below). |
 | 3. Build | Not started. A plan for step 1 is written (`docs/build/FOUNDATIONS_PLAN.md`) and awaits his approval. Nothing in `web/` (except `web/DESIGN.md`) or the backend has been changed. |
 | 4. Trial and error | Not started. |
 
@@ -44,15 +44,21 @@ with `get_artifact` first to get the live version id.
 
 ## Open with the owner
 
-Section 2 was signed off on 2026-11-19. His answers: the home page runs at 60 fps on his Mac
-(longest gap 18 ms, tier high-2 settled, GPU timer, DPR 2); the Draft rule checks move under the
-board; the phone home page keeps the stills; the 120 ms scroll glide is good.
+Section 2 was signed off on 2026-11-19, then reopened the same day by eight points of feedback.
+Done and live on the screens link: dollars removed beside SOL (the weekly $500 stays in dollars),
+full squads on the Blitz pick screen, three Banked versions (`banked-compare.html`), a Draft tier
+rule and shape label in the mockup, the old option pages removed. He also confirmed the steel
+board with green lines, Today with rays and the packs with the reveal panel.
 
 Still open:
-1. **Approval of `docs/build/FOUNDATIONS_PLAN.md`** and his word that the build can start. No
-   build code until he gives it.
-2. The plan's three assumptions (player pays the network fee on Collect; the $500 is converted at
-   the SOL price when the week is final; nothing is deployed during the build).
+1. **Draft tier rule:** "at most 2 Top and at most 2 Mid in a five" is in the mockup only. On his
+   yes, write it into blueprint 5.1, `CLAUDE.md` and the checklist; `config.toml` at build time.
+2. **Formations:** no picker; the board follows the picks. Awaiting his agreement.
+3. **Banked:** A (current), B (effects) or C (player figure). C needs one shared figure from
+   Higgsfield, 0.25 credits an image; no credits spent, needs his yes.
+4. **Weekly $500** stays written in dollars: awaiting his agreement.
+5. **Approval of `docs/build/FOUNDATIONS_PLAN.md`** (its three assumptions are confirmed) and
+   his plain word that the build can start. No build code until he gives it.
 
 Smaller loose ends, only if he raises them: the X thread and bio drafts predate this week's rule
 changes; the logo's fold-in animation has no home now the intro video is retired; `scroll.mp4`
