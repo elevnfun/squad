@@ -248,3 +248,9 @@ Reporting
   on a run of frames, drop effects before resolution, and be able to step back up. Never read a
   size inside the frame loop; set a CSS variable on the element that uses it, not on the root.
 - Rule for next time: a "before" measurement names the commit it was taken from.
+
+## 2026-11-19 · home-css · Home page: no per-frame repaint in the cards, packs and bar
+- Did: replaced the animated `filter: drop-shadow() brightness() saturate()` on `.pack-body` with a fixed shadow layer and a hot-glow layer (a copy of the art outline under the artwork, fixed `drop-shadow`, glow fades by opacity) plus a black dim layer (`.pack-dim`) whose opacity follows `--open` and the hover; the foil sheen now slides with `transform`; the bar lost its `backdrop-filter` (fill .94); card text is at least 12 CSS px; the phone stills were retaken and `--fx/--fy` recentred for beats 4 to 6.
+- How: Chrome trace (`Paint` events by node) over a scripted p 0.5 to 0.8 sweep, before and after, on a copy of the old CSS served beside the new one.
+- Changed: the first version (shadow and dim as `::before` or masked layers reading the art through `var(--mask)`) was worse: every pack repainted every frame. A `url()` read through a custom property that changes each frame is resolved again each time and repaints. Fix: set the image as a real value on each layer from JS (`outline()` in `icons.js`). The old cause of the repaints was also this, on `.pack-sheen`, not the filter (Chrome re-filters a changed `filter` on the GPU without a Paint event).
+- Rule for next time: never read an image or clip through a `var()` on an element inside a subtree whose variables change every frame; set it inline once. Measure with a trace before and after, not by reading the CSS.

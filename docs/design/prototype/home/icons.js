@@ -98,6 +98,20 @@ function hoverable(row, card, body, reduced, onHeat = () => {}) {
   cool.heat = heat;
   return cool;
 }
+// The artwork's outline, for everything that has to follow it: --mask (the sheen, the hover video,
+// the glint) and, as real values on their own layers, the shadow, the glow, the sheen and the dimming. Those
+// four are repainted if their image is read through a variable, because the packs' variables
+// change every frame of the story and a url() read through one is resolved again each time.
+function outline(body, src) {
+  const u = `url("${src}")`;
+  body.style.setProperty('--mask', u);
+  body.querySelectorAll('.pack-shadow, .pack-glow').forEach((e) => { e.style.backgroundImage = u; });
+  const sh = body.querySelector('.pack-sheen');
+  sh.style.webkitMaskImage = sh.style.maskImage = u;
+  const dim = body.querySelector('.pack-dim');
+  dim.style.webkitMaskImage = dim.style.maskImage = body.parentElement.classList.contains('fx')
+    ? `${u}, radial-gradient(ellipse 7.8% 4.8% at 50% 92%, #000 96%, transparent 100%)` : u;
+}
 const isReduced = () => new URLSearchParams(location.search).get('reduced') === '1' || matchMedia('(prefers-reduced-motion: reduce)').matches;
 const div = (cls) => { const d = document.createElement('div'); d.className = cls; return d; };
 
@@ -143,16 +157,16 @@ function fixtureCard(host, i) {
   // header: FIXTURE N, the status chip, HOME v AWAY, the kickoff time and its bar. Everything
   // is kept inside the steel frame and to the left of the artwork's diagonal stripe
   const text = (x, y, size, str, o = {}) => { const t = el('text', { x, y, 'font-size': size, 'font-weight': 600, fill: '#b4b8bf', ...o }, s); t.textContent = str; return t; };
-  text(23, 34, 10, `FIXTURE ${i + 1}`, { 'letter-spacing': 1.5 });
-  const chip = el('rect', { x: 134, y: 20, width: 56, height: 20, rx: 10, fill: '#f4f4f1', 'fill-opacity': 0, stroke: '#858b95', 'stroke-width': 1 }, s);
-  const open = text(162, 33.4, 9, 'OPEN', { 'text-anchor': 'middle', 'letter-spacing': 1.3, fill: '#c9ccd1' });
-  const shut = text(162, 33.4, 9, 'LOCKED', { 'text-anchor': 'middle', 'letter-spacing': 0.8, fill: '#0a0b0d', 'font-weight': 700, opacity: 0 });
+  text(23, 34.5, 13.4, `FIXTURE ${i + 1}`, { 'letter-spacing': 0.9 });
+  const chip = el('rect', { x: 118, y: 18, width: 72, height: 24, rx: 12, fill: '#f4f4f1', 'fill-opacity': 0, stroke: '#858b95', 'stroke-width': 1 }, s);
+  const open = text(154, 34.2, 13.4, 'OPEN', { 'text-anchor': 'middle', 'letter-spacing': 0.8, fill: '#c9ccd1' });
+  const shut = text(154, 34.2, 13.4, 'LOCKED', { 'text-anchor': 'middle', 'letter-spacing': 0.3, fill: '#0a0b0d', 'font-weight': 700, opacity: 0 });
   const teams = el('text', { x: 23, y: 75, 'font-family': '"Barlow Condensed", "Arial Narrow", sans-serif', 'font-weight': 700, 'font-size': 31, 'letter-spacing': 0.3, fill: '#f4f4f1' }, s);
   teams.append('HOME ');
   const v = el('tspan', { fill: '#858b95', 'font-size': 21 }, teams); v.textContent = 'v';
   teams.append(' AWAY');
-  text(23, 99, 10, 'KICKOFF', { 'letter-spacing': 1.5 });
-  text(81, 99, 12.5, KICKOFFS[i], { fill: '#f4f4f1', 'letter-spacing': 0.6 });
+  text(23, 100, 13.4, 'KICKOFF', { 'letter-spacing': 0.7 });
+  text(104, 100, 14, KICKOFFS[i], { fill: '#f4f4f1', 'letter-spacing': 0.3 });
   el('rect', { x: 23, y: 108, width: BAR, height: 2.4, rx: 1.2, fill: '#ffffff', 'fill-opacity': 0.14 }, s);
   const bar = el('rect', { x: 23, y: 108, width: BAR, height: 2.4, rx: 1.2, fill: '#f4f4f1' }, s);
   // the squad, in two columns either side of a faint centre line: HOME on the left, AWAY on the
@@ -319,7 +333,7 @@ export function blitzIcon(host) {
     card.tabIndex = -1;
     card.setAttribute('role', 'img'); card.setAttribute('aria-label', `Fixture ${i + 1} of 3: a squad of three, ${SPLIT[i]}, with a captain, locked at its ${KICKOFFS[i]} kickoff`);
     const parts = fixtureCard(art, i);
-    body.append(art, sheen); card.append(body); row.append(card);
+    body.append(div('pack-shadow'), div('pack-glow'), art, sheen, div('pack-dim')); card.append(body); row.append(card);
     Object.assign(card.style, { left: `${((cx - CW / 2) / W) * 100}%`, top: `${(CY / H) * 100}%`, width: `${(CW / W) * 100}%` });
     // the hover glint: only with the artwork, and not under reduced motion
     const gl = reduced ? null : glint(body, frozen);
@@ -335,7 +349,7 @@ export function blitzIcon(host) {
     img.onload = () => {
       const swap = () => {
         art.prepend(img); card.classList.add('has-art');
-        body.style.setProperty('--mask', `url("${img.src}")`);
+        outline(body, img.src);
         // the locked rim follows the artwork's steel frame
         for (const [k, val] of Object.entries({ x: 3, y: 3, width: FW - 6, height: FH - 6, rx: 15.5, 'stroke-width': 4.5, 'stroke-opacity': 0.5 })) parts.rim.setAttribute(k, val);
         if (gl) { makeStripeLight(img); img.after(gl.el); if (card.classList.contains('hot')) { card.classList.add('glinting'); gl.run(true); } }
@@ -481,7 +495,7 @@ function buildPack(row, i, reduced) {
   const body = div('pack-body'), art = div('pack-art'), sheen = div('pack-sheen');
   body.style.setProperty('--shape', CRIMP_CSS);
   packArt(art, i);
-  body.append(art, sheen); pack.append(body); row.append(pack);
+  body.append(div('pack-shadow'), div('pack-glow'), art, sheen, div('pack-dim')); pack.append(body); row.append(pack);
 
   // artwork: use art/pack-N.png when it is there
   const img = new Image();
@@ -491,7 +505,7 @@ function buildPack(row, i, reduced) {
     const swap = () => {
       art.replaceChildren(img); pack.classList.add('has-art');
       body.style.setProperty('--shape', 'none');
-      body.style.setProperty('--mask', `url("${img.src}")`);
+      outline(body, img.src);
     };
     img.decode().then(swap, swap);
   };
@@ -499,7 +513,7 @@ function buildPack(row, i, reduced) {
   img.onerror = () => { img.onerror = null; img.src = `${ART}pack.png`; };
   img.src = `${ART}pack-${i + 1}.png`;
   const num = document.createElement('span'); num.className = 'pack-num'; num.textContent = `PACK ${i + 1}`;
-  body.append(num);
+  body.insertBefore(num, body.querySelector('.pack-dim'));
 
   // hover video: looked for the first time the pack is hovered
   let video = null;
@@ -552,7 +566,7 @@ export function draftIcon(host) {
     const k = chosen.findIndex((c) => c[0] === i && c[1] === j);
     players.push({ ...token(toks, id), pack: p, k, open: [p.cx + (j === 0 ? 0 : j === 1 ? -31 : 31), p.cy + (j === 0 ? -34 : 30)], row: k < 0 ? null : [rowX(k), ROW_Y] });
   } });
-  const roleText = roles.map((r, k) => label(top, rowX(k), 326, r, 11));
+  const roleText = roles.map((r, k) => label(top, rowX(k), 327, r, 13.4));
   const cap = badge(top), lock = padlock(top);
 
   return function draw(t) {

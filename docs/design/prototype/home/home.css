@@ -45,7 +45,7 @@ ul, ol { list-style: none; }
 .btn-sm { height: 40px; padding: 0 18px; font-size: 14px; }
 
 /* ---------- nav ---------- */
-.nav { position: fixed; inset: 0 0 auto 0; z-index: 20; height: var(--nav); background: rgba(14,16,20,.62); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-bottom: 1px solid var(--edge-glass); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
+.nav { position: fixed; inset: 0 0 auto 0; z-index: 20; height: var(--nav); background: rgba(14,16,20,.94); border-bottom: 1px solid var(--edge-glass); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
 .nav .wrap { height: 100%; display: flex; align-items: center; }
 .logo { font-size: 24px; font-weight: 800; letter-spacing: -.04em; }
 .links { display: flex; gap: 32px; margin-left: 56px; font-size: 14px; font-weight: 500; color: var(--muted); }
@@ -120,27 +120,46 @@ ul, ol { list-style: none; }
 .draft-icon, .blitz-icon { position: relative; container-type: inline-size; aspect-ratio: 760 / 350; }
 .draft-icon > svg { position: absolute; inset: 0; height: 100%; z-index: 2; pointer-events: none; }
 .packs { position: absolute; inset: 0; z-index: 1; }
-.pack { position: absolute; aspect-ratio: 2 / 3; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--rot, 0deg)); border-radius: 4px; outline-offset: 6px; }
+.pack { position: absolute; aspect-ratio: 2 / 3; transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--rot, 0deg)); border-radius: 4px; outline-offset: 6px; will-change: transform, opacity; }
 .packs.live .pack { pointer-events: auto; cursor: pointer; }
+/* Nothing here repaints while the story or a hover plays. The body only moves (transform); the
+   shadow, the gold glow and the dimming are separate layers that only change opacity. */
 .pack-body { position: absolute; inset: 0; transform-origin: 50% 60%;
   transform: perspective(620px) translateY(var(--lift, 0)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(calc(1 - .04 * var(--open, 0)));
-  filter: drop-shadow(0 14px 16px rgba(0,0,0,.55)) brightness(calc(1 - .62 * var(--open, 0))) saturate(calc(1 - .5 * var(--open, 0)));
-  transition: transform 220ms var(--ease), filter 220ms linear; }
+  will-change: transform; transition: transform 220ms var(--ease); }
+/* the shadow and the hot glow: two layers under the artwork, each a copy of its outline (the art
+   image, set by icons.js) carrying a fixed drop-shadow. Their value never changes; the glow fades in */
+.pack-shadow, .pack-glow { position: absolute; inset: 0; pointer-events: none; will-change: transform; background: center / 100% 100% no-repeat; }
+.pack-shadow { filter: drop-shadow(0 14px 16px rgba(0,0,0,.55)); }
+.pack-glow { opacity: 0; transition: opacity 220ms linear;
+  filter: drop-shadow(0 22px 22px rgba(0,0,0,.6)) drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 14px rgba(242,193,78,.5)); }
+.pack.hot .pack-glow { opacity: 1; }
+/* without the PNG (the drawn pack and card): the same fixed shadows on the drawing, swapped once on hover */
+.pack:not(.has-art):not(.fx) .pack-art, .fx:not(.has-art) .fx-drawn { filter: drop-shadow(0 14px 16px rgba(0,0,0,.55)); }
+.pack.hot:not(.has-art):not(.fx) .pack-art, .fx.hot:not(.has-art) .fx-drawn { filter: drop-shadow(0 22px 22px rgba(0,0,0,.6)) drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 14px rgba(242,193,78,.5)); }
 .pack-art, .pack-art svg, .pack-art img, .pack video { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .pack-art img, .pack video { object-fit: contain; }
 .pack video { opacity: 0; transition: opacity 280ms linear; pointer-events: none; clip-path: var(--shape, none); -webkit-mask: var(--mask, none) center / 100% 100% no-repeat; mask: var(--mask, none) center / 100% 100% no-repeat; }
 .pack.hot.has-video video { opacity: 1; }
-/* the foil sheen: a bright diagonal band, parked off the pack until it is hovered */
-.pack-sheen { position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: screen;
-  clip-path: var(--shape, none); -webkit-mask: var(--mask, none) center / 100% 100% no-repeat; mask: var(--mask, none) center / 100% 100% no-repeat;
-  background: linear-gradient(112deg, rgba(255,255,255,0) 38%, rgba(255,255,255,.5) 47%, rgba(255,244,214,.75) 50%, rgba(255,255,255,.5) 53%, rgba(255,255,255,0) 62%) no-repeat;
-  background-size: 260% 100%; background-position: 135% 0; }
-.pack.hot .pack-body { --lift: -7%;
-  filter: drop-shadow(0 22px 22px rgba(0,0,0,.6)) drop-shadow(0 0 1.5px var(--accent)) drop-shadow(0 0 14px rgba(242,193,78,.5)); }
-.pack.hot .pack-sheen { opacity: 1; animation: sheen 900ms var(--ease) both; }
-.packs.hovering .pack:not(.hot) .pack-body { filter: drop-shadow(0 14px 16px rgba(0,0,0,.55)) brightness(.62); }
+/* the dimming (replaces brightness() and saturate()): a dark layer over the artwork, cut to its
+   outline like the sheen. --open dims by up to .62 as a pack is opened; a pack beside the hot one is dimmed to .38 */
+.pack-dim { position: absolute; inset: 0; pointer-events: none; background: #000; opacity: calc(.62 * var(--open, 0)); transition: opacity 220ms linear; will-change: opacity;
+  clip-path: var(--shape, none); mask-size: 100% 100%; mask-position: center; mask-repeat: no-repeat; -webkit-mask-size: 100% 100%; -webkit-mask-position: center; -webkit-mask-repeat: no-repeat; }
+/* a card's lock hangs off its bottom edge: its dimming box is taller, and its mask is the artwork plus a disc over the lock (the images are set by icons.js) */
+.fx:not(.has-art) .pack-dim { border-radius: 8.6% / 5.7%; }
+.fx.has-art .pack-dim { bottom: -8%; mask-size: 100% 92.59%, 100% 100%; mask-position: center top, 0 0; -webkit-mask-size: 100% 92.59%, 100% 100%; -webkit-mask-position: center top, 0 0; }
+.packs.hovering .pack:not(.hot) .pack-dim { opacity: .38; }
+/* the foil sheen: a bright diagonal band, parked off the pack until it is hovered. The band is a
+   child, 2.6 times as wide as the pack, slid across with transform */
+.pack-sheen { position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: screen; overflow: hidden;
+  clip-path: var(--shape, none); mask-size: 100% 100%; mask-position: center; mask-repeat: no-repeat; -webkit-mask-size: 100% 100%; -webkit-mask-position: center; -webkit-mask-repeat: no-repeat; }
+.pack-sheen::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 260%; transform: translateX(-83.08%);
+  background: linear-gradient(112deg, rgba(255,255,255,0) 38%, rgba(255,255,255,.5) 47%, rgba(255,244,214,.75) 50%, rgba(255,255,255,.5) 53%, rgba(255,255,255,0) 62%); }
+.pack.hot .pack-body { --lift: -7%; }
+.pack.hot .pack-sheen { opacity: 1; }
+.pack.hot .pack-sheen::before { animation: sheen 900ms var(--ease) both; will-change: transform; }
 .pack:focus-visible { outline: 2px solid var(--accent); }
-@keyframes sheen { from { background-position: 135% 0; } to { background-position: -35% 0; } }
+@keyframes sheen { from { transform: translateX(-83.08%); } to { transform: translateX(21.54%); } }
 /* the Blitz fixture cards: the same parts as a pack. art/card.png is the card, the SVG over it the content */
 .pack.fx { aspect-ratio: 216 / 327; border-radius: 8.6% / 5.7%; }
 .fx .pack-art svg { overflow: visible; }
@@ -155,7 +174,7 @@ ul, ol { list-style: none; }
   -webkit-mask: var(--mask, none) center / 100% 100% no-repeat; mask: var(--mask, none) center / 100% 100% no-repeat; }
 .pack.glinting .pack-glint { opacity: 1; transition-duration: 120ms; }
 /* capture mode: the sheen is held half way across */
-.still .pack.hot .pack-sheen { animation: none; background-position: 42% 0; }
+.still .pack.hot .pack-sheen::before { animation: none; transform: translateX(-25.85%); }
 
 /* hold to open */
 .hold { display: none; }
@@ -191,16 +210,17 @@ ul, ol { list-style: none; }
 #err { position: fixed; left: 16px; bottom: 16px; z-index: 50; color: #ff6b63; font: 12px ui-monospace, monospace; white-space: pre-wrap; }
 
 /* capture mode: no transitions, so a screenshot is the settled state */
-.still *, .still *::before { transition: none !important; }
+.still *, .still *::before, .still *::after { transition: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   /* no rise, 200 ms fades only */
   .js .words, .js .beat.on .words { transform: translateY(-50%); transition: opacity 200ms linear, visibility 0s; }
   .js .mode, .js .beat.on .mode { transform: none; transition: opacity 200ms linear, visibility 0s; }
   /* packs: no tilt, no lift, no sweep; the gold rim only */
-  .pack-body { transition: filter 200ms linear; }
+  .pack-body { transition: none; }
   .pack.hot .pack-body { --lift: 0; --rx: 0deg !important; --ry: 0deg !important; }
-  .pack.hot .pack-sheen { opacity: 0; animation: none; }
+  .pack.hot .pack-sheen { opacity: 0; }
+  .pack.hot .pack-sheen::before { animation: none; }
   .pack-glint { display: none; }
   .js .hold, .js .beat.on .hold { transition: opacity 200ms linear, visibility 0s; }
   .btn { transition: none; }
@@ -216,7 +236,7 @@ ul, ol { list-style: none; }
   .wrap { width: calc(100% - 40px); }
   .links, .menu-t { display: none; }
   .nav .right { gap: 8px; }
-  .nav { background: rgba(14,16,20,.86); }
+  
   .logo { display: inline-block; line-height: 44px; }
   .btn, .btn-sm { height: 44px; }
   .menu { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--edge-control); font-size: 22px; font-weight: 500; line-height: 1; }
@@ -238,9 +258,9 @@ ul, ol { list-style: none; }
     mask-image: linear-gradient(90deg, transparent calc(100% - 96 * var(--u)), #000 calc(100% - 40 * var(--u))), linear-gradient(180deg, transparent, #000 16%, #000 80%, transparent);
     -webkit-mask-composite: source-in; mask-composite: intersect; }
   #two::before { background-image: url("poster/beat-3.jpg"); --s: 84; --fx: .615; --fy: .525; --bh: 84; }
-  #blitz::before { background-image: url("poster/beat-4.jpg"); --s: 76; --fx: .668; --fy: .355; --bh: 40; }
-  #draft::before { background-image: url("poster/beat-5.jpg"); --s: 70; --fx: .68; --fy: .345; --bh: 40; }
-  #access::before { background-image: url("poster/beat-6.jpg"); --s: 100; --fx: .625; --fy: .585; --bh: 74; }
+  #blitz::before { background-image: url("poster/beat-4.jpg"); --s: 76; --fx: .672; --fy: .349; --bh: 40; }
+  #draft::before { background-image: url("poster/beat-5.jpg"); --s: 70; --fx: .681; --fy: .371; --bh: 40; }
+  #access::before { background-image: url("poster/beat-6.jpg"); --s: 100; --fx: .628; --fy: .533; --bh: 74; }
 
   .words, .js .words, .js .beat.on .words { position: static; opacity: 1 !important; visibility: visible; transform: none; margin: 0; padding-top: 8px; width: min(var(--copy), 100%); transition: none; }
   .words .eyebrow { margin-bottom: 14px; }
