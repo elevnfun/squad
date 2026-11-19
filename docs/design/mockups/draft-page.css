@@ -79,11 +79,20 @@
 .dp-frame { padding: var(--s2); border-radius: 20px; }
 .dp-frame .pitchbox { height: 490px; padding: 0; }
 .dp-save { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); }
-.dp-rules { display: grid; grid-template-columns: 220px minmax(0, 1fr); column-gap: var(--s5); align-items: center; margin-top: var(--s5); padding: var(--s3) var(--s5); border-radius: 16px; }
-.dp-rules .hd { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s2); }
-.dp-rules .checks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--s5); padding: 0; margin: 0; }
-.dp-rules .checks li { padding: 8px 0; }
-.dp-rules .checks li:nth-child(-n+3) { border-top: 0; }
+.dp-rules { padding: var(--s2) var(--s3); border-radius: 16px; }
+.dp-rules .hd { margin-bottom: var(--s1); }
+.dp-rules .checks { display: grid; grid-template-columns: auto auto; justify-content: space-between; column-gap: var(--s3); padding: 0; margin: 0; font-size: 13px; }
+.dp-rules .checks li { padding: 5px 0; gap: 8px; }
+.dp-rules .checks li:nth-child(-n+2) { border-top: 0; }
+/* desktop: the left column is shorter than the right; the prize card takes the spare height */
+@media (min-width: 1101px) {
+  .dp-left { display: flex; flex-direction: column; align-self: stretch; }
+  .dp-left > .dp-prz { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+}
+@media (min-width: 1101px) and (max-width: 1359px) {
+  .dp-rules .checks { grid-template-columns: 1fr; }
+  .dp-rules .checks li:nth-child(2) { border-top: 1px solid var(--line); }
+}
 .dp-note { margin-top: var(--s4); }
 
 .dp .steel2 { color: var(--steel-2); }
@@ -100,8 +109,7 @@
   .dp-reveal ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .dp-main { display: block; }
   .dp-right { margin-top: var(--s6); }
-  .dp-rules { grid-template-columns: 1fr; row-gap: var(--s2); }
-  .dp-rules .hd { flex-direction: row; align-items: center; justify-content: space-between; }
+  .dp-rules .checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* 390: single column, it only has to work */
@@ -131,7 +139,7 @@
   .dp-save { flex-direction: column; align-items: stretch; text-align: center; }
   .dp-rules { padding: var(--s3) var(--s4); }
   .dp-rules .checks { grid-template-columns: 1fr; }
-  .dp-rules .checks li:nth-child(-n+3) { border-top: 1px solid var(--line); }
+  .dp-rules .checks li:nth-child(-n+2) { border-top: 1px solid var(--line); }
   .dp-rules .checks li:first-child { border-top: 0; }
   .dp-frame .pitchbox { height: 490px; }
   .dp-frame .prow { gap: 24px; }
