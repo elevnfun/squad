@@ -8,12 +8,12 @@ and how to start the next section without re-reading the old conversation.
 | Section | State |
 |---|---|
 | 1. Blueprint | Done. `docs/blueprint/BLUEPRINT.md` (v9). Section 5.1 holds the newest rules and wins over older text. |
-| 2. Design | Built and reviewed. Waiting on the owner's last checks (below) before sign-off. |
-| 3. Build | Not started. Nothing in `web/` (except `web/DESIGN.md`) or the backend has been changed. |
+| 2. Design | Done. Signed off by the owner on 2026-11-19. |
+| 3. Build | Not started. A plan for step 1 is written (`docs/build/FOUNDATIONS_PLAN.md`) and awaits his approval. Nothing in `web/` (except `web/DESIGN.md`) or the backend has been changed. |
 | 4. Trial and error | Not started. |
 
-The owner said on 2026-11-19 that the next section starts in a new session. Before writing any
-build code, confirm with him that design is signed off (see "Open with the owner").
+Before writing any build code, get the owner's approval of the foundations plan (see "Open with
+the owner").
 
 ## What exists
 
@@ -42,20 +42,17 @@ Artifact slugs for republishing: home `ba827aaa-5752-4411-b163-2eb9b065522d`, sc
 `8de81161-545f-4a0a-b235-9e63c5012c5c`, status `abd77878-5109-43dd-a98c-413bbd62a56e`. Read each
 with `get_artifact` first to get the live version id.
 
-## Open with the owner (ask these before anything else)
+## Open with the owner
 
-1. **Home page speed on his Mac.** He reported a soft ball and lag between beats. Three rounds
-   of fixes are published but were only checked on software rendering. Ask him to open the home
-   link with `#stats`, scroll once, and read out: fps, longest gap, tier, timing method, and the
-   two DPR numbers. Expected: about 60 or 120 fps, tier "high, settled", timing "GPU timer (no
-   stall)", DPR 2 in use on a 2 screen. If it still lags, the README's "Known weak points" lists
-   what is left (two full passes at 4x multisampling plus the glass at the top level).
-2. **Draft screen:** move the six rule checks from the bottom strip to under the board? The head
-   agent and the lead both recommend yes.
-3. **Phone home page:** a still of the ball per beat (as built), or keep the live ball in the hero?
-4. **Scroll feel:** the ball follows the scroll with a 120 ms glide (`?smooth=80` tighter,
-   `?smooth=160` softer). Ask after he has tried it.
-5. **Sign-off of section 2**, and his go-ahead to start section 3.
+Section 2 was signed off on 2026-11-19. His answers: the home page runs at 60 fps on his Mac
+(longest gap 18 ms, tier high-2 settled, GPU timer, DPR 2); the Draft rule checks move under the
+board; the phone home page keeps the stills; the 120 ms scroll glide is good.
+
+Still open:
+1. **Approval of `docs/build/FOUNDATIONS_PLAN.md`** and his word that the build can start. No
+   build code until he gives it.
+2. The plan's three assumptions (player pays the network fee on Collect; the $500 is converted at
+   the SOL price when the week is final; nothing is deployed during the build).
 
 Smaller loose ends, only if he raises them: the X thread and bio drafts predate this week's rule
 changes; the logo's fold-in animation has no home now the intro video is retired; `scroll.mp4`
@@ -82,7 +79,7 @@ in the home prototype's shots is out of date (the live link replaces it).
 
 ## Section 3 (the build): how to start
 
-Do not begin until the owner says design is signed off.
+Do not begin until the owner approves the foundations plan and says the build can start.
 
 Order from the blueprint (section 8): foundations, Matchday Blitz, Draft, Penalty Shootout, retire
 Season, home page, News, first-visit tutorial.
@@ -101,9 +98,7 @@ chat), `db/schema.sql`, `config.toml` (every game number lives there), and `web/
 React 19, Tailwind 4; three.js is not yet a dependency of `web/`). Season code is still present
 and is retired in the build order above.
 
-Suggested first step for the new session: write a short build plan for "foundations" only (data
-model changes for two modes, the winnings ledger, guest mode, the three-tab navigation), show it
-to the owner, and build nothing until he approves it.
+The plan for "foundations" is `docs/build/FOUNDATIONS_PLAN.md`. Build nothing until he approves it.
 
 ## How to work (the owner's instructions)
 
