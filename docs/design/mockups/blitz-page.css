@@ -1,0 +1,46 @@
+/* Blitz pick page: full matchday squads, one scroll area, two club columns */
+.bp-hd, .bp-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.bp-hd { margin-bottom: 8px; }
+.bp-hd .team-hd { margin-bottom: 0; }
+.bp-scroll { max-height: 560px; overflow-y: auto; overscroll-behavior: contain; padding-right: 6px; margin-right: -6px; border-top: 1px solid var(--line); scrollbar-width: thin; scrollbar-color: var(--steel-2) transparent; }
+.bp-scroll:focus-visible { outline-offset: -2px; }
+.bp-col { min-width: 0; }
+.bp-colhd { display: none; margin-bottom: 0; }
+.bp-ph { display: flex; justify-content: space-between; margin: 0; padding: 12px 4px 6px; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--steel); line-height: 1.3; }
+.bp-ph span:last-child { letter-spacing: .04em; text-transform: none; font-weight: 500; padding-right: 7px; }
+.bp-row { display: flex; align-items: stretch; min-height: 42px; margin-bottom: 4px; border: 1px solid var(--steel-edge); border-radius: 10px; background: var(--row); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); transition: background 150ms var(--ease), border-color 150ms var(--ease); }
+.bp-row:hover { background: var(--row-2); border-color: var(--steel-2); }
+.bp-row.picked { background: var(--row-2); border-color: var(--edge-control); }
+.bp-row.off:hover { background: var(--row); border-color: var(--steel-edge); }
+.bp-pick, .bp-c { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.bp-pick { flex: 1; min-width: 0; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; column-gap: 8px; row-gap: 0; padding: 4px 6px 4px 8px; text-align: left; border-radius: 9px; }
+.bp-pick:disabled { cursor: default; padding-block: 6px; }
+.bp-pick:focus-visible, .bp-c:focus-visible { outline-offset: -2px; }
+.bp-pick .pos { min-width: 0; margin: 0; padding: 1px 0; }
+.bp-pick .nm { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bp-pick .avg { font-size: 13px; font-weight: 600; color: var(--steel); text-align: right; white-space: nowrap; }
+.bp-pick .sub { grid-column: 2 / -1; font-size: 12px; color: var(--steel); line-height: 1.3; }
+.bp-pick .sub .pk { font-weight: 700; color: var(--text); letter-spacing: .02em; }
+.bp-row.off .nm { color: var(--steel-2); }
+.bp-c { flex: none; width: 40px; display: grid; place-items: center; border-radius: 9px; }
+.bp-c:hover .cap.ring { border-color: var(--accent); color: var(--accent); }
+.bp-c .cap::after { display: none; }
+.bp-c .cap.ring { min-width: 22px; height: 22px; }
+.bp-ph + .bp-row { margin-top: 0; }
+.bp .bp-grp + .bp-grp { margin-top: 2px; }
+/* desktop: both clubs share four position rows, so each heading lines up across the columns */
+@media (min-width: 901px) {
+  .bp-cols { grid-template-rows: repeat(4, auto); row-gap: 0; }
+  .bp-col { display: grid; grid-row: 1 / span 4; grid-template-rows: subgrid; }
+}
+@media (max-width: 900px) {
+  .bp-hd, .bp-cols { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .bp-hd { display: none; }
+  .bp-colhd { display: flex; padding-top: 12px; }
+}
+@media (max-width: 700px) {
+  .bp-row, .bp-pick { min-height: 44px; }
+  .bp-c { width: 44px; }
+  .bp-pick .nm { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) { .bp-row { transition: none; } }
