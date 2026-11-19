@@ -77,18 +77,32 @@ The gold core and the rim studs are now dark while the ball is closed and ignite
 the glass variant's opening is a reveal. The glass variant's rim rings are satin steel. The glass
 stills and `turntable-glass.mp4` in `shots/` were retaken after this change.
 
+Added for performance (2026-11-18):
+
+```js
+ball.setPose(split, explode, turn, ignite)    // the four in one call
+ball.setLevel(0..6)     // quality levels, best first: LEVELS (exported); setQuality('high'|'low'|'min') takes the named ones
+ball.precompile()       // a promise: every shader compiled before the first frame
+ball.project(point, object, out)              // fills `out` instead of making a new object
+ball.lastCalls, ball.lastTriangles            // renderer.info of the last frame drawn
+```
+
 All setters return the engine, so they chain. Scene graph, for the animation step:
-`root` (pointer drag) > `tilt` (fixed tilt) > `spin` (`setTurn`) > `halves.blitz`,
-`halves.draft`, `coreGroup`. `ball.panels` lists the 32 panels with their group, normal, half
-and order. Sizes are in `SPEC`, the art direction (lights, bloom, grain, glow, tilt) is in `LOOK`,
+`root` (pointer drag) > `tilt` (fixed tilt) > `spin` (`setTurn`) > the instanced parts
+(`ball.parts`), `coreGroup`, and `halves.blitz` and `halves.draft`, which are now empty frames
+of reference that move with the split (for `project`). `ball.panels` lists the 32 panels with
+their normal, half, order and their place (`slot`) in the instanced mesh; a panel no longer has
+a group of its own. Sizes are in `SPEC`, the art direction (lights, bloom, grain, glow, tilt) is in `LOOK`,
 cameras are in `VIEWS`.
 
 ## What is in it
 
-- 32 panels, each its own curved mesh: the face polygon is inset 0.75 mm for a 1.5 mm seam,
-  corners rounded, swept through a rounded polished bevel, a radial side wall and a back face,
-  and every vertex is pushed onto its sphere. 16 panels per half (6 pentagons, 10 hexagons),
-  separated by the zigzag equator.
+- 32 curved panels: the face polygon is inset 0.75 mm for a 1.5 mm seam, corners rounded, swept
+  through a rounded polished bevel, a radial side wall and a back face, and every vertex is
+  pushed onto its sphere. 16 panels per half (6 pentagons, 10 hexagons), separated by the zigzag
+  equator. Each repeated part (hexagon bezels, pentagon bezels, hexagon panes, pentagon panes,
+  rim rings, studs, tubes and collars) is one instanced mesh placed in the space of the turning
+  ball; the split and the explode rewrite the instances' positions.
 - Two materials per part: a satin face and a polished edge.
 - Each half has a liner with a flat rim, gold studs on the rim (3 on Blitz, 5 on Draft) and a
   sliding tube; the gold core sits on a rod between them.
@@ -105,7 +119,7 @@ cameras are in `VIEWS`.
 
 | Spec | Here | Why |
 |---|---|---|
-| One instanced mesh for the hexagons | 32 separate meshes sharing two geometries | The brief for this pass asked for a mesh per panel; instancing is a later saving |
+| One instanced mesh for the hexagons | One instanced mesh per repeated part (ten in all) | Done on 2026-11-18: 15 draw calls for the scene instead of 149 |
 | Bevel 0.6 mm | 0.9 mm | 0.6 is about 1.6 px at hero size and flickers; 0.9 holds a clean line |
 | Panel lift 6 mm | 30 mm (pentagons 39) | 6 mm does not read as an exploded view; `SPEC.explodeLift` |
 | Shells travel 90 mm each | 30 mm each (60 apart) | The brief and "the one frame" both say 60. At 60 the core is only seen from within about 15 degrees of side-on, so the ball's tilt and the three-quarter camera were set for that |
@@ -133,24 +147,39 @@ cameras are in `VIEWS`.
 - The wet ground reflects the studio as if it were infinitely far away.
 - Rain, a reflecting ground, lanterns and bokeh are dropped by the owner (the video they came from
   is no longer a reference). No depth of field, no labels, no blueprint mode, no sound, no scroll.
-- No quality tiers, no adaptive resolution, no context-loss handling, no poster or fallback stills.
+- Quality levels are in the engine (`LEVELS`, `setLevel`), but this page does not choose one: the
+  home page does. No context-loss handling, no poster or fallback stills here.
 - The phone view is untested. Touch drag works through pointer events, tilt is not wired.
-- Geometry is not instanced or merged.
+- The glass still costs a second full pass over the opaque parts every frame (three.js draws
+  them into a picture for the glass to refract). It was kept because it is the approved look.
 
-## Measured (`renderer.info`, 1600x900, pixel ratio 1)
+## Measured (`renderer.info`, glass variant, the home page at 1440x900, pixel ratio 1)
 
-| | Steel | Glass |
+| | Before (2026-11-17) | Now |
 |---|---|---|
-| Meshes visible | 51 | 83 |
-| Draw calls, the scene once | 85 | 149 |
-| Triangles, the scene once | 139,538 | 155,042 |
-| Draw calls per frame, all passes | 161 | 249 |
-| Triangles per frame, all passes | 250,531 | 234,499 |
-| Shader programs | 18 | 17 |
+| Meshes visible | 83 | 11 |
+| Draw calls, the scene once | 149 | 15 |
+| Triangles, the scene once | 155,042 | 85,266 |
+| Draw calls per frame, all passes | 249 | 41 |
+| Triangles per frame, all passes | 234,499 | 134,907 |
+| Render-target changes per frame | 18 | 18 |
 
-"All passes" includes the extra pass three.js makes for transmission (the opaque parts are drawn
-twice) and the bloom and output passes. These were measured in headless Chromium on software
-WebGL, which says nothing about frame rate. Frame rate on real hardware has not been measured.
+The saving in draw calls is from instancing. The saving in triangles is from fewer steps along
+each panel edge (6, was 10), round each corner (3, was 4), round each bevel (3, was 4) and
+across each pane (4 rings, was 6): at the close-up's scale every edge stays within 0.07 mm of
+its sphere, which is under one pixel. The stills did not change.
+
+The passes are the same as before: the opaque parts into a picture for the glass (4x
+multisampled), the scene (4x multisampled), the bloom's thirteen small passes, tone mapping,
+and the vignette and grain. What changed in them: only the scene's own buffer is multisampled
+and has depth (the composer's second buffer used to carry both for no reason), and the bloom
+is worked out from a picture the size of the window in CSS pixels, not in screen pixels, which
+on a 2x screen is a quarter of the work and gives the same width of glow as on a 1x screen.
+
+"All passes" includes the extra pass three.js makes for transmission (the opaque parts are
+drawn twice). These were measured in headless Chromium on software WebGL, which says nothing
+about frame rate. Frame rate on real hardware has not been measured here; the home page's
+`?stats=1` readout shows it.
 
 ## Files
 

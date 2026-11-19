@@ -230,3 +230,21 @@ Reporting
 - How: the side labels went at the bottom of the card because the artwork's stripe crosses the top right; the phone stills are the existing `poster/beat-N.jpg` files placed with CSS variables (picture height, ball position, band height), so no script change was needed. Tap gives the hover state through focus.
 - Changed: text over a dimmed live ball was replaced by stills above the text (lowest contrast now 5.55:1, measured on pixels); a contrast script that samples a button's whole box reads the page behind its rounded corners, so sample inside the pill.
 - Rule for next time: on a phone put pictures above the words, not behind them; and when another agent is editing the scripts at the same time, a capture that times out is retried before anything is "fixed".
+
+## 2026-11-19 · home-perf agent · soft ball and lag on the owner's Mac
+- Did: the ball draws in 41 calls instead of 249 (instancing), the page chooses its quality by
+  watching real frame times all the time (effects are dropped before pixels, and it steps back up),
+  the scroll follows like a damped spring, `?stats=1` shows real numbers, and the Blitz, Draft and
+  access beats each have their own view of the ball.
+- How: found the soft ball by reading the tier code, not by guessing: one slow reading in the first
+  second sent a 2x screen to 1 pixel per CSS pixel for good. Checked each suspected cause before
+  fixing it; one (a shader compiled in mid-scroll) turned out not to happen, and then did happen
+  after my own change, so it was counted again afterwards.
+- Changed: `canvas.clientWidth` was read every frame after the frame had written to the page (a
+  layout each frame), and `--scrim` was set on the root element (a restyle of the whole page each
+  frame). The first "before" figures came from a checkout that already held my edits, because work
+  in progress is committed automatically; they were retaken from the real earlier commit.
+- Rule for next time: anything that picks quality by timing must discard start-up frames, decide
+  on a run of frames, drop effects before resolution, and be able to step back up. Never read a
+  size inside the frame loop; set a CSS variable on the element that uses it, not on the root.
+- Rule for next time: a "before" measurement names the commit it was taken from.

@@ -46,13 +46,18 @@ const POSE = {
   close2: { fit: 76,  az: 20, el: 15, x: 0.45, y: 0.43, tear: 0.04, gap: 0, turn: 30,  focus: 0,     near: 1, scrim: 1,    idle: 0 },
   apart:  { fit: 500, az: 23, el: 18, x: 0.12, y: 0.02, tear: 1,    gap: 0, turn: 52,  focus: 0,     near: 0, scrim: 0.6,  idle: 0 },
   apart2: { fit: 500, az: 23, el: 18, x: 0.12, y: 0.02, tear: 1,    gap: 0, turn: 58,  focus: 0,     near: 0, scrim: 0.6,  idle: 0 },
-  // Blitz and Draft: the panels are back on and the two halves stand 84 mm apart, upper right,
-  // above the cards. x is set by layoutTitles so the ball stays over the right end of the cards.
-  blitz:  { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 84,  focus: 0.06,  near: 0, scrim: 0.7,  idle: 0 },
-  blitz2: { fit: 560, az: 23, el: 18, x: 0.27, y: -0.16, tear: 0,   gap: 1.4, turn: 98,  focus: 0.06,  near: 0, scrim: 0.7,  idle: 0 },
-  draft:  { fit: 560, az: 23, el: 18, x: 0.27, y: -0.15, tear: 0,   gap: 1.4, turn: 124, focus: -0.06, near: 0, scrim: 0.7,  idle: 0 },
-  draft2: { fit: 560, az: 23, el: 18, x: 0.27, y: -0.15, tear: 0,   gap: 1.4, turn: 138, focus: -0.06, near: 0, scrim: 0.7,  idle: 0 },
-  access: { fit: 400, az: 23, el: 18, x: 0.13, y: 0.02, tear: 0,    gap: 1, turn: 196, focus: 0,     near: 0, scrim: 0.55, idle: 0 },
+  // Blitz, Draft and access are told apart by which half leads, the angle and how far apart the halves are.
+  // x is set by layoutTitles so the ball stays over the right end of the cards.
+  // Blitz: seen from the left and level, so the halves stack upright: the Blitz half on top with its
+  // rim and three gold studs towards the viewer, the lit core in the 87 mm gap under it.
+  blitz:  { fit: 560, az: -45, el: 5, x: 0.27, y: -0.175, tear: 0,  gap: 1.45, turn: 84,  focus: 0.2,  near: 0, scrim: 0.7,  idle: 0 },
+  blitz2: { fit: 560, az: -45, el: 5, x: 0.27, y: -0.175, tear: 0,  gap: 1.45, turn: 98,  focus: 0.2,  near: 0, scrim: 0.7,  idle: 0 },
+  // Draft: seen from the right and above, so the Draft half's rim and its five studs face the viewer
+  // as a ring at the lower left, with the Blitz half behind it; halves 90 mm apart.
+  draft:  { fit: 560, az: 46, el: 32, x: 0.27, y: -0.12, tear: 0,   gap: 1.5, turn: 124, focus: -0.1, near: 0, scrim: 0.7,  idle: 0 },
+  draft2: { fit: 560, az: 46, el: 32, x: 0.27, y: -0.12, tear: 0,   gap: 1.5, turn: 138, focus: -0.1, near: 0, scrim: 0.7,  idle: 0 },
+  // Access: the halves have nearly closed (13 mm apart) and the core is fully lit, glowing through the seam and the glass.
+  access: { fit: 400, az: 23, el: 18, x: 0.13, y: 0.02, tear: 0,    gap: 0.3, turn: 196, focus: 0,    near: 0, scrim: 0.55, idle: 0, lit: 1 },
   end:    { fit: 350, az: 0,  el: 9,  x: 0.13, y: 0.04, tear: 0,    gap: 0, turn: 216, focus: 0,     near: 0, scrim: 0.55, idle: 1 },
   // what a completed hold blends towards: "the one frame"
   open:   { fit: 400, az: 23, el: 18 },
@@ -109,13 +114,20 @@ const railDots = [...document.querySelectorAll('.rail a')];
 root.classList.add('js');
 if (STILL) root.classList.add('still');
 
-// No WebGL (or ?nogl=1): engine stays null and the page shows a still per beat instead (see "stills").
-let engine = null;
-try {
-  if (q.get('nogl') === '1') throw new Error('WebGL switched off by ?nogl=1');
-  engine = new BallEngine(canvas, { variant: 'glass', still: STILL, reducedMotion: REDUCED, pointer: false, pixelRatio: q.has('dpr') ? num('dpr', 1) : undefined });
-} catch (e) {
-  console.warn('elevn: no WebGL, showing stills.', e);
+// The live ball. It is made the first time the window is wide enough to show it: the phone
+// layout (900 px and under) shows a still per beat and never starts it. No WebGL (or ?nogl=1):
+// engine stays null and the page shows a still per beat instead (see "stills").
+let engine = null, engineFailed = false;
+function makeEngine() {
+  if (engine || engineFailed) return engine;
+  try {
+    if (q.get('nogl') === '1') throw new Error('WebGL switched off by ?nogl=1');
+    engine = new BallEngine(canvas, { variant: 'glass', still: STILL, reducedMotion: REDUCED, pointer: false, pixelRatio: q.has('dpr') ? num('dpr', 1) : undefined });
+  } catch (e) {
+    engineFailed = true;
+    console.warn('elevn: no WebGL, showing stills.', e);
+  }
+  return engine;
 }
 
 // ---------------------------------------------------------------- quality
@@ -134,7 +146,7 @@ const LAST = LEVELS.length - 1;
 const FORCED = ['high', 'low', 'min'].includes(q.get('quality')) ? q.get('quality') : null;
 const WINDOW = 40;
 const mon = {
-  on: !!engine && !FORCED && !STILL,
+  on: !FORCED && !STILL,
   n: 0, holdUntil: Infinity,
   ring: new Float32Array(WINDOW), sorted: new Float32Array(WINDOW), filled: 0, at: 0, count: 0,
   bad: 0, slow: 0, fast: 0, fails: new Uint8Array(LEVELS.length),
@@ -191,9 +203,11 @@ function timed(ms) {
 function draw() {
   stats.draws++;
   if ((!mon.on && !stats.on) || STILL || (mon.n++ & 3) || performance.now() < mon.holdUntil) { engine.render(); return; }
+  // wait for the frames already queued, so that only this frame is timed
+  const gl = engine.renderer.getContext();
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, mon.px);
   const t0 = performance.now();
   engine.render();
-  const gl = engine.renderer.getContext();
   gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, mon.px);
   timed(performance.now() - t0);
 }
@@ -222,7 +236,8 @@ function statsShow(now) {
   const gap = Math.max(...stats.gaps);
   stats.rafs = 0; stats.draws = 0; stats.gap = 0; stats.since = now;
   let text;
-  if (!engine || stills.on) text = 'no WebGL: showing stills';
+  if (vp.narrow) text = 'phone layout: stills, no live canvas';
+  else if (!engine || stills.on) text = 'no WebGL: showing stills';
   else {
     middle();
     const b = engine.renderer.domElement, pr = engine.renderer.getPixelRatio();
@@ -349,8 +364,8 @@ const icons = [...document.querySelectorAll('.mode')].map((mode) => {
 });
 function drawIcons(p) {
   for (const ic of icons) {
-    const [a, b] = ICON_SPAN[ic.half];
-    const t = REDUCED || narrow() ? 1 : clamp01((p - a) / (b - a));
+    const span = ICON_SPAN[ic.half];
+    const t = REDUCED || narrow() ? 1 : clamp01((p - span[0]) / (span[1] - span[0]));
     if (t === ic.t) continue;
     ic.t = t;
     ic.draw(t);
@@ -525,6 +540,8 @@ function onResize() {
   if (engine) engine.resize();
   layoutTitles(); onScroll();
   state.dirty = true;
+  if (!vp.narrow && !live.asked) wake().catch(fail);   // the window has grown past the phone layout: start the ball
+  else if (STILL && live.on) frame(0);
   if (mon.holdUntil !== Infinity) hush(500);   // new buffers: do not time the frames that make them
 }
 window.addEventListener('scroll', onScroll, { passive: true });
@@ -548,6 +565,7 @@ window.addEventListener('pointermove', (e) => {
 
 // hold to open: press the ball, or hold Space or Enter on the button
 function overBall(e) {
+  if (!engine) return false;
   const c = engine.project([0, 0, 0]);
   return Math.hypot(e.clientX - c.x, e.clientY - c.y) < engine.pxPerMm() * (R + 10);
 }
@@ -584,7 +602,9 @@ function loop(now) {
   statsRaf(now);
   // nothing is drawn in a hidden tab or once the prizes band has covered the stage; and a frame
   // is only drawn when something has changed (the scroll, the idle turn, the cursor, the hold, the window)
-  if (stills.on) return;
+  if (stills.on || !live.on) return;
+  // the phone layout shows stills: nothing is drawn or timed, only the icons are kept on their last frame
+  if (vp.narrow) { drawIcons(1); return; }
   if (document.hidden || vp.scrollY > vp.storyH + 40) return;
   if (REDUCED && !vp.narrow) {
     // crossfade between the stills when the beat changes
@@ -636,37 +656,45 @@ function useStills() {
 }
 canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); useStills(); });
 
-async function start() {
-  try { await Promise.all([document.fonts.load('700 100px "Barlow Condensed"'), document.fonts.load('800 60px "Sora"'), document.fonts.ready]); } catch (e) { /* fall back to system fonts */ }
-  measureWindow(); vp.scrollY = window.scrollY;
-  if (!engine) { useStills(); return; }
+// Starts the live ball: once, the first time the window is wider than the phone layout.
+const live = { asked: false, on: false };
+async function wake() {
+  live.asked = true;
+  if (!makeEngine()) { useStills(); return; }
   if (FORCED) setQuality(FORCED);
   layoutTitles();
-  if (q.has('p')) state.pTarget = clamp01(num('p', 0)); else onScroll();
-  state.p = state.pTarget;
-  if (q.has('hold')) { state.hold = clamp01(num('hold', 0)); state.open = 0.1 * state.hold; }
-  if (q.has('open')) { state.hold = 1; state.opened = true; state.open = clamp01(num('open', 1)); }
   // Every shader is compiled before the first frame, off the main thread where the browser can,
   // so the first frames (and the timing that sets the quality) do not pay for it.
   applyPose(vp.narrow ? POSE.hero : poseAt(state.p), state.open, 0);
   try { await engine.precompile(); } catch (e) { /* compiled on the first frame instead */ }
   state.dirty = true; frame(0);
-  requestAnimationFrame(() => {
-    state.dirty = true; frame(0);
-    canvas.classList.add('ready');
-    // the poster is under the canvas: take it away once the canvas has faded in over it
-    setTimeout(() => { if (!stills.on) stillBox.hidden = true; }, STILL ? 0 : 700);
-    statsShow(performance.now());
-    window.__homeReady = true;
-    mon.holdUntil = performance.now() + 1000;      // nothing is timed in the first second
-    if (!STILL) { state.last = performance.now(); requestAnimationFrame(loop); }
-  });
+  await new Promise((done) => requestAnimationFrame(done));
+  state.dirty = true; frame(0);
+  canvas.classList.add('ready');
+  // the poster is under the canvas: take it away once the canvas has faded in over it
+  setTimeout(() => { if (!stills.on) stillBox.hidden = true; }, STILL ? 0 : 700);
+  mon.holdUntil = performance.now() + 1000;        // nothing is timed in the first second
+  state.last = performance.now();
+  live.on = true;
+}
+async function start() {
+  try { await Promise.all([document.fonts.load('700 100px "Barlow Condensed"'), document.fonts.load('800 60px "Sora"'), document.fonts.ready]); } catch (e) { /* fall back to system fonts */ }
+  measureWindow(); vp.scrollY = window.scrollY;
+  if (q.has('p')) state.pTarget = clamp01(num('p', 0)); else onScroll();
+  state.p = state.pTarget;
+  if (q.has('hold')) { state.hold = clamp01(num('hold', 0)); state.open = 0.1 * state.hold; }
+  if (q.has('open')) { state.hold = 1; state.opened = true; state.open = clamp01(num('open', 1)); }
+  if (vp.narrow) { setBeat(beatAt(state.pTarget)); drawIcons(1); } else await wake();
+  statsShow(performance.now());
+  window.__homeReady = true;
+  if (!STILL) requestAnimationFrame(loop);
 }
 
 // For captures: set the story position (and the hold) and draw that frame now.
 window.home = {
-  engine, state, POSE, CUES, MARKS, TITLE, ICON_SPAN, STILL_SIZE, LEVELS, layoutTitles, titleReport, setQuality, setLevel, mon,
-  stats() { statsShow(performance.now()); return stats.text; },
+  get engine() { return engine; }, state, POSE, CUES, MARKS, TITLE, ICON_SPAN, STILL_SIZE, LEVELS, layoutTitles, titleReport, setQuality, setLevel, mon,
+  stats: () => stats.text,
+  feed: timed,               // for tests: hand the quality watch a frame time in ms
   get quality() { return engine ? engine.quality : 'stills'; },
   set(p, hold = 0, open = null) {
     if (!engine) return;
@@ -675,4 +703,5 @@ window.home = {
     state.dirty = true; frame(0);
   },
 };
-start().catch((e) => { document.getElementById('err').textContent = String((e && e.stack) || e); window.__homeError = String(e); });
+function fail(e) { document.getElementById('err').textContent = String((e && e.stack) || e); window.__homeError = String(e); }
+start().catch(fail);

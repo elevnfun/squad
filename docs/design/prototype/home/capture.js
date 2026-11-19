@@ -7,6 +7,8 @@
 //   node capture.js poster                 -> poster/beat-1.jpg ... beat-6.jpg: the canvas alone at 2400x1080 (the load poster and the no-WebGL stills)
 //   node capture.js modes                  -> shots/no-webgl-blitz.png (?nogl=1), shots/quality-low-hero.png (?quality=low)
 //   node capture.js titles                 -> prints each title word's box and its gap to the ball at four sizes
+//   node capture.js dpr2                   -> shots/dpr2-hero.png, dpr2-close-up.png: part of the ball on a 2x screen (1600x1200 real pixels)
+//   node capture.js stats                  -> shots/stats-readout.png: the hero with ?stats=1
 //   node capture.js one "<query>" out.png [width height]
 //   node capture.js video                  -> shots/scroll.mp4 (1280x720, 30 fps)
 // Needs the prototype folder served:  cd docs/design/prototype && python3 -m http.server 8772
@@ -117,6 +119,19 @@ async function open(browser, query, w, h, opts = {}) {
       console.log('quality:', await page.evaluate(() => window.home.quality));
       await page.screenshot({ path: path.join(SHOTS, 'quality-low-hero.png') });
       console.log('quality-low-hero.png');
+    } else if (mode === 'dpr2') {
+      // sharpness on a 2x screen (a Retina Mac): a window of the hero and of the close-up, pixel for pixel
+      const page = await open(browser, 'p=0&quality=high', 1440, 900, { deviceScaleFactor: 2 });
+      for (const [name, p, y] of [['hero', 0, 280], ['close-up', 0.2, 350]]) {
+        await page.evaluate((a) => window.home.set(a), p);
+        await page.waitForTimeout(200);
+        await page.screenshot({ path: path.join(SHOTS, `dpr2-${name}.png`), clip: { x: 640, y, width: 800, height: 600 } });
+        console.log(`dpr2-${name}.png`, await page.evaluate(() => window.home.stats()));
+      }
+    } else if (mode === 'stats') {
+      const page = await open(browser, 'p=0&stats=1', 1440, 900, { deviceScaleFactor: 2 });
+      await page.screenshot({ path: path.join(SHOTS, 'stats-readout.png') });
+      console.log('stats-readout.png\n' + await page.evaluate(() => window.home.stats()));
     } else if (mode === 'titles') {
       // every title word at four window sizes: its box, and how near the ball comes to it
       for (const [w, h] of [[1440, 900], [1920, 1080], [1512, 860], [1728, 1000]]) {

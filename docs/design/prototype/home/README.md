@@ -22,8 +22,10 @@ and hold the ball (or focus "Press and hold the ball to open it" and hold Space 
 
 URL parameters, for captures: `still=1` (no time-based motion, no fades), `p=0..1` (story
 position), `hold=0..1` (the ring), `open=1` (a completed hold), `reduced=1` (force the
-reduced-motion path), `dpr=`, `quality=high|low|min` (fix the quality tier), `nogl=1` (behave as
-if there were no WebGL), `demo=cardhover` (holds the hover on a fixture card once the cards
+reduced-motion path), `dpr=`, `quality=high|low|min` (fix the quality level), `stats=1` (a small
+readout in the lower left corner: frame rate, frame time, quality level, pixel ratio, canvas size,
+draw calls and triangles; see "Reading `?stats=1`"), `smooth=` (how far the ball lags behind the
+scrollbar, in milliseconds; 120 unless given), `nogl=1` (behave as if there were no WebGL), `demo=cardhover` (holds the hover on a fixture card once the cards
 stand in their row: `card=0..2`, the middle one unless given; `glint=0..1` freezes the glint at
 that point of its loop; use it with `p=0.56`). `window.home.set(p, hold, open)` draws any frame at once.
 
@@ -37,6 +39,8 @@ node capture.js glint             # shots/blitz-card-glint-strip.png: one card, 
 node capture.js poster            # poster/beat-1.jpg to beat-6.jpg: the canvas alone, 2400x1080 (load poster, no-WebGL stills)
 node capture.js modes             # shots/no-webgl-blitz.png (?nogl=1) and shots/quality-low-hero.png (?quality=low)
 node capture.js titles            # prints every title word's box and its gap to the ball at four window sizes
+node capture.js dpr2              # shots/dpr2-hero.png, dpr2-close-up.png: part of the ball on a 2x screen, pixel for pixel
+node capture.js stats             # shots/stats-readout.png: the hero with ?stats=1
 node capture.js video             # shots/scroll.mp4, 1280x720, 30 fps (the two icon stretches are taken slowly)
 ```
 
@@ -50,10 +54,10 @@ artwork and falls back when it is not there.
 | 0% | Hero | elevn. Fantasy football with a result at full time. | Whole and closed, turning 6 degrees a second. The core is a dark bead. Hold to open |
 | 20% | Full time | A week is too long to wait. Your points are banked 15 minutes after the final whistle. | A macro: the camera pushes in until the ball is about two screens tall. Glass and steel fill the lower right; the title word stands top left, over the dark |
 | 40% | Two | Two ways to play. One ball, two halves: Matchday Blitz and Draft. | The teardown: panels lift from the poles, the halves part, the core ignites gold |
-| 56% | Blitz | Three squads of three, on any three fixtures. Your captain scores double. A prize every matchday. | The panels close back on, the two halves stay 84 mm apart with the core lit, and the ball draws back to the upper right and turns. The three fixture cards play below it (below) |
-| 72% | Draft | Open five packs of three and build a five-a-side. Your captain scores double. Paid weekly. | The same frame, leaning a little to the Draft half; the ball turns on; the five packs play below it (below) |
-| 88% | Access | Hold 150,000 $ELEVN to play Blitz. 300,000 adds Draft. Play free. | The ball comes back to the centre and grows: "the one frame", halves 60 mm apart, core lit |
-| 100% | End | Fantasy football with a result at full time. [Connect wallet] | The halves close, the core goes dark: the hero frame again |
+| 56% | Blitz | Three squads of three, on any three fixtures. Your captain scores double. A prize every matchday. | The panels close back on and the camera comes round to the left, level with the ball, so the two halves stack upright in the upper right: the Blitz half on top, its rim and three gold studs towards the viewer, the lit core in the 87 mm gap under it. The three fixture cards play below it (below) |
+| 72% | Draft | Open five packs of three and build a five-a-side. Your captain scores double. Paid weekly. | The camera swings to the right and above: the Draft half's rim, with its five studs, faces the viewer as a ring at the lower left, the Blitz half behind it, 90 mm apart. The five packs play below it (below) |
+| 88% | Access | Hold 150,000 $ELEVN to play Blitz. 300,000 adds Draft. Play free. | The ball comes back to the centre and grows, and the halves close to 13 mm: a nearly whole ball with the core fully lit, glowing through the seam and the glass |
+| 100% | End | Fantasy football with a result at full time. [Connect wallet] | The seam closes, the core goes dark: the hero frame again |
 
 After the story a plain prizes band scrolls up over the stage (top 5, 50 / 25 / 12 / 8 / 5).
 
@@ -98,7 +102,9 @@ its artwork, as on the packs).
 **The content** is drawn over it in code, in the card's own units (216 x 327), inside the steel
 frame and to the left of the stripe: "FIXTURE 1" and an OPEN / LOCKED chip, "HOME v AWAY" in
 Barlow Condensed, "KICKOFF" with its time (12:30, 15:00, 17:30) over a thin bar that runs out
-as kickoff nears, three player tokens (the captain on top, gold, with "×2"), and a padlock on
+as kickoff nears, three player tokens in a HOME column and an AWAY column either side of a
+dashed centre line, the two labels at the bottom (the three cards split 2 + 1, 1 + 2 and 2 + 1,
+so every squad has a player from each club; the captain is gold with "×2"), and a padlock on
 the bottom edge whose shackle stands open until kickoff and then snaps shut with a ring; the
 steel frame brightens when the card locks. The fixtures and kickoff times are placeholders on
 purpose: no club names, no crests. No scrim was needed behind the text.
@@ -170,8 +176,10 @@ set works. The hover video is only looked for the first time a pack is hovered.
 ## How it works
 
 - `home.js` holds a table of poses (`POSE`) and a cue list (`CUES`: scroll position, pose). Every
-  frame the scroll position is eased a little, the two neighbouring cues are blended with an
-  ease-in-out, and the result is handed to the engine. Nothing is triggered by observers, so the
+  frame the ball's position in the story follows the scrollbar like a critically damped spring
+  (it lags 120 ms behind a steady scroll, starts and stops without a jerk and never overshoots,
+  so a wheel step does not make the camera jump; `?smooth=` tries other values), the two
+  neighbouring cues are blended with an ease-in-out, and the result is handed to the engine. Nothing is triggered by observers, so the
   story runs backwards exactly as it runs forwards. Two cues with nearly the same pose make a
   beat rest. No animation library: the interpolator is about 15 lines.
 - Words are HTML, pinned to the left content edge. Each beat owns the scroll from halfway after
@@ -200,10 +208,18 @@ set works. The hover video is only looked for the first time a pack is hovered.
 - Reduced motion: no scrubbed motion, no idle turn, no cursor light. Each beat is one still
   pose, swapped with a 200 ms fade as its words change; the hold becomes a button that toggles
   open and closed with the same fade.
-- Narrow screens (900 px and under): the words flow as a normal page over a dimmed still of the
-  closed ball. No scrub, no callout lines, no hold.
-- Rendering stops in a hidden tab, when nothing has changed, and once the prizes band has
-  covered the stage.
+- Narrow screens (900 px and under) get a phone layout: one block per beat with that beat's
+  still (`poster/beat-N.jpg`) above its words, the cards and the packs in a row that scrolls
+  sideways and snaps a card at a time, no title words, no hold and no live canvas. The 3D engine
+  is not started at all on a narrow window; it starts if the window grows past 900 px, and
+  stops drawing if it shrinks again.
+- A frame is drawn only when something has changed (the scroll, the hero's idle turn, the
+  cursor light, the hold, the window). Nothing is drawn in a hidden tab or once the prizes band
+  has covered the stage.
+- Nothing is measured while a frame is drawn. The window, the story's height and the canvas are
+  measured when the window is sized; the scroll handler only notes where the page is; every
+  write to the page happens in the animation frame and is skipped when its value has not
+  changed. The frame loop makes no new objects.
 
 ## Loading and slower computers
 
@@ -213,21 +229,45 @@ set works. The hover video is only looked for the first time a pack is hovered.
   at 2400x1080; it is shown at the window's height and slid sideways so the ball lands where
   the live ball will be (compared with the live canvas at 1440x900 and 1728x1000: no offset),
   so the cross-fade does not jump. Without JavaScript the poster simply stays behind the words.
-- **Quality tiers** (`BallEngine.setQuality`). The page starts at `high` and times six of the
-  first frames it draws (every sixth frame, about the first second): the frame is drawn and one
-  pixel is read back, which waits for the graphics card, so the time is the frame's real cost.
-  If the middle one of the six took longer than 22 ms (it cannot hold 45 frames a second) the
-  page steps down one tier and times once more. `?quality=high|low|min` fixes the tier and
-  switches the timing off. The tier is not remembered between visits.
+- **Quality levels** (`LEVELS` in `ball.js`, `BallEngine.setLevel`). Seven, best first. Going
+  down, the cheaper effects go before any sharpness:
 
-  | Tier | Buffer pixels per CSS pixel | Bloom | Glass refraction | Multisampling |
-  |---|---|---|---|---|
-  | high | the screen's own, 2 at most | full | full-size copy of the scene | 4x |
-  | low | 1 at most | worked out at half size | half-size copy | 2x |
-  | min | 0.75 at most | off | half-size copy | off |
+  | Level | Name | Buffer pixels per CSS pixel, at most | Multisampling | Picture the glass refracts | Bloom |
+  |---|---|---|---|---|---|
+  | 0 | high | the screen's own, 2 at most | 4x | full size | on |
+  | 1 | high-1 | 2 | 4x | 1 pixel per CSS pixel | worked out at half size |
+  | 2 | high-2 | 2 | 2x | 1 per CSS pixel | off |
+  | 3 | low | 1.5 | 2x | 1 per CSS pixel | off |
+  | 4 | low-1 | 1.25 | 2x | 1 per CSS pixel | off |
+  | 5 | low-2 | 1 | 2x | half | off |
+  | 6 | min | 0.75 | off | half | off |
 
-  `low` is hard to tell from `high` (the glass is a little softer). `min` is visibly plainer:
-  without the bloom the highlights lose their glow and edges are rougher.
+  The page starts at level 0 and keeps watching what a frame really costs. One drawn frame in
+  four is timed: the frames already queued are waited for, the frame is drawn and one pixel is
+  read back, which waits for the graphics card, so the time is that frame's real cost. Nothing
+  is timed in the first second (every shader is compiled before the first frame, but textures
+  and buffers are still being made), for half a second after the level or the window changes,
+  or in a hidden tab. Every 40 timed frames the middle one decides:
+  - over 18 ms (it cannot hold 60 frames a second): one level down. Levels 0 and 1 go at once,
+    because the next step costs no sharpness; a step that lowers the resolution needs two slow
+    lots in a row;
+  - below 1.5 pixels per CSS pixel the limit is 30 ms, again twice in a row, so a 2x screen
+    is only taken under 1.5 when it cannot hold 30 frames a second;
+  - under 7 ms three lots in a row: one level back up. A level that has proved too slow twice
+    is not tried again in that visit;
+  - three timed frames in a row over 100 ms (a software renderer): straight to `min`.
+
+  Levels that come to the same thing on the screen in use are skipped (a 1x screen has no 1.5
+  to drop to). `?quality=high|low|min` fixes the level (0, 3 or 6) and switches the watching
+  off. The level is not remembered between visits. Bloom is always worked out from a picture
+  the size of the window in CSS pixels, so the glow is as wide on a 2x screen as on a 1x one.
+
+  **Why this was rebuilt (the owner's Mac showed a soft ball).** The first version timed six
+  frames in the first second of the page's life and, if the middle one was over 22 ms, went
+  straight to a level with one buffer pixel per CSS pixel and a half-size picture for the glass
+  to refract. On a 2x screen that is a quarter of the pixels, and the inside of the ball at a
+  sixteenth: `shots/sharpness-dpr2-hero.png` and `sharpness-dpr2-close-up.png` show that level
+  beside `high`. Once stepped down it never stepped back up.
 - **No WebGL** (the context cannot be made, or is lost later; `?nogl=1` to try it). The canvas,
   the title words and the hold are not shown. Each beat gets its own still instead,
   `poster/beat-1.jpg` to `beat-6.jpg` (the end frame reuses the hero's), cross-faded as the beat
@@ -249,6 +289,41 @@ All earlier setters and URL parameters still work.
 - `setQuality('high' | 'low' | 'min')`: see "Loading and slower computers".
 - Glass variant: the rim ring of each half is satin steel instead of mirror steel, which had
   read as a black band once the ball was apart.
+- `setLevel(0..6)` and `LEVELS`; `setQuality` takes the named ones.
+- `setPose(split, explode, turn, ignite)`: all four in one call.
+- `precompile()`: compiles every shader before the first frame.
+- Every repeated part is one instanced mesh, so the ball is 15 draw calls where it was 149
+  (see the ball README).
+
+## Reading `?stats=1`
+
+Open the page with `?stats=1` added to the address. Five lines appear in the lower left corner
+and refresh twice a second:
+
+```
+fps 60 · redraws 60 a second · longest gap 17 ms
+frame 6.1 ms median · 9.8 worst (last 40 timed frames)
+tier high (level 0 of 6, automatic)
+DPR 2 in use · screen 2 · canvas 2880 × 1800
+draw calls 41 · triangles 134,907
+```
+
+(The frame rate and frame time above are an example, not a measurement.)
+
+- **fps** is how often the browser offers a frame (60 or 120 on a Mac); **redraws** is how many
+  of those the ball was actually drawn for (0 when the page is at rest on a beat, which is
+  right); **longest gap** is the longest wait between two frames in the last three seconds: a
+  stutter shows here as 50 ms or more.
+- **frame** is the real cost of drawing the ball once, graphics card included, for the middle
+  and the worst of the last 40 timed frames. Under 16 ms holds 60 frames a second.
+- **tier** is the quality level in use. It should say `high` on a recent Mac. If it says
+  anything else, the frame line says why.
+- **DPR** is buffer pixels per CSS pixel in use, beside the screen's own. On a Retina screen
+  both should be 2, and the canvas twice the window's size each way.
+- **draw calls** and **triangles** are for the whole frame, every pass.
+
+The numbers worth sending back: all five lines in the hero, in the close-up (FULL TIME), and
+while scrolling from the hero to MODES.
 
 ## Where this departs from the spec
 
@@ -256,34 +331,46 @@ All earlier setters and URL parameters still work.
 |---|---|---|
 | Camera fit 60 mm for the close-up | 76 to 80 | A true macro again (the ball is about two screens tall). The last step to 60 is not taken so that the ball's limb stays in frame; the title word stands top left where the ball is not |
 | Explode 1 at "apart": panels 30 mm out, halves 60 mm apart | Panels at 0.7 (pole panels fully out, the equator row still seated), halves 144 mm apart | At 60 mm with every panel lifted the gap closes up and it reads as one burst ball, not two halves |
-| Access: explode 1 to 0 | Panels return and the halves stay 60 mm apart with the core lit; they close on the way to the end | Gives the access beat its own frame ("the one frame") and the end a last motion |
-| Orbit of 40 degrees per mode | The ball turns about its own axis, 14 degrees during each rest and about 26 between beats; the camera slides to the half | Orbiting the camera foreshortens the diagonal split |
+| Access: explode 1 to 0 | Panels return and the halves close to 13 mm with the core fully lit; the seam closes and the core goes dark on the way to the end | Gives the access beat its own frame, unlike Blitz and Draft, and the end a last motion |
+| Orbit of 40 degrees per mode | The camera goes to the left of the ball for Blitz and to the right and above for Draft (91 degrees between the two); the ball also turns about its own axis, 14 degrees during each rest | Each mode's half faces the viewer in its own beat |
 | Landscape: split axis horizontal, Blitz left | Diagonal, Blitz upper right, Draft lower left | The ball prototype's tilt and "the one frame" are diagonal; kept so the hero, the hold and the story share one axis |
 | Callouts in two columns, each with a leader line | One icon with three notes per beat, lower right, no leader lines | The lines crossed the title word and the ball; the icon now stands directly in front of its ball |
 | Title word behind the ball, refracted by the glass | Title word in front of everything, never overlapping the ball at rest | The owner could not read the whole word: letters were hidden by the ball and dimmed by the wash. Legibility wins |
 | Camera fit 260 for Blitz and Draft | 560, the ball in the upper right, above the cards | The cards and packs are the subject of those beats and need the room |
-| Blitz and Draft show the ball fully torn down | Panels back on, halves 84 mm apart, core lit | Compact enough to be drawn larger (each half 354 px across at 1440x900, up from 267) without covering the cards |
+| Blitz and Draft show the ball fully torn down | Panels back on, halves 87 mm (Blitz) and 90 mm (Draft) apart, core lit, each seen from its own side | Compact enough to be drawn larger without covering the cards; the two angles tell the beats apart |
 | Hold: release closes it | Same, and the seam cracks 10% while the ring fills | Feedback during the 900 ms |
 | Keyboard: Space on the focused canvas | A real button under the ball takes Space or Enter | A canvas is a poor focus target for screen readers |
 | Hero and end both carry the gold button | Outlined "Connect wallet" in the words; the one gold button is in the bar | One gold button per view, as in the approved mockup |
 | Blueprint toggle, sound, tilt on phones | Not built | Out of scope for this pass (sound was asked to stay off) |
-| Three quality tiers chosen by device class | Three tiers chosen by timing the first frames | No device sniffing; the page measures what it actually gets |
+| Three quality tiers chosen by device class | Seven levels chosen by timing frames all the time, down and back up | No device sniffing; the page measures what it actually gets |
 | Rain, lanterns, wet ground, bokeh | Dropped by the owner | The video they came from is no longer a reference |
 | Reduced motion uses pre-captured stills | The live canvas held still per beat | Same result on screen. The pre-captured stills are used when there is no WebGL |
 | Devnet banner, glass nav "once scrolled" | Nav is always glass; no banner | Prototype of the motion, not the chrome |
 
 ## Known weak points
 
-- **Nothing here has been seen on a real GPU.** Everything was checked in headless Chromium on
-  software WebGL (about one frame a second). That matters most for this round's quality tiers:
-  the 22 ms threshold, and how much each tier really saves on a real graphics card, are
-  reasoned, not measured. The timing was seen to work on the software renderer, which stepped
-  from high to low to min by itself (about 1.7 s a frame at low and 0.5 s at min). The
-  hover's easing and 900 ms sweep, the lock's snap and the poster cross-fade were checked as
-  stills and by state, not by eye at speed.
-- **Blitz, Draft and Access now show nearly the same ball**: panels on, halves apart, core lit.
-  Blitz and Draft differ by a small lean and the turn; Access is the same thing larger and
-  centred. The full teardown is only seen on the MODES beat and on the way out of it.
+- **The owner has seen it on a real GPU once (a Mac); nothing since has been.** His report (a
+  soft ball, lag between beats) led to this round, but the fixes were again only checked in
+  headless Chromium on software WebGL. What is measured: draw calls, triangles, the page's own
+  layout and style work, and that the stills are unchanged. What is reasoned, not measured: the
+  frame time on a real graphics card at each level, and so the 18, 30 and 7 ms limits. The
+  `?stats=1` readout exists so that he can read the real numbers.
+- **The lag may not be all gone.** The ball's own cost on a 2x screen is two full passes over
+  the scene at 4x multisampling plus the glass, and that is unchanged at level 0; the page now
+  steps to cheaper effects by itself if that is too much. Two things outside the ball were
+  seen in the code and not changed here (they belong to `home.css` and `icons.js`): the cards
+  and packs carry CSS `filter: drop-shadow(...) brightness(...)` that changes while their
+  icons play, which is repainted every frame; and the bar's `backdrop-filter` blurs the canvas
+  under it every time the ball is redrawn.
+- **Blitz and Draft swing the camera a long way** (68 degrees into Blitz, 91 into Draft, 23
+  into access), so the title word is crossed by the moving ball for a little longer between
+  those beats than before.
+- **The stills are out of date for three beats.** `poster/beat-4.jpg`, `beat-5.jpg` and
+  `beat-6.jpg` (no WebGL, and the phone layout) still show the old Blitz, Draft and access
+  poses. `node capture.js poster` remakes them, but the phone layout places each still by
+  where the ball is in the picture (`--fx`, `--fy` in `home.css`), so the two go together.
+- **The quality levels 1 to 5 have not been looked at one by one** on a 2x screen, only `high`,
+  `low` (in `shots/quality-low-hero.png`) and `min`.
 - **The card glint is a remake, not the video.** Its path, timing, warmth, rays and sparkles
   match the pack video in stills (`shots/blitz-card-glint-strip.png`), but the card's stripe is
   much thinner than the pack's, so the lit stretch of stripe is a line where the pack's is a
@@ -298,8 +385,9 @@ All earlier setters and URL parameters still work.
   pick up the card's light.
 - **The cards do not show "at least one player from each club".** The three tokens are not
   marked home or away; at this size a mark was unreadable.
-- **The ball still passes behind the top edge of the cards and packs** (a few tens of pixels
-  of its lowest part), most on Draft. It is not hidden, but it is not fully clear either.
+- **The ball still passes behind the top edge of the cards and packs** (its lowest part, most
+  on Blitz, where the lower half stands behind the third card). It is not hidden, but it is not
+  fully clear either.
 - **The macro has little glass in it at rest**: mostly steel edges, a dark pane and the limb.
   The exact panel under the camera is whatever the turn gives; it was not art-directed.
 - **The title word does not pass behind the glass.** It is flat HTML in front of the scene, and
@@ -320,8 +408,8 @@ All earlier setters and URL parameters still work.
   idle turn, the word fades, the cursor light, the hovers or the poster cross-fade.
 - Glass still does not see other glass, and the inside of the ball has no shadowing (see the
   ball README).
-- The phone view is only "does not break": no title words, the icons sit under the words at
-  their last frame, and the cards and packs are small.
+- The phone view is a layout of its own but a still one: no 3D, no title words, no hold; the
+  icons rest on their last frame.
 
 ## Files
 
@@ -335,4 +423,6 @@ All earlier setters and URL parameters still work.
   `blitz-step-1.png` to `-4`, `draft-step-1.png` to `-4` (1440x900); the same seventeen with
   `-1920` (1920x1080); `beat-1-hero`, `beat-2-full-time`, `beat-4-blitz` and `beat-5-draft` with
   `-1512x860` and `-1728x1000`; `blitz-card-hover.png`, `blitz-card-glint-strip.png`, `draft-pack-hover.png`;
-  `no-webgl-blitz.png`, `quality-low-hero.png`; `scroll.mp4`
+  `no-webgl-blitz.png`, `quality-low-hero.png`; `dpr2-hero.png`, `dpr2-close-up.png` (a 2x screen,
+  pixel for pixel), `sharpness-dpr2-hero.png`, `sharpness-dpr2-close-up.png` (the old stepped-down
+  level, the old `high` and the new `high`, side by side), `stats-readout.png`; `scroll.mp4`
