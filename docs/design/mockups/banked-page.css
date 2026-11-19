@@ -11,9 +11,6 @@
 .bkb { isolation: isolate; }
 .bkb .bk-fx { position: absolute; pointer-events: none; z-index: 0; }
 .bkb .bk-in { position: relative; z-index: 1; }
-/* dim fixture-card artwork as a texture in the top band, fading out well above the first line below the title */
-.bkb .bk-tex { left: 0; right: 0; top: 3px; height: 170px; background: url("art/card.png") center 28% / 100% auto; opacity: .30;
-  -webkit-mask: linear-gradient(180deg, #000 0, #000 45%, transparent 100%); mask: linear-gradient(180deg, #000 0, #000 45%, transparent 100%); }
 /* the site's light rays, top band only, static */
 .bkb .bk-rays { left: 0; right: 0; top: 3px; height: 150px; overflow: hidden;
   -webkit-mask: linear-gradient(180deg, transparent 0, #000 14%, #000 50%, transparent 100%); mask: linear-gradient(180deg, transparent 0, #000 14%, #000 50%, transparent 100%); }
@@ -24,9 +21,6 @@
 .bkb .bk-rays i:nth-child(3) { left: 30%; width: 24px; transform: rotate(46deg); opacity: .6; }
 .bkb .bk-rays i:nth-child(4) { left: 44%; width: 80px; transform: rotate(30deg); opacity: .4; }
 .bkb .bk-rays i:nth-child(5) { left: 58%; width: 32px; transform: rotate(40deg); opacity: .5; }
-/* one faint diagonal steel streak across the card, below the content */
-.bkb .bk-streak { inset: 0; border-radius: inherit;
-  background: linear-gradient(118deg, transparent 38%, rgba(204,208,214,.05) 46%, rgba(204,208,214,.10) 50%, rgba(204,208,214,.05) 54%, transparent 62%); }
 /* collectible edge: thicker brushed-steel bevel with a gold glint, and a fine gold hairline frame inside it */
 .bkb .bk-foil { inset: 0; border-radius: 24px; padding: 4px; z-index: 3;
   background: linear-gradient(135deg, #f4f4f1 0%, #8a93a1 18%, #3b4048 38%, #c9ccd1 52%, #5a616c 70%, #b9bec6 86%, #6e7682 100%);
@@ -78,7 +72,6 @@
 /* ---------- phone ---------- */
 @media (max-width: 700px) {
   .bkb .bk-frame { inset: 8px; }
-  .bkb .bk-tex { height: 130px; }
   .bkb .bk-rays { height: 110px; }
   .bkb .bk-rays i:nth-child(2n) { display: none; }
   .bkc .bkc-grid { grid-template-columns: 1fr; }
@@ -92,3 +85,5 @@
   .bkc .bkc-role, .bkc .bkc-ph { display: none; }
   .bkc .bk-in { padding-right: 20px !important; }
 }
+
+.bkb .bk-rays { opacity: .55; }

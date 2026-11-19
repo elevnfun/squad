@@ -617,7 +617,7 @@ body.guest [data-in] { display: none !important; }
 /* etched lines: a light line with a dark line under it, as if cut into the metal */
 .pitchbox.steel .ln, .pitchbox.steel .ln::before, .pitchbox.steel .ln::after { border-color: rgba(201,204,209,.42); box-shadow: 0 1px 0 rgba(0,0,0,.7), inset 0 1px 0 rgba(0,0,0,.5); }
 .pitchbox.steel .ln::before { border-top-color: rgba(201,204,209,.42); }
-/* FINAL draft board (owner decision): steel with green lines. Used by draft.html and draft-guest.html; also the archived draft-steel-green.html.
+/* FINAL draft board (owner decision): steel with green lines. Used by draft.html and draft-guest.html.
    Green is strong enough to read as a pitch at a glance but darker and calmer than the old green pitch; gold stays for the captain only. */
 .pitchbox.sg { background:
     radial-gradient(ellipse 36% 32% at 50% 50%, rgba(74,170,108,.36), rgba(74,170,108,.10) 62%, rgba(74,170,108,0) 100%),

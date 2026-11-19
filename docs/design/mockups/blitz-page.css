@@ -14,7 +14,7 @@
 .bp-row.off:hover { background: var(--row); border-color: var(--steel-edge); }
 .bp-pick, .bp-c { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 .bp-pick { flex: 1; min-width: 0; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; column-gap: 8px; row-gap: 0; padding: 4px 6px 4px 8px; text-align: left; border-radius: 9px; }
-.bp-pick:disabled { cursor: default; padding-block: 6px; }
+.bp-pick:disabled { cursor: default; }
 .bp-pick:focus-visible, .bp-c:focus-visible { outline-offset: -2px; }
 .bp-pick .pos { min-width: 0; margin: 0; padding: 1px 0; }
 .bp-pick .nm { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -44,3 +44,8 @@
   .bp-pick .nm { white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) { .bp-row { transition: none; } }
+
+.bp-scroll { -webkit-mask: linear-gradient(180deg,#000 calc(100% - 40px),transparent); mask: linear-gradient(180deg,#000 calc(100% - 40px),transparent); }
+.bp-cols { padding-bottom: 36px; }
+.bp-pick .nm { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; }
+@media (min-width:901px) and (max-width:1365px) { .bp-hd, .bp-cols { column-gap: 8px; } .bp-pick { grid-template-columns: 32px minmax(0,1fr) auto; column-gap: 6px; padding-left: 6px; } }

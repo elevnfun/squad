@@ -157,3 +157,5 @@
 
 /* the READY badge beside the rule checks: an outlined pill, like the other status badges */
 .dp-rules .badge { border: 1px solid var(--edge-control); color: var(--steel); background: transparent; }
+
+@media (max-width: 700px) { .dp .pitchbox .ln::after { width: 44px; height: 44px; margin: -22px; } }

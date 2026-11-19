@@ -48,7 +48,9 @@ Facts and rules
 3. Nothing removed or parked appears: Season, Squad Battles, league pages or picker, live
    predictions, notifications, per-fixture prizes, a full-time leader bonus, anything from the
    Tokyo video, Blender. Shootout has no prize and no holding, and its board is on its own page.
-4. Sample sums are right: SOL and dollar figures agree with the stated rate, shares add up to the
+4. Sample sums are right: prize amounts are in SOL only, with no dollar value beside them (owner,
+   2026-11-19; the fixed weekly $500 and its split are the one exception, and its SOL equivalent
+   agrees with the stated rate), shares add up to the
    pot, a locked balance and its next withdrawal follow the 20% rule, and dates fall on the right
    weekday. [loop-design-check: reconcile against the source, do not accept an assertion]
 
@@ -368,3 +370,9 @@ Reporting
 - Rule for next time: a reason that applies to a whole column is said once at the column's head,
   never on every row. Any effect placed behind a title is measured against its brightest pixel
   with the text hidden. A builder who has not looked at its final screenshots has not finished.
+
+## 2026-11-19 · fix agent · head agent's changes to Draft, Blitz pick and Banked
+- Did: applied the 12 reviewed fixes (Draft Step 3 text and phone centre circle; Blitz pick reason said once, scroll fade, wrapping names, h3 headings, aria-pressed on C; Banked B texture and streak removed, rays at .55; compare links; index, mock.css and ranks wording).
+- How: edited by script, then measured at every listed width (no name wider than its box, no overflow, no console errors) and looked at the crops.
+- Changed: nothing redone. At 1280 the picked row "A. Grimaldo" wraps to two lines because the "Picked" line and C button share the row; the Leverkusen header wraps to two lines at 1280 and 1440.
+- Rule for next time: a longer header note (e.g. "2 picked, the limit") wraps beside a crest; check header text at the narrowest desktop width before lengthening it.
