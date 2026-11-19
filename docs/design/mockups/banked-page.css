@@ -1,38 +1,13 @@
-/* Banked screen: static variants B (effects) and C (with a player) and the compare sheet.
+/* Banked screen: the poster with the captain figure (version C, chosen by the owner).
    Everything here is static: no animation, no transitions. Tokens only: near-black, warm white, steel, gold. */
 
 /* shared: player rows sit on the dark row fill, as the checklist asks */
-.bkb .bk-rows, .bkc .bk-rows { background: var(--row); border: 1px solid var(--steel-edge); border-radius: 14px; padding: 6px 18px !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
-.bkb .bk-rows > *, .bkc .bk-rows > * { padding: 12px 0; }
-.bkb .bk-rows > *:first-child, .bkc .bk-rows > *:first-child { padding-top: 12px; }
-.bkb .bk-rows > *:last-child, .bkc .bk-rows > *:last-child { padding-bottom: 12px; }
+.bkc .bk-rows { background: var(--row); border: 1px solid var(--steel-edge); border-radius: 14px; padding: 6px 18px !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+.bkc .bk-rows > * { padding: 12px 0; }
+.bkc .bk-rows > *:first-child { padding-top: 12px; }
+.bkc .bk-rows > *:last-child { padding-bottom: 12px; }
 
-/* ---------- B: effects only ---------- */
-.bkb { isolation: isolate; }
-.bkb .bk-fx { position: absolute; pointer-events: none; z-index: 0; }
-.bkb .bk-in { position: relative; z-index: 1; }
-/* the site's light rays, top band only, static */
-.bkb .bk-rays { left: 0; right: 0; top: 3px; height: 150px; overflow: hidden;
-  -webkit-mask: linear-gradient(180deg, transparent 0, #000 14%, #000 50%, transparent 100%); mask: linear-gradient(180deg, transparent 0, #000 14%, #000 50%, transparent 100%); }
-.bkb .bk-rays i { position: absolute; top: -40px; height: 330px; transform-origin: 50% 0; filter: blur(10px);
-  background: linear-gradient(180deg, rgba(240,243,248,.8), rgba(240,243,248,.3) 55%, rgba(232,235,240,0)); }
-.bkb .bk-rays i:nth-child(1) { left: 6%;  width: 26px; transform: rotate(40deg); opacity: .6; }
-.bkb .bk-rays i:nth-child(2) { left: 16%; width: 64px; transform: rotate(34deg); opacity: .5; }
-.bkb .bk-rays i:nth-child(3) { left: 30%; width: 24px; transform: rotate(46deg); opacity: .6; }
-.bkb .bk-rays i:nth-child(4) { left: 44%; width: 80px; transform: rotate(30deg); opacity: .4; }
-.bkb .bk-rays i:nth-child(5) { left: 58%; width: 32px; transform: rotate(40deg); opacity: .5; }
-/* collectible edge: thicker brushed-steel bevel with a gold glint, and a fine gold hairline frame inside it */
-.bkb .bk-foil { inset: 0; border-radius: 24px; padding: 4px; z-index: 3;
-  background: linear-gradient(135deg, #f4f4f1 0%, #8a93a1 18%, #3b4048 38%, #c9ccd1 52%, #5a616c 70%, #b9bec6 86%, #6e7682 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  box-shadow: inset 0 0 0 1px rgba(10,11,13,.5); }
-.bkb .bk-frame { inset: 12px; border: 1px solid rgba(242,193,78,.42); border-radius: 14px; z-index: 0; }
-.bkb .bk-frame::before, .bkb .bk-frame::after { content: ""; position: absolute; width: 14px; height: 14px; border: 2px solid var(--accent); }
-.bkb .bk-frame::before { left: -2px; top: -2px; border-right: 0; border-bottom: 0; border-radius: 14px 0 0 0; }
-.bkb .bk-frame::after { right: -2px; bottom: -2px; border-left: 0; border-top: 0; border-radius: 0 0 14px 0; }
-.bkb .bk-top .small { color: var(--text); }
-
-/* ---------- C: with a player ---------- */
+/* ---------- poster with the captain ---------- */
 .bkc .bkc-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; }
 .bkc .bkc-fig { position: relative; overflow: hidden; border-left: 1px solid var(--steel-edge); min-height: 100%;
   background:
@@ -47,7 +22,14 @@
 .bkc .bkc-fig .bk-rays i:nth-child(2) { left: 42%; width: 56px; transform: rotate(32deg); opacity: .5; }
 .bkc .bkc-fig .bk-rays i:nth-child(3) { left: 62%; width: 22px; transform: rotate(44deg); opacity: .6; }
 .bkc .bkc-fig .bk-rays i:nth-child(4) { left: 82%; width: 60px; transform: rotate(30deg); opacity: .4; }
-.bkc .bkc-fig svg { position: absolute; left: 50%; bottom: 0; width: 400px; height: auto; transform: translateX(-50%); }
+.bkc .bkc-art { position: absolute; left: 0; right: 0; bottom: 0; top: 96px; overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(180deg, transparent 0, #000 12%, #000 100%); -webkit-mask-composite: source-in;
+  mask: linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%) intersect, linear-gradient(180deg, transparent 0, #000 12%, #000 100%); }
+/* final art: <img src="art/captain.png"> fills the box, head anchored to the top */
+.bkc .bkc-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+.bkc .bkc-art svg { position: absolute; left: 50%; bottom: 0; width: 400px; height: auto; transform: translateX(-50%); }
+/* the card's own fill is opaque so the dimmed page behind never reads through it; rim and bevel stay */
+.bkc.bk-dlg { background: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 36%, rgba(255,255,255,.055) 100%), #0d0f13; }
 .bkc .bkc-lab { position: absolute; left: 16px; right: 16px; top: 18px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; z-index: 2; }
 .bkc .bkc-lab .cap { min-width: 44px; height: 28px; border-radius: 14px; font-size: 16px; }
 .bkc .bkc-name { font-family: var(--font-display); font-weight: 700; font-size: 32px; line-height: 1; letter-spacing: .02em; text-transform: uppercase; color: var(--text); }
@@ -57,33 +39,15 @@
 .bkc .bk-in { padding-right: 36px !important; }
 .bkc .bk-top { flex-wrap: wrap; }
 
-/* ---------- compare sheet ---------- */
-.cmp { width: min(1400px, calc(100% - 48px)); margin: 0 auto; padding: 48px 0 64px; }
-.cmp h1 { font-size: clamp(32px, 2.8vw, 44px); }
-.cmp-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1.28fr); gap: 24px; margin-top: 36px; align-items: start; }
-.cmp-item > .eyebrow { display: block; }
-.cmp-item > p { margin: 6px 0 16px; min-height: 40px; }
-.cmp-stage { min-width: 0; background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(206,210,218,.10), rgba(10,11,13,.0) 80%), #0d0e11; border: 1px solid var(--line); border-radius: 20px; padding: 14px; overflow: hidden; }
-.cmp-stage .bk-dlg { margin: 0 auto; }
-.cmp-fit { zoom: .65; }
-.cmp-item.c .cmp-fit { zoom: .57; }
-@media (max-width: 1000px) { .cmp-stage .bk-dlg { width: 100% !important; max-width: 580px; } .cmp-item.c .bk-dlg { max-width: 820px; } .cmp-row { grid-template-columns: 1fr; } .cmp-fit, .cmp-item.c .cmp-fit { zoom: 1; } }
-
 /* ---------- phone ---------- */
 @media (max-width: 700px) {
-  .bkb .bk-frame { inset: 8px; }
-  .bkb .bk-rays { height: 110px; }
-  .bkb .bk-rays i:nth-child(2n) { display: none; }
   .bkc .bkc-grid { grid-template-columns: 1fr; }
-  .bkc .bkc-fig { order: -1; min-height: 0; height: 104px; border-left: 0; border-bottom: 1px solid var(--steel-edge); }
-  .bkc .bkc-fig svg { left: auto; right: 4px; transform: none; width: 150px; bottom: -34px; }
-  .bkc .bkc-fig .bk-rays { height: 104px; }
-  .bkc .bkc-fig .bk-rays i:nth-child(2n) { display: none; }
-  .bkc .bkc-lab { top: 14px; gap: 6px; }
-  .bkc .bkc-lab .cap { height: 24px; min-width: 38px; font-size: 14px; }
-  .bkc .bkc-name { font-size: 26px; }
-  .bkc .bkc-role, .bkc .bkc-ph { display: none; }
+  .bkc .bkc-fig { order: -1; min-height: 0; height: auto; border-left: 0; border-bottom: 1px solid var(--steel-edge); padding: 14px 20px; }
+  .bkc .bkc-fig::before, .bkc .bkc-fig .bk-rays, .bkc .bkc-art, .bkc .bkc-ph { display: none; }
+  .bkc .bkc-lab { position: static; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+  .bkc .bkc-lab .cap { height: 26px; min-width: 40px; font-size: 15px; }
+  .bkc .bkc-name { font-size: 24px; }
+  .bkc .bkc-role { display: block; font-size: 12px; letter-spacing: .12em; }
   .bkc .bk-in { padding-right: 20px !important; }
 }
 
-.bkb .bk-rays { opacity: .55; }

@@ -49,3 +49,15 @@
 .bp-cols { padding-bottom: 36px; }
 .bp-pick .nm { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; }
 @media (min-width:901px) and (max-width:1365px) { .bp-hd, .bp-cols { column-gap: 8px; } .bp-pick { grid-template-columns: 32px minmax(0,1fr) auto; column-gap: 6px; padding-left: 6px; } }
+
+/* phone and small tablet: a two-button switch shows one club at a time (needs JS; without it both clubs stay stacked) */
+.bp-sw { display: none; }
+@media (max-width: 900px) {
+  .bp-js .bp-sw { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .bp-swb { font: inherit; font-size: 14px; font-weight: 600; min-height: 48px; padding: 0 10px; border-radius: 999px; cursor: pointer; color: var(--text);
+    border: 1px solid var(--edge-control); background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)), rgba(13,15,19,.55); box-shadow: inset 0 1px 0 rgba(255,255,255,.28); }
+  .bp-swb:hover { border-color: var(--steel); }
+  .bp-swb[aria-pressed="true"] { background: var(--text); color: var(--accent-ink); border-color: var(--text); box-shadow: none; }
+  .bp-swb[aria-pressed="true"]::before { content: "\2713"; margin-right: 8px; }
+  .bp-js .bp-scroll[data-show="0"] .bp-col:nth-child(2), .bp-js .bp-scroll[data-show="1"] .bp-col:nth-child(1) { display: none; }
+}

@@ -55,7 +55,9 @@
 .dp-tiers span { padding-left: var(--s3); }
 .dp-t3 { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--s3); }
 .dp-t3 .eyebrow { flex: 0 0 100%; }
-.dp-shape { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--steel); }
+/* the same outlined steel badge as READY in the Team rules card */
+.dp-shape, .dp-rules .badge { border: 1px solid var(--edge-control); color: var(--steel); background: transparent; }
+.dp-shape { align-self: center; }
 .dp-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
 .dp-pk { align-self: center; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--steel); }
 .dp-chips { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); }

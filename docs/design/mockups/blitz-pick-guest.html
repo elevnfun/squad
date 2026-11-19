@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pick squads, guest · elevn mockup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="blitz-page.css"><link rel="stylesheet" href="menu.css"><script src="menu.js" defer></script><script src="tabbar.js" defer></script></head>
+<link rel="stylesheet" href="mock.css"><link rel="stylesheet" href="blitz-page.css"><link rel="stylesheet" href="menu.css"><script src="menu.js" defer></script><script src="bp-switch.js" defer></script><script src="tabbar.js" defer></script></head>
 <body>
 <div class="devnet">Devnet test: prizes shown in this mockup are sample test SOL</div>
 <header class="nav"><div class="wrap">
@@ -54,8 +54,9 @@
 <div class="card" style="padding:24px 24px 8px">
 <div class="pk-bdhd" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px"><div><span class="eyebrow">Squad 2 · choose 3 players</span><h2 class="h3" style="margin-top:6px">Leverkusen v Leipzig</h2></div><span class="small muted" style="text-align:right">Line-ups confirmed<br>about an hour before kick-off</span></div>
 <div class="bp">
+<div class="bp-sw" role="group" aria-label="Show one club"><button type="button" class="bp-swb" data-club="0" aria-pressed="false">Leverkusen</button><button type="button" class="bp-swb" data-club="1" aria-pressed="true">Leipzig · pick 1</button></div>
 <div class="bp-hd"><div class="team-hd"><span class="crest lg">B04</span><span>Leverkusen<br><span class="small muted" style="font-weight:500">Home · 2 of 2 picked</span></span></div><div class="team-hd"><span class="crest lg">RBL</span><span>Leipzig<br><span class="small muted" style="font-weight:500">Away · pick 1</span></span></div></div>
-<div class="bp-scroll" role="region" aria-label="Players for Leverkusen v Leipzig, scrolls" tabindex="0"><div class="bp-cols"><div class="bp-col">
+<div class="bp-scroll" data-show="1" role="region" aria-label="Players for Leverkusen v Leipzig, scrolls" tabindex="0"><div class="bp-cols"><div class="bp-col">
 <div class="team-hd bp-colhd"><span class="crest lg">B04</span><span>Leverkusen<br><span class="small muted" style="font-weight:500">Home · 2 of 2 picked</span></span></div>
 <section class="bp-grp" aria-label="Leverkusen goalkeepers"><h3 class="bp-ph"><span>Goalkeepers</span><span>Avg pts</span></h3>
 <div class="bp-row off"><button type="button" class="bp-pick" disabled aria-label="Mark Flekken, GK, Leverkusen, average 5.5 points, not available: one from each club" title="Mark Flekken"><span class="pos">GK</span><span class="nm">M. Flekken</span><span class="avg">5.5</span></button></div>

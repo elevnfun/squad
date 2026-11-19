@@ -377,3 +377,9 @@ Reporting
 - How: edited by script, then measured at every listed width (no name wider than its box, no overflow, no console errors) and looked at the crops.
 - Changed: nothing redone. At 1280 the picked row "A. Grimaldo" wraps to two lines because the "Picked" line and C button share the row; the Leverkusen header wraps to two lines at 1280 and 1440.
 - Rule for next time: a longer header note (e.g. "2 picked, the limit") wraps beside a crest; check header text at the narrowest desktop width before lengthening it.
+
+## 2026-11-19 · builder · Banked C made final, Blitz phone club switch, shape badge
+- Did: banked.html is now version C (B, C and the compare sheet deleted, banked-page.css cut to C's rules); the figure sits in an img-ready `.bkc-art` box with a comment where `art/captain.png` goes; on the phone the figure is gone and a "×2 BUKAYO SAKA · Captain · double points" strip stays. Card background made opaque. Blitz pick: a two-button club switch (`bp-switch.js`, shown only at 900px and narrower, default Leipzig, both clubs stacked with JS off). Draft: the shape label is now a `.badge` in the READY outline style.
+- How: measured at 1920/1440/1024/390 and 900; checked see-through by hiding the card text and reading the pixels (flat 26-29 per channel).
+- Changed: my first opaque fill used `var(--glass), #0d0f13`, which is invalid CSS because `--glass` already ends in a colour, so the whole rule was dropped silently; check computed `backgroundColor` after any background override.
+- Rule for next time: never put a colour after a custom property that already holds one; and a box built for a swap-in image must start below any text laid over it.
