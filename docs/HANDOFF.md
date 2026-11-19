@@ -51,9 +51,9 @@ said: start building, with a team of agents on a cheaper model (Sonnet builders;
 
 Nothing is waiting on him. He may still prefer another of the four captain figures.
 
-## Section 3 (the build): progress
+## Section 3 (the build): progress (state at the end of the 2026-11-19 session)
 
-Step 1, foundations (`docs/build/FOUNDATIONS_PLAN.md`):
+Step 1, foundations (`docs/build/FOUNDATIONS_PLAN.md`). Backend suite: 216 passed, 10 skipped.
 
 | Piece | State |
 |---|---|
@@ -61,12 +61,27 @@ Step 1, foundations (`docs/build/FOUNDATIONS_PLAN.md`):
 | Prize pots (`squad/pots.py`) | Done, reviewed |
 | Winnings ledger, Collect and Withdraw (`squad/winnings.py`) | Done, reviewed. Tested on LiteSVM only, not real devnet |
 | Contest calendar, finality, release (`squad/contests.py`) | Done, reviewed |
-| API routes, minute job, watcher freeze (`squad/api.py`, `squad/jobs.py`, `squad/watcher.py`) | With a builder |
-| Web shell and Today (`web/`) | With a builder |
-| Ranks page, Winnings page, admin release screen | Not started |
+| API routes, minute job, watcher freeze (`squad/api.py`, `squad/jobs.py`, `squad/watcher.py`) | Done, reviewed |
+| Web shell and Today (`web/src/components/Header.tsx`, `TabBar.tsx`, `elevn2.css`, `today/`) | Done; head review passed, its five fixes applied (the fixes themselves were not re-reviewed) |
+| Ranks page (`web/src/app/(site)/ranks/`) | Built. Head review was running when the session ended: check `docs/design/LESSONS.md` for its verdict ("review of the Ranks and Winnings pages") and apply it |
+| Winnings page (`web/src/app/(site)/winnings/`) | Built. Same head review. Signing with a real wallet has never been exercised |
+| Admin release screen (`web/src/app/(site)/admin/Release.tsx`) | Built, checked by the lead on screenshots. No head review yet |
 
-Then steps 2 to 8 of blueprint section 8: Blitz, Draft, Shootout, retire Season, home page, News,
-tutorial. Each gets its own short plan.
+Next, in order:
+1. Read the head agent's verdict on Ranks and Winnings and apply its required changes.
+2. Run every new page against the REAL API in the container (so far every page was checked against
+   mocked routes only): start Postgres (`scripts/db-container.sh`), load the schema, start the API
+   with `RUN_JOBS=1` and `HOLDINGS_DEV_BALANCE`, insert a few fixtures, entries and scores, release a
+   result from the admin screen, and collect it.
+3. The owner must test Collect and Withdraw on devnet with a real wallet (Phantom) and a funded
+   payout wallet (`PAYOUT_WALLET`, `PAYOUT_WALLET_KEY`).
+4. Then step 2 of blueprint section 8, Matchday Blitz, with its own short plan first; then Draft,
+   Shootout, retire Season, home page, News, tutorial.
+
+Open with the owner:
+- When the locked half appears: the server credits it at release; the Winnings mockup said it
+  "joins Locked when you collect". The lead recommended "at release"; no answer yet.
+- The link for "Get $ELEVN" (the page falls back to jup.ag).
 
 Known gaps to close later:
 - While Season squads exist, fee income goes to Season's pots; Blitz and Draft get only the reserve
@@ -74,11 +89,22 @@ Known gaps to close later:
 - A match's end time is estimated as kickoff + 2 hours (`contests.ended_at`) until real full-time
   times are stored, so "final 15 minutes after the last match" is approximate.
 - The weekly $500 needs a SOL price: the owner enters it at release while the review switch is on.
+  The weekly board counts a wallet's best 3 matchday totals (`[blitz].weekly_best_matchdays`).
 - A claim costs the player 10,000 lamports (two signatures). A wallet that claims while frozen waits
   a full 24 hours after unfreezing.
-- Tests: run `scripts/db-container.sh` first (Postgres on 5433). Each new test file uses its own
-  database name so builders can run tests at the same time. The web needs `npx -y pnpm@8 install
-  --frozen-lockfile` (pnpm 10 cannot read the lockfile).
+- The minute job (`RUN_JOBS=1` or `python -m squad.jobs`) must run in one process only and has not
+  been run under the real server.
+- A live board is rebuilt on every request; the admin prize preview repeats the pot arithmetic of
+  `pots.fund`. Ranks shows the per-place amount on tied rows before a result is final.
+- The footer and the old payout block on the admin page still belong to Season.
+
+How to run things here:
+- Tests: `scripts/db-container.sh` first (Postgres on 5433), then `uv run -q pytest -q`. Each new
+  test file uses its own database name so builders can run tests at the same time.
+- Web: `npx -y pnpm@8 install --frozen-lockfile` in `web/` (pnpm 10 cannot read the lockfile).
+  Two `next dev` servers in the same `web/` corrupt each other's `.next`: give each agent a private
+  copy of `web/` (node_modules symlinked) and its own port. Use the globally installed Playwright.
+- Builders are Sonnet; the lead reviews backend code itself and uses a head agent for pages.
 
 Smaller loose ends, only if he raises them: the X thread and bio drafts predate this week's rule
 changes; the logo's fold-in animation has no home now the intro video is retired; `scroll.mp4`
