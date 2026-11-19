@@ -10,7 +10,7 @@
 .bkc .bkc-art { position: absolute; inset: 0;
   -webkit-mask: linear-gradient(90deg, transparent 0, #000 38%), linear-gradient(180deg, transparent 0, #000 10%, #000 86%, transparent 100%); -webkit-mask-composite: source-in;
   mask: linear-gradient(90deg, transparent 0, #000 38%) intersect, linear-gradient(180deg, transparent 0, #000 10%, #000 86%, transparent 100%); }
-.bkc .bkc-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 78% 0; }
+.bkc .bkc-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 100% 0; }
 /* the card's own fill is opaque so the dimmed page behind never reads through it; rim and bevel stay */
 .bkc.bk-dlg { background: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 36%, rgba(255,255,255,.055) 100%), #0d0f13; }
 .bkc .bkc-lab { position: absolute; left: 36px; right: 16px; bottom: 22px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; z-index: 2; }
@@ -39,6 +39,8 @@
   .bkc .bkc-lab { left: 20px; right: auto; top: 0; bottom: 0; justify-content: center; max-width: 52%; }
   .bkc .bkc-row { flex-direction: column; align-items: flex-start; gap: 6px; }
   .bkc .bkc-name { font-size: 24px; }
-  .bkc .bkc-role { letter-spacing: .12em; }
+  .bkc .bkc-role { letter-spacing: .06em; white-space: nowrap; }
+  .bkc .bkc-lab { max-width: none; }
+  .bkc .bkc-art { left: 54%; }
   .bkc .bk-in { padding-right: 20px !important; }
 }
