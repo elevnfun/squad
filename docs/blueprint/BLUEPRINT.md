@@ -234,7 +234,8 @@ only for the 24-hour withdrawal cooldown.
 - Legal review comes last, after everything else.
 - The payout wallet will be tested before any real prize is sent.
 - Design: no blue light (steel, white light and gold only); the Shootout leaderboard is on the
-  Shootout page; prize amounts show SOL as the main figure with dollars in small grey text.
+  Shootout page; prize amounts show SOL only, with no dollar value beside them
+  (changed 2026-11-19; the fixed weekly $500 is still named in dollars).
 
 ## 6. Home page scroll story
 

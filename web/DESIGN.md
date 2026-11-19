@@ -349,8 +349,9 @@ same fade. Everything else is a 200 ms fade or instant, with final numbers shown
 
 1. **Light on the home canvas** (settled): steel, white light and gold only. No blue anywhere.
 2. **Shootout leaderboard** (settled): a section of the Shootout page, not a board in Ranks.
-3. **Prize amounts** (settled): SOL as the main figure with the dollar value in `--muted` beside
-   it; the weekly prize as "$500" with its SOL equivalent.
+3. **Prize amounts** (changed 2026-11-19): SOL only. No dollar value beside a SOL amount anywhere.
+   The one exception is the fixed weekly prize, which is defined in dollars: "$500" with its SOL
+   equivalent.
 4. **SideRays outside the home page** (settled): on the info pages, and in the top band behind
    the page title on Today, Ranks and Chat. Soft and slow, fading out before the data panels and
    never behind tables or text blocks. Static under reduced motion. Off on the home page.

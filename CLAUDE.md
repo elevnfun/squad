@@ -83,8 +83,9 @@ Owner's decisions (2026-11-14 to 2026-11-16; every rule in the blueprint is sett
     but nothing is saved. Connecting unlocks saving and a username.
   - Buying, winning and selling the same day is allowed. Several wallets per person are allowed,
     with no defence built. Draft is the luck mode, Blitz the skill mode. Legal review comes last.
-  - Design: no blue light; Shootout leaderboard on the Shootout page; SOL main figure with dollars
-    in small grey text. The glint on the Blitz cards passes behind the players.
+  - Design: no blue light; Shootout leaderboard on the Shootout page; prize amounts in SOL only, with
+    no dollar value beside them (changed 2026-11-19; the fixed weekly $500 is still named in
+    dollars). The glint on the Blitz cards passes behind the players.
   - Product screens (2026-11-18): Draft board is steel with green pitch lines; light rays sit in the
     top band of Today, Ranks and Chat; the Draft reveal panel stays; a frozen Winnings balance shows
     a red FROZEN badge and keeps the gold Get $ELEVN button. The locked balance has no floor. The
