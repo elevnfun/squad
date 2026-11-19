@@ -410,3 +410,15 @@ Reporting
 - How: ported the mockup's tokens and components into one stylesheet; the bar, the menu button and the page all measure their width from `100vw`, so they share content edges; the guest "Connect wallet" turns outlined by CSS (`body:has(main .e2-btn-gold)`) whenever a page shows its own gold button.
 - Changed: `--e2-display` was first defined on `:root`, where next/font's `--font-display` does not exist, so every scoreboard word fell back to Sora; font aliases must be defined on `<body>`. The bloom behind the glass ended in a hard edge at the page foot; it now fades with a mask.
 - Rule for next time: a CSS variable that aliases a next/font variable goes on `body`, not `:root`. Hide the fixed Test season bar and tab bar before full-page captures.
+
+## 2026-11-19 · web builder · Ranks page
+- Did: `web/src/app/(site)/ranks/` (page.tsx, RanksView.tsx, ranks.css): three tabs kept in `?board=`, board table on the dark row fill, prize line, YOU row pinned when outside the rows, "Your place" line, prize panel, state badges, 30 s polling.
+- How: reused e2- classes; "would win" amounts computed on the client from `pot_sol` and 50/25/12/8/5; weekly shows the dollar split. Checked with mocked API at 1440, 1920, 1024, 390: no overflow, one h1, no text under 12px.
+- Changed: the mockup's Squads dots and Move column are dropped (the API has no such data); Captain pts takes their place. A phone header "RANK" ran into "PLAYER" at 32px, widened to 40px.
+- Rule for next time: three `next dev` servers on one `.next` folder corrupt each other (500s, "League not found"); run a private copy of web/ with node_modules symlinked for screenshots.
+
+## 2026-11-19 · web builder · Winnings page
+- Did: `web/src/app/(site)/winnings/` (page, WinningsView, claim.ts, winnings.css) and the two Winnings types in `lib/api.ts`. Five states, guest, signed-out and unreachable, from one fetch.
+- How: one `GET /api/winnings` poll (30 s, 5 s while a claim waits); the countdown ticks from `seconds_to_withdraw` and holds still when frozen; gold button chosen by state (Get $ELEVN, else Collect, else Withdraw). Tested by mocking the routes with Playwright; the wallet signing could not be exercised.
+- Changed: the mockup says Locked fills "when you collect", but the server credits half to Locked at release (`winnings.credit`), so the page shows Locked straight away and Collect only pays the ready half.
+- Rule for next time: another builder's `next dev` on the shared `web/.next` corrupts the manifest ("Unexpected end of JSON input"); run your own copy of web (tar without .next, symlink node_modules) in the scratchpad. Playwright runs the LAST registered route first, so register a catch-all route first.
