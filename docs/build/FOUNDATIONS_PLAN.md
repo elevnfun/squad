@@ -22,7 +22,7 @@ is added beside it.
 
 ### 1. Config (`config.toml`)
 New sections with every new number: Blitz (3 squads of 3, captain x2, 150,000), Draft (5 packs of
-3, five-a-side, at most 2 per club, 300,000), the 60 / 40 pot split, top 5 at 50 / 25 / 12 / 8 / 5,
+3, five-a-side, at most 2 per club, at most 2 Top and 2 Mid, 300,000), the 60 / 40 pot split, top 5 at 50 / 25 / 12 / 8 / 5,
 minimum pots (0.5 and 1 SOL; 0.05 and 0.1 on devnet), fewer than 3 entrants rolls forward, final
 after 15 minutes, review switch on, collect half, withdraw 20% every 24 hours, freeze below
 150,000, the weekly $500, the payout wallet's address. `min_holding_hours = 72` is removed.

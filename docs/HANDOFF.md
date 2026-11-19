@@ -45,20 +45,23 @@ with `get_artifact` first to get the live version id.
 ## Open with the owner
 
 Section 2 was signed off on 2026-11-19, then reopened the same day by eight points of feedback.
-Done and live on the screens link: dollars removed beside SOL (the weekly $500 stays in dollars),
-full squads on the Blitz pick screen, three Banked versions (`banked-compare.html`), a Draft tier
-rule and shape label in the mockup, the old option pages removed. He also confirmed the steel
-board with green lines, Today with rays and the packs with the reveal panel.
+All eight are done, reviewed and live on the screens link: dollars removed beside SOL (the weekly
+$500 stays in dollars), full squads on the Blitz pick screen (a club switch on the phone), the
+Banked poster with the captain figure, the Draft tier rule (at most 2 Top and 2 Mid) and free
+shapes with a shape badge and no picker, the old option pages removed. The rules are written into
+blueprint 5.1 and `CLAUDE.md`.
 
 Still open:
-1. **Draft tier rule:** "at most 2 Top and at most 2 Mid in a five" is in the mockup only. On his
-   yes, write it into blueprint 5.1, `CLAUDE.md` and the checklist; `config.toml` at build time.
-2. **Formations:** no picker; the board follows the picks. Awaiting his agreement.
-3. **Banked:** A (current), B (effects) or C (player figure). C needs one shared figure from
-   Higgsfield, 0.25 credits an image; no credits spent, needs his yes.
-4. **Weekly $500** stays written in dollars: awaiting his agreement.
-5. **Approval of `docs/build/FOUNDATIONS_PLAN.md`** (its three assumptions are confirmed) and
-   his plain word that the build can start. No build code until he gives it.
+1. **The Banked captain figure.** One shared image for every captain (anonymous steel footballer,
+   portrait 2:3, figure in the central 75% of the width, head in the top third, near-black
+   background fading to black). Four Higgsfield tries cost 1 credit in all (0.25 each). He chose
+   the poster but has not yet said yes to the spend; no credits spent. It drops into `.bkc-art` in
+   `banked.html` as `art/captain.png` (an HTML comment marks the place); then remove the
+   placeholder strip.
+2. **His last look at the screens**, then his word that every issue is solved.
+3. **The build:** he will say "start" only after every design issue is solved.
+   `docs/build/FOUNDATIONS_PLAN.md` is written and its three assumptions are confirmed. The plan
+   must gain the Draft tier limit before building.
 
 Smaller loose ends, only if he raises them: the X thread and bio drafts predate this week's rule
 changes; the logo's fold-in animation has no home now the intro video is retired; `scroll.mp4`

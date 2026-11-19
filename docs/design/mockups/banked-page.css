@@ -40,6 +40,14 @@
 .bkc .bk-top { flex-wrap: wrap; }
 
 /* ---------- phone ---------- */
+/* fit a 768px-high window: tighter rhythm, the score stays the loudest thing */
+.bk-ov:has(.bkc) { padding-top: 20px !important; }
+.bkc .bk-in { padding-top: 28px !important; padding-bottom: 28px !important; }
+.bkc .bk-num { margin: 20px 0 6px !important; }
+.bkc .bk-rows { margin-top: 20px !important; }
+.bkc .bk-rows > *, .bkc .bk-rows > *:first-child, .bkc .bk-rows > *:last-child { padding: 9px 0; }
+.bkc .bk-act { margin-top: 24px !important; }
+.bkc .bk-in > p:last-child { margin-top: 16px !important; }
 @media (max-width: 700px) {
   .bkc .bkc-grid { grid-template-columns: 1fr; }
   .bkc .bkc-fig { order: -1; min-height: 0; height: auto; border-left: 0; border-bottom: 1px solid var(--steel-edge); padding: 14px 20px; }
