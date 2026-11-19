@@ -317,3 +317,27 @@ Reporting
   names wrap; never let flex items shrink below their text. Test every 20px across a band, not
   only its two ends, and run the old CSS through the same measurements to prove the outside of
   the band did not change.
+
+## 2026-11-19 · tidy agent · dollars removed
+- Did: removed every dollar figure beside a SOL amount from the main mockups (46 spans or sentences), kept the fixed $500 weekly prize with its split and its SOL equivalent; tidied the screen list in index.html.
+- How: a regex over `<span class="usd">$…</span>` (only spans whose text starts with a dollar sign), then a screenshot check of today, ranks and winnings at 1440; unused `.usd` CSS rules removed only after grepping every html file.
+- Changed: nothing redone. `.usd` itself stays in mock.css because the $500 SOL equivalent and the draft, blitz-pick and banked pages still use it.
+- Rule for next time: the "Sample rate" footer note stays only on pages that still state the SOL equivalent of $500 (3.13 SOL); grep `\$[0-9]` and read each hit.
+
+## 2026-11-19 · draft agent · tier rule, shapes, no dollars
+- Did: removed every dollar figure beside SOL (pot, prize cells, footer rate note) on `draft.html` and `draft-guest.html`; added the seventh check "At most 2 Top and 2 Mid players" and one sentence in the Step 3 help; added a "Shape 1-2-2" label (guest "Shape 2-2-1") beside the board heading; draft.html's five is now Kane, Mbappé, Rice, Szoboszlai, Van de Ven (captain Mbappé); the guest five is Kane (captain), Rice, Szoboszlai, Grimaldo, Van de Ven; deleted `draft-steel.html`, `draft-steel-green.html` and their shots.
+- How: seven checks flow by column (4 then 3) in `.dp-rules .checks`, one column from 1101 to 1439 and at 390, so each stays on one line; the same three board rows serve every shape (top 36 / 207 / 346 px), only the players in each row change; prize cells show the place and share on one line and the SOL figure below.
+- Changed: the 2-2-1 board put the MID labels 10px from the DEF tokens at the old middle-row position; moving the middle row up 12px (219 to 207) on both boards balanced the gaps while the halfway line still passes behind the tokens, not the names.
+- Rule for next time: a board with absolutely placed rows needs one render per shape, not one render for the sample; and when a list gains an item, check which items carry the "no top border" rule in every column layout.
+
+## 2026-11-19 · blitz agent · full player lists
+- Did: Blitz pick (and guest) now list each club's full matchday squad (19 Leverkusen, 20 Leipzig) in one scrolling area with the squad slots, the note and the Save button outside it; dollar figures beside SOL and the sample-rate note removed. New `blitz-page.css`, no change to `mock.css`.
+- How: two club columns, one compact row per player (position, initial + surname, avg pts, a captain button on picked ones), four position sub-headings shared by both columns through CSS subgrid so they line up; rows are real buttons. Because two players are already picked from Leverkusen, the other 17 Leverkusen rows are disabled with "One from each club" on a second line.
+- Changed: the first version let each column flow alone, so headings drifted apart (the disabled rows are taller); subgrid fixed it. A first single-column break at 1200 would have pushed Leipzig below 19 disabled rows; two columns hold to 900.
+- Rule for next time: when two lists must line up, share the rows (subgrid), do not match heights by hand; focus outlines inside a scroll box need a negative offset or they are clipped.
+
+## 2026-11-19 · banked agent · static variants
+- Did: banked.html (A, baseline, dollars removed), banked-b.html (effects: top-band rays, fixture-card texture, steel bevel, gold hairline frame, player rows on the dark row fill), banked-c.html (captain figure on the right, placeholder drawn in code), banked-compare.html, all new rules in banked-page.css.
+- How: one build script wrote B, C and the compare sheet from A's markup so facts stay identical; effects sit in absolutely placed layers behind `.bk-in`, fading out above the first text line.
+- Changed: the first placeholder figure read as a flat blob; added hair, jaw, collar and a gold rim by offsetting a steel copy over a gold copy. The compare sheet overflowed until grid columns got `minmax(0,..)` and the cards got `zoom`.
+- Rule for next time: contrast checks on the rendered pixels must hide text and measure the backdrop, but skip elements that carry their own fill (buttons, caps, crests) or they report false failures.
