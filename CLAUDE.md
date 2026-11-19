@@ -2,6 +2,10 @@
 
 ## CRUCIAL: project outline for elevn 2.0
 
+**New session? Read `docs/HANDOFF.md` first.** It says where the project stands, what is still open
+with the owner, and how to start section 3. Where older lines below disagree with the block "Rules
+changed on 2026-11-17 and 2026-11-18", that block wins.
+
 Read `docs/blueprint/BLUEPRINT.md` before any work on game modes, navigation or the home page.
 It is the plan of record. Do not build anything in it until the owner has approved it.
 
