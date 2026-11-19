@@ -271,3 +271,28 @@ Reporting
 - How: checks are 2 columns of 3 at 13px with auto-width columns from 1360px up, one column from 1101 to 1359, two equal columns at 1024 and below, one column at 390. The prize card now stretches (flex) to the board's height on desktop so the left column has no hole.
 - Changed: with equal columns the longest lines wrapped to two rows (the column is only about 500px), so the columns became auto-width and the card padding and row padding were tightened; the first try made the page 68px taller.
 - Rule for next time: when a strip moves into a narrower column, measure the longest line first; tighten the container before shrinking text. A stretched card centres its content, so the extra height shows as empty space inside the prize card (about 80px above and below at 1440).
+
+## 2026-11-19 · head agent · review of the Draft rule checks move
+- Verdict: approve with changes. The move itself is right on all three pages: the checks sit
+  directly under the board, same six lines, eyebrow and badge, then the save line and its one
+  outlined button; no word, number or rule changed; no overflow, no text under 12px, no console
+  errors; check text 10.6:1 or better on the rendered pixels; the board is untouched.
+- What did not work: (1) from 1360 to 1435 wide the two long checks wrap to two lines, and at
+  1440 the two columns fit with 2px to spare; the builder's breakpoint (1360) was never rendered.
+  (2) The stretched prize card has 82px of empty glass above and below its content at 1440 and
+  140px at 1280, which reads as a card that failed to load; it was also not asked for.
+- Changes required in `draft-page.css`: delete the `@media (min-width: 1101px)` block that
+  stretches `.dp-left` and `.dp-prz` (the left column then ends 132px short at 1440 and wider,
+  about 250px short from 1101 to 1439; the owner decides if that needs filling); set `.dp-rules`
+  padding to `var(--s2)`; add `white-space: nowrap` to `.dp-rules .checks li`; move the
+  one-column band's upper limit from 1359px to 1439px. Tested by injection at eight widths.
+- Seen but not from this change (same at HEAD): from 1101 to about 1359 the position chip and
+  club name overlap in the "In five" player chips of the fifteen.
+- Rule for next time: when a breakpoint is chosen, render 1px each side of it and the narrowest
+  width of each band, and count the lines of the longest string. Never fill spare height by
+  stretching a card around fixed content; let the column end short and report the gap.
+
+## 2026-11-19 · lead · applying the head agent's Draft fixes and republishing
+- Did: removed the prize card stretch, kept the six checks on one line each (one column from 1101 to 1439 wide, two columns from 1440), republished the screens.
+- Changed: the screens link was behind the repo (it had no `draft-page.css` or `tabbar.js` and an older `mock.css`), so the owner had been looking at an older Draft and phone view.
+- Rule for next time: after any mockup change, republish every file and compare `list_files` against the folder; render the widths either side of every breakpoint you add.

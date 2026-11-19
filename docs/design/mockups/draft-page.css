@@ -79,17 +79,12 @@
 .dp-frame { padding: var(--s2); border-radius: 20px; }
 .dp-frame .pitchbox { height: 490px; padding: 0; }
 .dp-save { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); }
-.dp-rules { padding: var(--s2) var(--s3); border-radius: 16px; }
+.dp-rules { padding: var(--s2); border-radius: 16px; }
 .dp-rules .hd { margin-bottom: var(--s1); }
 .dp-rules .checks { display: grid; grid-template-columns: auto auto; justify-content: space-between; column-gap: var(--s3); padding: 0; margin: 0; font-size: 13px; }
-.dp-rules .checks li { padding: 5px 0; gap: 8px; }
+.dp-rules .checks li { padding: 5px 0; gap: 8px; white-space: nowrap; }
 .dp-rules .checks li:nth-child(-n+2) { border-top: 0; }
-/* desktop: the left column is shorter than the right; the prize card takes the spare height */
-@media (min-width: 1101px) {
-  .dp-left { display: flex; flex-direction: column; align-self: stretch; }
-  .dp-left > .dp-prz { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-}
-@media (min-width: 1101px) and (max-width: 1359px) {
+@media (min-width: 1101px) and (max-width: 1439px) {
   .dp-rules .checks { grid-template-columns: 1fr; }
   .dp-rules .checks li:nth-child(2) { border-top: 1px solid var(--line); }
 }
