@@ -542,6 +542,22 @@ export class BallEngine {
     this.setView(opts.view || 'hero');
     if (opts.pointer !== false) this._bindPointer();
     window.addEventListener('resize', () => this.resize());
+    this.onResolution = opts.onResolution || null;   // called after the screen's pixel ratio has changed
+    this._watchResolution();
+  }
+  // A window dragged to another screen changes its pixel ratio without a resize event. A media
+  // query for the ratio in use fires once when it stops matching; it is then set again for the new one.
+  _watchResolution() {
+    if (this._fixedDpr || !window.matchMedia) return;
+    const mq = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+    const changed = () => {
+      mq.removeEventListener('change', changed);
+      this.resize();
+      this._dirty = true;
+      if (this.onResolution) this.onResolution();
+      this._watchResolution();
+    };
+    if (mq.addEventListener) mq.addEventListener('change', changed);
   }
 
   // ---- public API --------------------------------------------------------

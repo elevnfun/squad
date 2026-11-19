@@ -148,7 +148,10 @@ cameras are in `VIEWS`.
 - Rain, a reflecting ground, lanterns and bokeh are dropped by the owner (the video they came from
   is no longer a reference). No depth of field, no labels, no blueprint mode, no sound, no scroll.
 - Quality levels are in the engine (`LEVELS`, `setLevel`), but this page does not choose one: the
-  home page does. No context-loss handling, no poster or fallback stills here.
+  home page does. The engine re-sizes its buffers on a window resize and when the screen's
+  pixel ratio changes (a `matchMedia('(resolution: Ndppx)')` listener, set again after each
+  change), so a window dragged to another screen is redrawn at that screen's sharpness; the
+  `onResolution` option is called after such a change. No context-loss handling, no poster or fallback stills here.
 - The phone view is untested. Touch drag works through pointer events, tilt is not wired.
 - The glass still costs a second full pass over the opaque parts every frame (three.js draws
   them into a picture for the glass to refract). It was kept because it is the approved look.

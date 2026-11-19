@@ -124,7 +124,8 @@ function makeEngine() {
   if (engine || engineFailed) return engine;
   try {
     if (q.get('nogl') === '1') throw new Error('WebGL switched off by ?nogl=1');
-    engine = new BallEngine(canvas, { variant: 'glass', still: STILL, reducedMotion: REDUCED, pointer: false, pixelRatio: q.has('dpr') ? num('dpr', 1) : undefined });
+    engine = new BallEngine(canvas, { variant: 'glass', still: STILL, reducedMotion: REDUCED, pointer: false, pixelRatio: q.has('dpr') ? num('dpr', 1) : undefined,
+      onResolution: () => { state.dirty = true; hush(500); mon.forget(); if (STILL && live.on) frame(0); } });   // the window is on another screen
   } catch (e) {
     engineFailed = true;
     console.warn('elevn: no WebGL, showing stills.', e);
@@ -134,89 +135,242 @@ function makeEngine() {
 
 // ---------------------------------------------------------------- quality
 // The engine has seven quality levels (LEVELS in ball.js): cheaper effects first, then fewer
-// pixels. The page starts at the best and keeps watching what a frame really costs:
-//   - one drawn frame in four is timed: it is drawn and one pixel is read back, which waits for
-//     the graphics card, so the time is the frame's real cost and not the time taken to queue it;
-//   - nothing is timed in the first second (shaders, textures and buffers are still being made),
-//     for half a second after the level or the window changes, or while the tab is hidden;
-//   - every 40 timed frames the middle one decides. Over 18 ms (it cannot hold 60 frames a
-//     second): one level down. The steps that cost sharpness need two slow lots in a row, and
-//     below 1.5 pixels per CSS pixel the limit is 30 ms. Under 7 ms three lots in a row: one
-//     level back up (a level that has proved too slow twice is not tried again).
-// ?quality=high, low or min fixes the level and switches the watching off.
+// pixels. The page starts at the best (or where it settled earlier in this tab) and keeps
+// watching how long frames take. Two parts: the watch decides, the timing feeds it.
+//
+// Timing, in order of preference. None of the first two waits for the graphics card:
+//   'query'  EXT_disjoint_timer_query_webgl2: the graphics card reports each frame's time a few
+//            frames later. Every drawn frame while a decision is pending, 1 in 30 once settled.
+//   'gaps'   no such extension (Safari, Firefox), or it stopped answering (three frames with
+//            no answer after 1.5 s): the time between two animation frames when the first of
+//            them was drawn. Free, so every drawn frame.
+//   read-back  drawing a frame and reading one pixel back, which does wait for the graphics
+//            card. Only with 'gaps', only 1 drawn frame in 30, and only when the real cost is
+//            needed: before stepping back up a level (gaps cannot show headroom), or for ?stats=1.
+// ?timing=gaps uses the second by hand. ?quality=high, low or min fixes the level and
+// switches the watch off.
+//
+// The watch (makeWatch) is fed frame times in ms and knows nothing about the page:
+//   - readings are dropped for a while after a level change (250 ms), a resize or the tab
+//     coming back (500 ms), and in the first second: those frames pay for new buffers;
+//   - a lot is at least 10 readings and 300 ms; its middle reading decides. Over the limit
+//     (18 ms of cost, or 20 ms between frames: it cannot hold 60 frames a second): one level
+//     down. Over twice the limit: two levels down. Levels 0 and 1 go on one lot. A step that
+//     costs sharpness needs two lots in a row that are clearly slow (15% over), or one at
+//     twice the limit. Below 1.5 pixels per CSS pixel the limit is 30 ms (35 between frames);
+//   - under 7 ms of cost three lots in a row: one level back up (a level that has proved too
+//     slow twice is not tried again);
+//   - three readings in a row over 100 ms is a stall or a hopeless renderer: straight to
+//     'low', never lower, and judged again from there. After such a drop each lot under the
+//     limit of the level above climbs one level, back to where it was, and the page draws
+//     probe frames at rest so that this does not wait for a scroll. Two more stalls within
+//     10 s of each other and it is no one-off: the quick climb is off, the usual rule applies;
+//   - three lots in a row without a change: settled. The level is kept for the tab
+//     (sessionStorage) and the timing backs off.
 const LAST = LEVELS.length - 1;
+const LOW = LEVELS.findIndex((L) => L.name === 'low');
 const FORCED = ['high', 'low', 'min'].includes(q.get('quality')) ? q.get('quality') : null;
-const WINDOW = 40;
-const mon = {
-  on: !FORCED && !STILL,
-  n: 0, holdUntil: Infinity,
-  ring: new Float32Array(WINDOW), sorted: new Float32Array(WINDOW), filled: 0, at: 0, count: 0,
-  bad: 0, slow: 0, fast: 0, fails: new Uint8Array(LEVELS.length),
-  median: 0, worst: 0, px: new Uint8Array(4), log: [],
+const LIMITS = { cost: [18, 30], gap: [20, 35] };   // ms: levels above 'low', and 'low' and under
+function makeWatch({ ratioAt, apply = () => {}, save = () => {}, kind = 'cost', start = 0 }) {
+  const SIZE = 64, lot = new Float32Array(SIZE), sorted = new Float32Array(SIZE);
+  const w = {
+    on: true, kind, level: start,
+    n: 0, lotAt: 0, quiet: 0, bad: 0, slow: 0, fast: 0, steady: 0,
+    fails: new Uint8Array(LEVELS.length),
+    back: -1, probes: 0,                     // after a stall: the level to climb back to, and probe frames left
+    stallAt: -1e9, relapses: 0,
+    period: 0,                               // ms between the screen's own frames, once known ('gap' only)
+    recent: new Float32Array(40), filled: 0, at: 0, median: 0, worst: 0,   // for the readout
+    cost: new Float32Array(5), costN: 0,     // read-back samples ('gap' only)
+    changes: 0, changedAt: -1, log: [],
+  };
+  const mid = (a, n, part = 0.5) => { sorted.set(a.subarray(0, n)); return sorted.subarray(0, n).sort()[Math.min(n - 1, Math.floor(n * part))]; };
+  // Two levels that come to the same thing on this screen (a 1x screen has no 1.5 to drop to).
+  const same = (a, b) => ratioAt(a) === ratioAt(b) && LEVELS[a].msaa === LEVELS[b].msaa && LEVELS[a].bloom === LEVELS[b].bloom
+    && Math.min(LEVELS[a].glass, ratioAt(a)) === Math.min(LEVELS[b].glass, ratioAt(b));
+  const next = (dir, from = w.level) => {
+    let n = from;
+    do { n += dir; } while (n > 0 && n < LAST && same(n, n - dir));
+    return Math.max(0, Math.min(LAST, n));
+  };
+  const limit = (L) => { const base = LIMITS[w.kind][L < LOW ? 0 : 1]; return w.kind === 'gap' ? Math.max(base, 1.4 * w.period) : base; };
+  w.limit = limit;
+  w.set = (n, why, now) => {
+    if (n === w.level) return;
+    w.level = n; w.changes++; w.changedAt = now;
+    w.log.push(`${LEVELS[n].name}: ${why}`);
+    w.n = 0; w.bad = 0; w.slow = 0; w.fast = 0; w.steady = 0; w.costN = 0; w.filled = 0; w.at = 0;
+    w.quiet = Math.max(w.quiet, now + 250);              // the first frames of a level pay for its new buffers
+    if (w.back >= 0 && n <= w.back) { w.back = -1; w.probes = 0; w.stallAt = now; }   // back where it was: a stall soon after counts as a relapse
+    apply(n, why);
+  };
+  // Start-up frames: drop what is in hand and take no readings for a while.
+  w.hush = (ms, now) => { w.quiet = Math.max(w.quiet, now + ms); w.n = 0; w.bad = 0; w.steady = 0; };
+  // How often the timing needs to run: every drawn frame while deciding, 1 in 30 once settled.
+  Object.defineProperty(w, 'every', { get: () => (w.steady >= 3 || !w.on ? 30 : 1) });
+  w.middle = () => {
+    if (!w.filled) { w.median = 0; w.worst = 0; return; }
+    w.median = mid(w.recent, w.filled); w.worst = sorted[w.filled - 1];
+  };
+  w.costMiddle = () => (w.costN ? mid(w.cost, Math.min(w.costN, w.cost.length)) : 0);
+  // 'gap' only. A frame's real cost from a read-back, and a gap between two frames at rest.
+  w.sample = (ms) => { w.cost[w.costN % w.cost.length] = ms; w.costN++; };
+  const rest = new Float32Array(12); let restN = 0;
+  w.rest = (gap) => { rest[restN % rest.length] = gap; restN++; if (restN >= 6) w.period = mid(rest, Math.min(restN, rest.length)); };
+  w.forget = () => { restN = 0; };
+  w.probe = () => { if (!w.on || w.back < 0 || w.probes <= 0) return false; w.probes--; return true; };
+  // A frame time in ms, and the clock.
+  w.feed = (ms, now) => {
+    if (now < w.quiet) return;
+    w.recent[w.at] = ms; w.at = (w.at + 1) % w.recent.length; w.filled = Math.min(w.recent.length, w.filled + 1);
+    if (!w.on) return;
+    const L = w.level, lim = limit(L);
+    w.bad = ms > 100 ? w.bad + 1 : 0;
+    if (w.bad >= 3 && L < LOW) {
+      // a stall again within 10 s of the last one: after two of those it is not a one-off, so no quick climb back
+      if (now - w.stallAt < 10000) w.relapses++;
+      w.stallAt = now;
+      if (w.relapses < 2) { w.back = L; w.probes = 300; } else w.back = -1;
+      w.set(LOW, 'three frames in a row over 100 ms', now);
+      return;
+    }
+    if (ms > lim && L < LAST && w.steady >= 3) w.steady = 0;   // settled, and a slow reading: time often again
+    if (!w.n) w.lotAt = now;
+    lot[w.n++] = ms;
+    if (w.n < SIZE && (w.n < 10 || now - w.lotAt < 300)) return;
+    // Between frames, a renderer that is too slow can also show as mostly on-time frames with a
+    // long one every few: so a fifth of the frames at over twice the limit counts as slow too.
+    const p90 = mid(lot, w.n, 0.9), m = w.kind === 'gap' ? Math.max(mid(lot, w.n), 0.5 * mid(lot, w.n, 0.8)) : mid(lot, w.n);
+    w.n = 0;
+    const why = `${m.toFixed(1)} ms a frame`;
+    if (m > lim) {
+      w.fast = 0;
+      if (w.back >= 0) {                                 // climbing back after a stall: its tail may still be in this lot
+        if (++w.slow < 2) return;
+        w.back = -1;
+      }
+      const far = m > 2 * lim, easy = L < 2;             // easy: the next step down costs no sharpness
+      if (L < LAST && (easy || far || m > 1.15 * lim)) {
+        if (++w.slow >= (easy || far ? 1 : 2)) { w.fails[L]++; w.set(far ? next(1, next(1)) : next(1), why, now); return; }
+        w.steady = 0;
+        return;
+      }
+      w.slow = 0;                                        // only just over, and the step would cost sharpness: stay
+    } else {
+      w.slow = 0;
+      const up = next(-1);
+      if (w.back >= 0 && L > w.back) {                   // climbing back after a stall: one lot a level
+        if (m < limit(up)) { w.set(up, `${why}, back up after a stall`, now); return; }
+        w.back = -1;
+      }
+      const quick = w.kind === 'cost' ? m < 7 : w.costN >= 3 && w.costMiddle() < 7 && p90 <= lim;
+      if (L > 0 && w.fails[up] < 2 && quick) { if (++w.fast >= 3) { w.set(up, why, now); return; } }
+      else w.fast = 0;
+    }
+    if (++w.steady === 3) save(L);
+  };
+  return w;
+}
+
+const STORE = 'elevn.home.level';
+function stored() { try { const n = parseInt(sessionStorage.getItem(STORE), 10); return n >= 0 && n <= LAST ? n : 0; } catch (e) { return 0; } }
+const timing = {
+  method: 'off', ext: null, waiting: [], epoch: 0, asked: 0, got: 0, lost: 0,
+  frames: 0, reads: 0,                         // drawn frames since the start, and read-backs made
+  drewAt: 0, lastRaf: 0, px: new Uint8Array(4),
 };
-const hush = (ms) => { mon.holdUntil = performance.now() + ms; mon.count = 0; mon.bad = 0; };
-function setLevel(n, why) {
-  if (!engine || engine.level === n) return;
-  engine.setLevel(n);
-  mon.log.push(`${LEVELS[n].name}: ${why}`);
-  mon.slow = 0; mon.fast = 0; mon.filled = 0; mon.at = 0;
-  hush(500);                                   // the first frames of a level pay for its new buffers
-  state.dirty = true;
-}
+const mon = makeWatch({
+  ratioAt: (n) => engine.pixelRatioAt(n),
+  apply: (n) => { engine.setLevel(n); timing.epoch++; state.dirty = true; },
+  save: (n) => { try { sessionStorage.setItem(STORE, String(n)); } catch (e) { /* private window: not kept */ } },
+});
+mon.on = !FORCED && !STILL;
+mon.quiet = Infinity;                          // until the ball has started
+const hush = (ms) => { if (mon.quiet !== Infinity) mon.hush(ms, performance.now()); timing.drewAt = 0; timing.lastRaf = 0; timing.epoch++; };
+function setLevel(n, why) { if (engine) mon.set(n, why, performance.now()); }
 function setQuality(tier) { const i = LEVELS.findIndex((L) => L.name === tier); if (i >= 0) setLevel(i, 'set by hand'); }
-// Two levels that come to the same thing on this screen (a 1x screen has no 1.5 to drop to).
-const sameLevel = (a, b) => engine.pixelRatioAt(a) === engine.pixelRatioAt(b) && LEVELS[a].msaa === LEVELS[b].msaa
-  && LEVELS[a].bloom === LEVELS[b].bloom && Math.min(LEVELS[a].glass, engine.pixelRatioAt(a)) === Math.min(LEVELS[b].glass, engine.pixelRatioAt(b));
-function nextLevel(dir) {
-  let n = engine.level;
-  do { n += dir; } while (n > 0 && n < LAST && sameLevel(n, n - dir));
-  return Math.max(0, Math.min(LAST, n));
+const middle = () => mon.middle();
+// Which timing this browser gets (see the top of this section).
+function chooseTiming() {
+  const gl = engine.renderer.getContext(), want = q.get('timing');
+  let ext = null;
+  try { ext = want === 'gaps' ? null : gl.getExtension('EXT_disjoint_timer_query_webgl2'); } catch (e) { ext = null; }
+  if (ext && !(gl.getQuery(ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT) > 0)) ext = null;
+  timing.ext = ext;
+  timing.method = ext ? 'query' : 'gaps';
+  mon.kind = ext ? 'cost' : 'gap';
 }
-function middle() {                             // the middle and the worst of the timed frames in hand
-  const n = mon.filled;
-  if (!n) { mon.median = 0; mon.worst = 0; return; }
-  mon.sorted.set(mon.ring);
-  const part = mon.sorted.subarray(0, n).sort();
-  mon.median = part[n >> 1]; mon.worst = part[n - 1];
+function useGaps(why) {
+  const gl = engine.renderer.getContext();
+  for (const w of timing.waiting) gl.deleteQuery(w.q);
+  timing.waiting.length = 0;
+  timing.method = 'gaps'; mon.kind = 'gap'; mon.n = 0; mon.filled = 0; mon.at = 0; mon.steady = 0;
+  mon.log.push(`timing: frame gaps (${why})`);
 }
-function timed(ms) {
-  mon.ring[mon.at] = ms; mon.at = (mon.at + 1) % WINDOW; mon.filled = Math.min(WINDOW, mon.filled + 1);
-  if (!mon.on) return;
-  const L = engine.level;
-  // hopeless (a software renderer): three timed frames in a row over 100 ms, straight to the lowest
-  mon.bad = ms > 100 ? mon.bad + 1 : 0;
-  if (mon.bad >= 3 && L < LAST) { setLevel(LAST, 'three frames in a row over 100 ms'); return; }
-  if (++mon.count < WINDOW) return;
-  mon.count = 0;
-  middle();
-  const sharp = L < 2;                          // the next step down costs no sharpness
-  const limit = L < 3 ? 18 : 30;
-  if (mon.median > limit) {
-    mon.fast = 0;
-    if (++mon.slow >= (sharp ? 1 : 2) && L < LAST) { mon.fails[L]++; setLevel(nextLevel(1), `${mon.median.toFixed(1)} ms a frame`); }
-  } else {
-    mon.slow = 0;
-    const up = nextLevel(-1);
-    if (mon.median < 7 && L > 0 && mon.fails[up] < 2) { if (++mon.fast >= 3) setLevel(up, `${mon.median.toFixed(1)} ms a frame`); }
-    else mon.fast = 0;
+// Collects the graphics card's answers to earlier frames. Never waits for one.
+function collect(now) {
+  const t = timing;
+  if (t.method !== 'query' || !t.waiting.length) return;
+  const gl = engine.renderer.getContext(), ext = t.ext;
+  const broken = gl.getParameter(ext.GPU_DISJOINT_EXT);      // the card was interrupted: these times mean nothing
+  while (t.waiting.length) {
+    const w = t.waiting[0];
+    const ready = !broken && gl.getQueryParameter(w.q, gl.QUERY_RESULT_AVAILABLE);
+    const late = !ready && !broken && now - w.at > 1500 && t.frames - w.frame >= 12;   // no answer after 1.5 s and 12 frames: give it up
+    if (!ready && !broken && !late) break;
+    t.waiting.shift();
+    const ms = ready ? gl.getQueryParameter(w.q, gl.QUERY_RESULT) / 1e6 : 0;
+    gl.deleteQuery(w.q);
+    if (late) t.lost++;
+    if (!ready) continue;
+    t.got++;
+    if (w.epoch === t.epoch) mon.feed(Math.max(ms, w.cpu), now);   // the page's own share of the frame counts too
   }
+  if ((t.asked >= 40 && !t.got) || t.lost >= 3) useGaps(t.got ? 'the timer stopped answering' : 'the timer gave no answers');
 }
-// Draws the frame. One in four is timed, for the level and for ?stats=1.
+// Draws the frame, timed as this browser allows.
 function draw() {
   stats.draws++;
-  if ((!mon.on && !stats.on) || STILL || (mon.n++ & 3) || performance.now() < mon.holdUntil) { engine.render(); return; }
-  // wait for the frames already queued, so that only this frame is timed
+  const t = timing;
+  if (STILL || t.method === 'off' || (!mon.on && !stats.on)) { engine.render(); return; }
+  const n = t.frames++, now = performance.now();
   const gl = engine.renderer.getContext();
-  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, mon.px);
+  if (t.method === 'query') {
+    if (now < mon.quiet || n % mon.every || t.waiting.length >= 4) { engine.render(); return; }
+    const query = gl.createQuery();
+    gl.beginQuery(t.ext.TIME_ELAPSED_EXT, query);
+    engine.render();
+    gl.endQuery(t.ext.TIME_ELAPSED_EXT);
+    t.waiting.push({ q: query, epoch: t.epoch, cpu: performance.now() - now, at: now, frame: n });
+    t.asked++;
+    return;
+  }
+  // 'gaps': the loop feeds the watch. A read-back only when the real cost is needed, 1 frame in 30.
+  const wanted = stats.on || (mon.on && mon.level > 0 && mon.steady >= 3);
+  if (!wanted || n % 30 !== 29 || now < mon.quiet) { engine.render(); return; }
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, t.px);   // wait for the frames already queued, so that only this one is timed
   const t0 = performance.now();
   engine.render();
-  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, mon.px);
-  timed(performance.now() - t0);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, t.px);
+  mon.sample(performance.now() - t0);
+  t.reads++;
+}
+// Once per animation frame, before anything is drawn: what the last frame told us.
+function watchFrame(now) {
+  const t = timing;
+  if (t.method === 'off' || document.hidden) { t.drewAt = 0; t.lastRaf = 0; return; }
+  collect(now);
+  if (t.method === 'gaps') {
+    if (t.drewAt) mon.feed(Math.min(now - t.drewAt, 1000), now);
+    else if (t.lastRaf) mon.rest(now - t.lastRaf);
+  }
+  t.drewAt = 0; t.lastRaf = now;
+  if (mon.probe()) state.dirty = true;         // after a stall: draw at rest too, so the level can climb back
 }
 
 // ---------------------------------------------------------------- ?stats=1
 // A small readout in the corner, for reading real numbers on a real graphics card.
-const stats = { on: q.get('stats') === '1', el: null, draws: 0, rafs: 0, since: performance.now(), gap: 0, gaps: [0, 0, 0, 0, 0, 0], gi: 0, lastRaf: 0, text: '' };
+const stats = { on: q.get('stats') === '1', el: null, draws: 0, rafs: 0, since: performance.now(), gap: 0, gaps: [0, 0, 0, 0, 0, 0], gi: 0, lastRaf: 0, text: '', t0: performance.now() };
 if (stats.on) {
   stats.el = document.createElement('div');
   stats.el.setAttribute('aria-hidden', 'true');
@@ -243,9 +397,18 @@ function statsShow(now) {
   else {
     middle();
     const b = engine.renderer.domElement, pr = engine.renderer.getPixelRatio();
+    const gaps = timing.method === 'gaps', sec = (ms) => `${Math.max(0, ms / 1000).toFixed(0)} s`;
+    const frameLine = !mon.filled ? 'frame: none timed yet (scroll, or wait for the ball to turn)'
+      : gaps ? `frame to frame ${mon.median.toFixed(1)} ms median · ${mon.worst.toFixed(1)} worst (last ${mon.filled})` + (mon.costN ? ` · cost ${mon.costMiddle().toFixed(1)} ms` : '')
+        : `frame ${mon.median.toFixed(1)} ms median · ${mon.worst.toFixed(1)} worst (last ${mon.filled} timed frames)`;
+    const how = STILL || timing.method === 'off' ? 'off'
+      : gaps ? 'frame gaps (no stall)' + (mon.costN || stats.on ? ' + read-back 1 frame in 30' : '')
+        : `GPU timer (no stall), ${mon.every === 1 ? 'every frame' : '1 frame in 30'}`;
+    const since = mon.changedAt < 0 ? `level unchanged since load (${sec(now - stats.t0)})` : `level changed ${sec(now - mon.changedAt)} ago (${mon.changes} in all)`;
     text = `fps ${fps.toFixed(0)} · redraws ${redraws.toFixed(0)} a second · longest gap ${gap.toFixed(0)} ms\n`
-      + (mon.filled ? `frame ${mon.median.toFixed(1)} ms median · ${mon.worst.toFixed(1)} worst (last ${mon.filled} timed frames)\n` : 'frame: none timed yet (scroll, or wait for the ball to turn)\n')
-      + `tier ${engine.quality} (level ${engine.level} of ${LAST}, ${FORCED ? 'fixed by ?quality' : STILL ? 'fixed: still mode' : 'automatic'})\n`
+      + `${frameLine}\n`
+      + `tier ${engine.quality} (level ${engine.level} of ${LAST}, ${FORCED ? 'fixed by ?quality' : STILL ? 'fixed: still mode' : mon.steady >= 3 ? 'automatic, settled' : mon.back >= 0 ? 'automatic, climbing back after a stall' : 'automatic, deciding'})\n`
+      + `timing ${how} · ${since}\n`
       + `DPR ${+pr.toFixed(2)} in use · screen ${+(window.devicePixelRatio || 1).toFixed(2)} · canvas ${b.width} × ${b.height}\n`
       + `draw calls ${engine.lastCalls} · triangles ${engine.lastTriangles.toLocaleString('en-GB')}`;
   }
@@ -544,12 +707,13 @@ function onResize() {
   state.dirty = true;
   if (!vp.narrow && !live.asked) wake().catch(fail);   // the window has grown past the phone layout: start the ball
   else if (STILL && live.on) frame(0);
-  if (mon.holdUntil !== Infinity) hush(500);   // new buffers: do not time the frames that make them
+  hush(500);                                   // new buffers: do not time the frames that make them
+  mon.forget();                                // and the window may be on another screen now
 }
 window.addEventListener('scroll', onScroll, { passive: true });
 window.addEventListener('resize', onResize);
 if ('ResizeObserver' in window) new ResizeObserver(() => { const h = story.offsetHeight; if (h !== vp.storyH) { measureWindow(); onScroll(); state.dirty = true; } }).observe(story);
-document.addEventListener('visibilitychange', () => { state.last = performance.now(); stats.lastRaf = 0; if (mon.holdUntil !== Infinity) hush(500); });
+document.addEventListener('visibilitychange', () => { state.last = performance.now(); stats.lastRaf = 0; hush(500); mon.forget(); });   // the first frames back are start-up frames
 
 // rail and logo: jump to a beat's mark
 function goTo(i) {
@@ -602,6 +766,7 @@ function loop(now) {
   const dt = Math.min(wall, 0.1);
   state.last = now;
   statsRaf(now);
+  if (live.on) watchFrame(now);
   // nothing is drawn in a hidden tab or once the prizes band has covered the stage; and a frame
   // is only drawn when something has changed (the scroll, the idle turn, the cursor, the hold, the window)
   if (stills.on || !live.on) return;
@@ -615,7 +780,9 @@ function loop(now) {
     lastBeatShown = b;
     if (canvas.classList.contains('swap')) return;
   }
+  const drawn = stats.draws;
   frame(dt, wall);
+  if (stats.draws !== drawn) timing.drewAt = now;
 }
 
 // ---------------------------------------------------------------- stills
@@ -664,6 +831,8 @@ async function wake() {
   live.asked = true;
   if (!makeEngine()) { useStills(); return; }
   if (FORCED) setQuality(FORCED);
+  else if (mon.on && stored()) { mon.level = stored(); engine.setLevel(mon.level); mon.log.push(`${LEVELS[mon.level].name}: where this tab settled before`); }
+  if (!STILL) chooseTiming();
   layoutTitles();
   // Every shader is compiled before the first frame, off the main thread where the browser can,
   // so the first frames (and the timing that sets the quality) do not pay for it.
@@ -675,7 +844,13 @@ async function wake() {
   canvas.classList.add('ready');
   // the poster is under the canvas: take it away once the canvas has faded in over it
   setTimeout(() => { if (!stills.on) stillBox.hidden = true; }, STILL ? 0 : 700);
-  mon.holdUntil = performance.now() + 1000;        // nothing is timed in the first second
+  // 'gaps' needs the screen's own frame interval (a browser may hold a page to 30 frames a second):
+  // eight animation frames with nothing drawn, while the canvas fades in
+  if (timing.method === 'gaps') {
+    let was = 0;
+    for (let i = 0; i < 9; i++) { const t = await new Promise((done) => requestAnimationFrame(done)); if (was) mon.rest(t - was); was = t; }
+  }
+  mon.quiet = performance.now() + 1000;            // nothing is timed in the first second
   state.last = performance.now();
   live.on = true;
 }
@@ -695,8 +870,8 @@ async function start() {
 // For captures: set the story position (and the hold) and draw that frame now.
 window.home = {
   get engine() { return engine; }, state, POSE, CUES, MARKS, TITLE, ICON_SPAN, STILL_SIZE, LEVELS, layoutTitles, titleReport, setQuality, setLevel, mon,
-  stats: () => stats.text,
-  feed: timed,               // for tests: hand the quality watch a frame time in ms
+  stats: () => stats.text, timing, makeWatch,
+  feed: (ms, now = performance.now()) => mon.feed(ms, now),   // for tests: hand the quality watch a frame time in ms
   get quality() { return engine ? engine.quality : 'stills'; },
   set(p, hold = 0, open = null) {
     if (!engine) return;

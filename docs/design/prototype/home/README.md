@@ -23,8 +23,9 @@ and hold the ball (or focus "Press and hold the ball to open it" and hold Space 
 URL parameters, for captures: `still=1` (no time-based motion, no fades), `p=0..1` (story
 position), `hold=0..1` (the ring), `open=1` (a completed hold), `reduced=1` (force the
 reduced-motion path), `dpr=`, `quality=high|low|min` (fix the quality level), `stats=1` (a small
-readout in the lower left corner: frame rate, frame time, quality level, pixel ratio, canvas size,
-draw calls and triangles; see "Reading `?stats=1`"), `smooth=` (how far the ball lags behind the
+readout in the lower left corner: frame rate, frame time, quality level, timing method, pixel ratio,
+canvas size, draw calls and triangles; see "Reading `?stats=1`"), `timing=gaps` (time frames by the
+gaps between them even where the GPU timer exists), `smooth=` (how far the ball lags behind the
 scrollbar, in milliseconds; 120 unless given), `nogl=1` (behave as if there were no WebGL), `demo=cardhover` (holds the hover on a fixture card once the cards
 stand in their row: `card=0..2`, the middle one unless given; `glint=0..1` freezes the glint at
 that point of its loop; use it with `p=0.56`). `window.home.set(p, hold, open)` draws any frame at once.
@@ -242,25 +243,63 @@ set works. The hover video is only looked for the first time a pack is hovered.
   | 5 | low-2 | 1 | 2x | half | off |
   | 6 | min | 0.75 | off | half | off |
 
-  The page starts at level 0 and keeps watching what a frame really costs. One drawn frame in
-  four is timed: the frames already queued are waited for, the frame is drawn and one pixel is
-  read back, which waits for the graphics card, so the time is that frame's real cost. Nothing
-  is timed in the first second (every shader is compiled before the first frame, but textures
-  and buffers are still being made), for half a second after the level or the window changes,
-  or in a hidden tab. Every 40 timed frames the middle one decides:
-  - over 18 ms (it cannot hold 60 frames a second): one level down. Levels 0 and 1 go at once,
-    because the next step costs no sharpness; a step that lowers the resolution needs two slow
-    lots in a row;
-  - below 1.5 pixels per CSS pixel the limit is 30 ms, again twice in a row, so a 2x screen
-    is only taken under 1.5 when it cannot hold 30 frames a second;
-  - under 7 ms three lots in a row: one level back up. A level that has proved too slow twice
-    is not tried again in that visit;
-  - three timed frames in a row over 100 ms (a software renderer): straight to `min`.
+  The page starts at level 0 (or at the level it settled on earlier in the same tab) and keeps
+  watching how long frames take. `makeWatch` in `home.js` decides; the timing feeds it.
+
+  **How a frame is timed**, in order of preference:
+
+  | Method | Used when | What it costs | How often |
+  |---|---|---|---|
+  | GPU timer (`EXT_disjoint_timer_query_webgl2`) | the browser offers it (Chrome and Edge on a desktop) | nothing: the graphics card reports each frame's time a few frames later, the page never waits | every drawn frame while a decision is pending; 1 in 30 once settled; every frame again after a slow reading, a resize or a level change |
+  | Frame gaps | no timer (Safari, Firefox), or the timer stopped answering (three frames with no answer after 1.5 s, or none at all in its first 40) | nothing: the time between two animation frames, when the first of them was drawn | every drawn frame |
+  | Read-back (`readPixels`, which waits for the graphics card) | only with frame gaps, and only when the real cost is needed: the level is below `high` and settled, so the page must know there is room before stepping up; or `?stats=1` is on | one short wait | 1 drawn frame in 30, never more |
+
+  So at `high` without `?stats=1` the page never waits for the graphics card, whichever
+  method is in use. `?timing=gaps` forces the second method.
+
+  With frame gaps the page also needs the screen's own frame interval (a browser may hold a
+  page to 30 frames a second to save power, which is not the ball's fault). It is measured over
+  eight frames with nothing drawn as the canvas fades in, and again whenever the page is at
+  rest. The limit between frames is never under 1.4 times that interval.
+
+  **How it decides:**
+  - readings are thrown away for one second after the ball starts, for 500 ms after a resize, a
+    move to another screen or the tab coming back, and for 250 ms after a level change: those
+    frames pay for new buffers;
+  - a lot is at least 10 readings and 300 ms of drawing, and its middle reading decides. With
+    frame gaps a fifth of the frames at over twice the limit also counts as slow: a renderer
+    that cannot keep up can show as on-time frames with a long one every few;
+  - over 18 ms of cost (20 ms between frames): it cannot hold 60 frames a second, so one level
+    down. Levels 0 and 1 go on one lot, because the next step costs no sharpness. A step that
+    lowers the resolution needs two lots in a row that are clearly slow (15% over the limit);
+    a middle reading only just over the limit never costs sharpness;
+  - over twice the limit: two levels down, on one lot, so a slow computer settles in a few
+    seconds;
+  - below 1.5 pixels per CSS pixel the limit is 30 ms (35 between frames), so a 2x screen is
+    only taken under 1.5 when it cannot hold 30 frames a second;
+  - under 7 ms of cost three lots in a row: one level back up. A level that has proved too slow
+    twice is not tried again in that visit;
+  - three readings in a row over 100 ms is a stall (or a software renderer): straight to `low`
+    (1.5 pixels per CSS pixel), never lower, and judged again from there by the rules above.
+    After such a drop, each lot under the limit of the level above climbs one level, until the
+    page is back where it was; and if the page is at rest it draws up to 300 probe frames so
+    that this does not wait for a scroll. One long frame (a tab switch, a collection pause) is
+    one reading and changes nothing. Two more stalls within 10 s of each other are no one-off:
+    the quick climb is switched off and the usual rule for stepping up applies;
+  - three lots in a row with no change: settled. The level is written to `sessionStorage`
+    (`elevn.home.level`) and the next load in that tab starts there.
 
   Levels that come to the same thing on the screen in use are skipped (a 1x screen has no 1.5
   to drop to). `?quality=high|low|min` fixes the level (0, 3 or 6) and switches the watching
-  off. The level is not remembered between visits. Bloom is always worked out from a picture
-  the size of the window in CSS pixels, so the glow is as wide on a 2x screen as on a 1x one.
+  off. Bloom is always worked out from a picture the size of the window in CSS pixels, so the
+  glow is as wide on a 2x screen as on a 1x one.
+
+  Fed with simulated frame times (`home.makeWatch`, a 2x screen): steady 8 ms stays at `high`
+  and the timing drops to 1 frame in 30 after 0.9 s; one 900 ms frame changes nothing; a 900 ms
+  stall spread over three frames goes to `low` and is back at `high` 1.7 s later; steady 40 ms
+  whatever the level reaches `min` in 3.1 s and stays; a computer that takes 40 ms at `high`
+  and less lower down settles on `low` in 1.3 s; 16 to 20 ms noise makes two changes (to
+  `high-2`, still 2 pixels per CSS pixel) and stops.
 
   **Why this was rebuilt (the owner's Mac showed a soft ball).** The first version timed six
   frames in the first second of the page's life and, if the middle one was over 22 ms, went
@@ -297,13 +336,14 @@ All earlier setters and URL parameters still work.
 
 ## Reading `?stats=1`
 
-Open the page with `?stats=1` added to the address. Five lines appear in the lower left corner
-and refresh twice a second:
+Open the page with `?stats=1` added to the address (or `#stats` on the published link). Six
+lines appear in the lower left corner and refresh twice a second:
 
 ```
-fps 60 · redraws 60 a second · longest gap 17 ms
+fps 120 · redraws 120 a second · longest gap 9 ms
 frame 6.1 ms median · 9.8 worst (last 40 timed frames)
-tier high (level 0 of 6, automatic)
+tier high (level 0 of 6, automatic, settled)
+timing GPU timer (no stall), 1 frame in 30 · level unchanged since load (41 s)
 DPR 2 in use · screen 2 · canvas 2880 × 1800
 draw calls 41 · triangles 134,907
 ```
@@ -315,14 +355,24 @@ draw calls 41 · triangles 134,907
   right); **longest gap** is the longest wait between two frames in the last three seconds: a
   stutter shows here as 50 ms or more.
 - **frame** is the real cost of drawing the ball once, graphics card included, for the middle
-  and the worst of the last 40 timed frames. Under 16 ms holds 60 frames a second.
-- **tier** is the quality level in use. It should say `high` on a recent Mac. If it says
-  anything else, the frame line says why.
+  and the worst of the last 40 timed frames. Under 16 ms holds 60 frames a second, under 8 ms
+  holds 120. In Safari and Firefox the line reads `frame to frame 8.3 ms median · ... · cost
+  5.9 ms`: the time between drawn frames (8.3 is a steady 120 a second, 16.7 is 60), then the
+  real cost from the read-back.
+- **tier** is the quality level in use. It should say `high` on a recent Mac. `settled` means
+  three lots in a row asked for no change; `deciding` means it is still measuring; `climbing
+  back after a stall` means it dropped to `low` after three very long frames and is on its
+  way back up.
+- **timing** is the method in use (see "Quality levels"): `GPU timer (no stall)`, or `frame
+  gaps (no stall) + read-back 1 frame in 30`. With `?stats=1` on, the read-back always runs
+  under frame gaps, so that the cost can be shown; without it, it runs only below `high`. Then
+  how long ago the level last changed and how many changes there have been. A level that
+  keeps changing is the thing to report.
 - **DPR** is buffer pixels per CSS pixel in use, beside the screen's own. On a Retina screen
   both should be 2, and the canvas twice the window's size each way.
 - **draw calls** and **triangles** are for the whole frame, every pass.
 
-The numbers worth sending back: all five lines in the hero, in the close-up (FULL TIME), and
+The numbers worth sending back: all six lines in the hero, in the close-up (FULL TIME), and
 while scrolling from the hero to MODES.
 
 ## Where this departs from the spec
@@ -342,7 +392,7 @@ while scrolling from the hero to MODES.
 | Keyboard: Space on the focused canvas | A real button under the ball takes Space or Enter | A canvas is a poor focus target for screen readers |
 | Hero and end both carry the gold button | Outlined "Connect wallet" in the words; the one gold button is in the bar | One gold button per view, as in the approved mockup |
 | Blueprint toggle, sound, tilt on phones | Not built | Out of scope for this pass (sound was asked to stay off) |
-| Three quality tiers chosen by device class | Seven levels chosen by timing frames all the time, down and back up | No device sniffing; the page measures what it actually gets |
+| Three quality tiers chosen by device class | Seven levels chosen by timing frames, down and back up, without waiting for the graphics card | No device sniffing; the page measures what it actually gets |
 | Rain, lanterns, wet ground, bokeh | Dropped by the owner | The video they came from is no longer a reference |
 | Reduced motion uses pre-captured stills | The live canvas held still per beat | Same result on screen. The pre-captured stills are used when there is no WebGL |
 | Devnet banner, glass nav "once scrolled" | Nav is always glass; no banner | Prototype of the motion, not the chrome |
@@ -355,6 +405,16 @@ while scrolling from the hero to MODES.
   layout and style work, and that the stills are unchanged. What is reasoned, not measured: the
   frame time on a real graphics card at each level, and so the 18, 30 and 7 ms limits. The
   `?stats=1` readout exists so that he can read the real numbers.
+- **The GPU timer is unproven.** Headless Chromium on software WebGL offers
+  `EXT_disjoint_timer_query_webgl2` but answers only the first few frames (one to four in
+  some runs, none in others) and then stops; the page noticed each time and fell back to
+  frame gaps by itself, which is the path every browser check here then used. Whether the timer
+  answers reliably in Chrome on the owner's Mac is not known: the `timing` line of `?stats=1`
+  says which method is in use. Frame gaps are also weaker in headless Chromium than they
+  should be in a real browser: with no real screen to wait for, a 250 ms frame showed as
+  16.7 ms gaps with a one-second pause every few frames, which is why a fifth of the frames
+  being very late counts as slow. The decisions themselves were tested with simulated frame
+  times, not real ones.
 - **The lag may not be all gone.** The ball's own cost on a 2x screen is two full passes over
   the scene at 4x multisampling plus the glass, and that is unchanged at level 0; the page now
   steps to cheaper effects by itself if that is too much. Two things outside the ball were
