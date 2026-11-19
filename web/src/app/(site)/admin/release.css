@@ -1,0 +1,58 @@
+/* Admin: Results to release. Plain on purpose; shared e2- classes come from components/elevn2.css. */
+.rl { font-family: var(--e2-sans); margin-bottom: 48px; padding-bottom: 40px; border-bottom: 1px solid var(--steel-edge); }
+.rl > * + * { margin-top: 16px; }
+.rl-h { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -.01em; }
+.rl-intro, .rl-note, .rl-sub { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.rl-note { font-size: 15px; }
+.rl-err { margin: 0; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--danger); color: var(--danger); font-size: 15px; font-weight: 600; background: var(--row); }
+.rl-warn { margin: 0; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--edge-strong); background: var(--row); font-size: 15px; font-weight: 600; }
+.rl-done { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rl-done li { padding: 12px 16px; border-radius: 12px; border: 1px solid var(--ok); background: var(--row); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+
+.rl-card { padding: 24px 28px; }
+.rl-card > * + * { margin-top: 20px; }
+.rl-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.rl-title { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.3; }
+.rl-top .rl-sub { margin-top: 4px; }
+.rl-eyebrow { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--steel); }
+
+.rl-table { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.rl-tr { display: grid; grid-template-columns: 56px minmax(0, 1fr) 96px 120px; column-gap: 12px; align-items: center; min-height: 44px; padding: 0 16px; background: var(--row); font-size: 15px; border-top: 1px solid var(--line); }
+.rl-tr:first-child { border-top: 0; }
+.rl-th { min-height: 40px; background: var(--row-2); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--steel); font-weight: 600; }
+.rl-tr .n { text-align: right; font-variant-numeric: tabular-nums; }
+.rl-tr .pl { font-weight: 700; color: var(--steel); }
+.rl-tr .who { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+.rl-price { display: grid; gap: 8px; max-width: 360px; }
+.rl-price label { font-size: 14px; font-weight: 600; }
+.rl-price input { height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--edge-strong); background: var(--row); color: var(--text); font: inherit; font-size: 16px; }
+.rl-price input:disabled { opacity: .6; }
+
+.rl-pot { margin: 0 0 8px; font-size: 24px; font-weight: 700; letter-spacing: -.01em; }
+.rl-prizes { list-style: none; margin: 0 0 10px; padding: 0; }
+.rl-prizes li { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; column-gap: 12px; padding: 6px 0; font-size: 15px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.rl-prizes li:first-child { border-top: 0; }
+.rl-prizes li > :first-child { color: var(--steel); font-weight: 700; }
+
+.rl-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.rl-confirm { padding: 16px 18px; border-radius: 12px; border: 1px solid var(--edge-strong); background: var(--row); }
+.rl-confirm p { margin: 0 0 14px; font-size: 15px; line-height: 1.5; }
+.rl .e2-btn:focus-visible, .rl-price input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.rl-recent > * + * { margin-top: 12px; }
+.rl-recent ul { list-style: none; margin: 0; padding: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+.rl-recent li { display: grid; grid-template-columns: minmax(0, 1fr) auto 110px; align-items: center; column-gap: 16px; min-height: 48px; padding: 8px 16px; background: var(--row); border-top: 1px solid var(--line); font-size: 15px; }
+.rl-recent li:first-child { border-top: 0; }
+.rl-recent li b { text-align: right; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 640px) {
+  .rl-card { padding: 18px 16px; }
+  .rl-top { flex-direction: column; }
+  .rl-tr { grid-template-columns: 40px minmax(0, 1fr) 56px 64px; column-gap: 8px; padding: 0 12px; font-size: 14px; }
+  .rl-th { letter-spacing: .04em; font-size: 11px; }
+  .rl-recent li { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
+  .rl-recent li b { grid-column: 2; text-align: right; }
+  .rl-recent li .t { grid-column: 1 / -1; }
+  .rl-actions .e2-btn { white-space: normal; height: auto; min-height: 40px; padding-block: 8px; }
+}

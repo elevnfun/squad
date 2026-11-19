@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminOverview, api, Batch, BatchTx, fmtSol, shortWallet } from "@/lib/api";
 import { useAuth } from "@/components/auth";
 import { Button, Card, Loading } from "@/components/ui";
+import Release from "./Release";
 
 const KIND: Record<string, string> = {
   instant: "Prize, 30% now", vest: "Prize, daily part", buyback: "Buy back $ELEVN", burn: "Burn $ELEVN", operations: "Operations",
@@ -69,6 +70,7 @@ export default function Admin() {
 
   return (
     <div className="space-y-6 pt-8">
+      <Release token={token} />
       <div>
         <h1 className="text-3xl font-semibold">Payouts</h1>
         <p className="text-muted">Fee wallet {data && shortWallet(data.fee_wallet)} · {data?.cluster}</p>
