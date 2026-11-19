@@ -2,7 +2,7 @@
 
 Contests (rows of `contests`): one 'blitz_matchday' per UK date with a launch-league kickoff, one 'blitz_week'
 and one 'draft_week' per week. A week runs Tuesday to Monday, UK time. Draft locks at the first kickoff from
-Friday to Monday and scores the matches of those four days; the Blitz week scores all seven days.
+Friday to Monday and scores the matches of those four days; the Blitz week adds up a wallet's best 3 matchday totals.
 
 States: open -> live (first kickoff) -> review (15 minutes after the last match ends) -> final (released).
 A contest with under 3 entrants becomes 'rolled' when released, and one whose every match was called off
@@ -157,10 +157,14 @@ def tick(conn, now=None, sol_usd=None):
 def build_results(conn, contest_id):
     """(Re)write the results rows of a contest from the scores. Rows already final are left alone."""
     kind, week = conn.execute("SELECT kind, week_start FROM contests WHERE id = %s", (contest_id,)).fetchone()
-    if kind == "blitz_week":        # the sum of the week's matchday results
-        select, args = ("""SELECT %s, r.wallet, SUM(r.points), SUM(r.captain_points) FROM results r
-                           JOIN contests c ON c.id = r.contest_id
-                           WHERE c.kind = 'blitz_matchday' AND c.week_start = %s GROUP BY r.wallet""", (contest_id, week))
+    if kind == "blitz_week":        # the sum of a wallet's best 3 matchday totals that week (all of them, if fewer)
+        select, args = ("""SELECT %s, t.wallet, SUM(t.points), SUM(t.captain_points) FROM (
+                               SELECT r.wallet, r.points, r.captain_points, ROW_NUMBER() OVER (
+                                   PARTITION BY r.wallet ORDER BY r.points DESC, r.captain_points DESC, r.contest_id) AS n
+                               FROM results r JOIN contests c ON c.id = r.contest_id
+                               WHERE c.kind = 'blitz_matchday' AND c.week_start = %s) t
+                           WHERE t.n <= %s GROUP BY t.wallet""",
+                        (contest_id, week, CFG["blitz"]["weekly_best_matchdays"]))
     else:                           # the sum over a wallet's entries; no score yet counts as 0
         select, args = ("""SELECT e.contest_id, e.wallet, COALESCE(SUM(s.points), 0), COALESCE(SUM(s.captain_points), 0)
                            FROM entries e LEFT JOIN entry_scores s ON s.entry_id = e.id

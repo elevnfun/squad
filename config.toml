@@ -223,6 +223,7 @@ captain_multiplier = 2.0
 week_starts = "tuesday"                     # the Blitz week runs Tuesday to Monday, UK time
 timezone = "Europe/London"
 weekly_prize_usd = 500                      # fixed, paid in SOL from the team's own wallet
+weekly_best_matchdays = 3            # the weekly board adds up a wallet's best 3 matchday totals (all, if fewer)
 
 [draft]                                     # [Confirmed 2026-11-19] weekly Draft: 5 packs of 3, a five-a-side from the 15
 requirement = 300_000

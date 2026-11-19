@@ -2,7 +2,7 @@
 Tue 17 Nov starts a week; Wed 18, Fri 20, Sat 21, Sun 22, Mon 23 Nov. The UK is on GMT (= UTC) in November.
 Runs against the real squad/winnings.py."""
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import psycopg
 import pytest
@@ -345,3 +345,23 @@ def test_current(conn):
     assert [c["fixtures"] for c in got] == [2, 5, 4]
     assert got[0]["first_kickoff"] == t(20, "15:00") and got[2]["locks_at"] == t(20, "15:00")
     assert contests.current(conn, t(18, "12:00"))[0]["day"] == date(2026, 11, 18)
+
+
+def test_blitz_week_counts_only_the_best_three_matchdays(conn):
+    """A wallet with matchday totals 10, 40, 30 and 20 (captain points 1, 4, 3, 2) scores its best three:
+    40 + 30 + 20 = 90, captain points 4 + 3 + 2 = 9. A wallet with two matchdays (50, 5) scores both: 55."""
+    week = date(2026, 11, 17)
+    wk = conn.execute("INSERT INTO contests (kind, week_start) VALUES ('blitz_week', %s) RETURNING id", (week,)).fetchone()[0]
+    days = []
+    for i in range(4):
+        days.append(conn.execute("""INSERT INTO contests (kind, day, week_start) VALUES ('blitz_matchday', %s, %s)
+                                    RETURNING id""", (week + timedelta(days=i), week)).fetchone()[0])
+    for cid, pts, cap in zip(days, (10, 40, 30, 20), (1, 4, 3, 2)):
+        conn.execute("INSERT INTO results (contest_id, wallet, points, captain_points) VALUES (%s, 'four', %s, %s)",
+                     (cid, pts, cap))
+    for cid, pts in zip(days, (50, 5)):
+        conn.execute("INSERT INTO results (contest_id, wallet, points) VALUES (%s, 'two', %s)", (cid, pts))
+    contests.build_results(conn, wk)
+    rows = dict((w, (float(p), float(c))) for w, p, c in conn.execute(
+        "SELECT wallet, points, captain_points FROM results WHERE contest_id = %s", (wk,)))
+    assert rows == {"four": (90.0, 9.0), "two": (55.0, 0.0)}
