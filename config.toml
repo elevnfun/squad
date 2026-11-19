@@ -167,7 +167,6 @@ champions_leaderboard = false               # [Proposed]; funding [Open]
 # 150k = one squad in one area; 750k covers one squad in each of the five areas
 token_mint = ""                             # $ELEVN mint address; set at launch (a devnet test mint before)
 solana_rpc = "https://api.devnet.solana.com"
-min_holding_hours = 72                      # [Proposed] anti-sybil
 # [Confirmed 2026-11-01] below the requirement mid-gameweek -> the squad is frozen: no points from
 # that moment and never restored by buying back. Highest-numbered squads freeze first.
 below_requirement = "freeze"
@@ -213,6 +212,53 @@ operations_wallet = ""                      # where the 10% operations share goe
 buyback_min_sol = 0.05                      # buy back once the bucket holds at least this much
 transfers_per_tx = 18
 reserve_trigger_volume = 0                  # [Open] X; 0 = unset
+
+# --------------------------------------------------------------- elevn 2.0 ---
+[blitz]                                     # [Confirmed 2026-11-19] Matchday Blitz: 3 squads of 3 on 3 chosen fixtures
+requirement = 150_000
+squads_per_matchday = 3
+squad_size = 3
+min_per_club = 1
+captain_multiplier = 2.0
+week_starts = "tuesday"                     # the Blitz week runs Tuesday to Monday, UK time
+timezone = "Europe/London"
+weekly_prize_usd = 500                      # fixed, paid in SOL from the team's own wallet
+
+[draft]                                     # [Confirmed 2026-11-19] weekly Draft: 5 packs of 3, a five-a-side from the 15
+requirement = 300_000
+packs = 5
+pack_size = 3
+tiers = ["top", "mid", "budget"]            # one of each in every pack
+team_size = 5
+min_per_position = { DEF = 1, MID = 1, FWD = 1 }
+goalkeepers = false
+max_per_club = 2
+max_per_tier = { top = 2, mid = 2 }         # budget unlimited
+captain_multiplier = 2.0
+opens = "tuesday"
+locks = "friday_first_kickoff"
+scores = ["friday", "saturday", "sunday", "monday"]
+
+[shootout]                                  # [Confirmed 2026-11-19] side mini-game: no prize, no holding requirement
+ranked_games_per_day = 10
+
+[boards]                                    # [Confirmed 2026-11-19] every prize board: Blitz matchday, Blitz weekly, Draft weekly
+mode_split = { blitz = 0.60, draft = 0.40 }
+place_split = [0.50, 0.25, 0.12, 0.08, 0.05]
+min_entrants = 3                            # fewer: the pot rolls forward
+min_pot_sol = { blitz_matchday = 0.5, draft_week = 1.0 }
+min_pot_sol_devnet = { blitz_matchday = 0.05, draft_week = 0.1 }
+final_after_minutes = 15                    # a result is final this long after the last match ends
+manual_review = true                        # the owner releases each result by hand at the start
+
+[release]                                   # [Confirmed 2026-11-19] prizes are collected, never sent automatically
+collect_share = 0.50                        # ready to collect at once; the rest joins the locked balance
+withdraw_share = 0.20                       # of the locked balance, once per withdraw_every_hours
+withdraw_every_hours = 24
+freeze_below = 150_000                      # locked balance and timer freeze while the wallet holds less
+
+[payout_wallet]                             # [Confirmed 2026-11-19] prizes are paid from here, never the fee wallet
+address = ""                                # public address; the key is a server secret (PAYOUT_WALLET_KEY), never in this file
 
 [usernames]                                 # [Confirmed 2026-11-13] picked after sign-in; reset when $ELEVN launches
 min_length = 3

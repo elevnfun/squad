@@ -383,3 +383,115 @@ CREATE TABLE IF NOT EXISTS chat_reports (
     created_at  timestamptz NOT NULL,
     PRIMARY KEY (message_id, wallet)                -- one report per player per message
 );
+
+-- ------------------------------------------- elevn 2.0: contests, entries, winnings ---
+
+-- one row per Blitz matchday, per Blitz week and per Draft week
+CREATE TABLE IF NOT EXISTS contests (
+    id                  serial PRIMARY KEY,
+    kind                text NOT NULL CHECK (kind IN ('blitz_matchday', 'blitz_week', 'draft_week')),
+    day                 date,                       -- the UK date of a matchday; NULL for the weekly kinds
+    week_start          date NOT NULL,              -- the Tuesday the week starts
+    opens_at            timestamptz,
+    locks_at            timestamptz,                -- Draft: Friday's first kickoff; NULL for Blitz (squads lock per fixture)
+    last_match_ends_at  timestamptz,
+    final_at            timestamptz,                -- last match end + 15 minutes
+    state               text NOT NULL DEFAULT 'open' CHECK (state IN ('open', 'live', 'review', 'final', 'rolled')),
+    pot_lamports        bigint NOT NULL DEFAULT 0 CHECK (pot_lamports >= 0),
+    released_at         timestamptz,
+    released_by         text,                       -- 'auto' or the admin wallet
+    created_at          timestamptz NOT NULL DEFAULT now(),
+    CHECK ((kind = 'blitz_matchday') = (day IS NOT NULL))
+);
+-- one matchday contest per day, one Blitz week and one Draft week per week
+CREATE UNIQUE INDEX IF NOT EXISTS contests_matchday_day ON contests (day) WHERE kind = 'blitz_matchday';
+CREATE UNIQUE INDEX IF NOT EXISTS contests_blitz_week ON contests (week_start) WHERE kind = 'blitz_week';
+CREATE UNIQUE INDEX IF NOT EXISTS contests_draft_week ON contests (week_start) WHERE kind = 'draft_week';
+
+-- a wallet's saved squad (Blitz) or team (Draft) in a contest
+CREATE TABLE IF NOT EXISTS entries (
+    id          serial PRIMARY KEY,
+    contest_id  integer NOT NULL REFERENCES contests (id),
+    wallet      text NOT NULL,
+    slot        integer NOT NULL DEFAULT 1 CHECK (slot BETWEEN 1 AND 3),   -- Blitz squad number; always 1 for Draft
+    fixture_id  integer REFERENCES fixtures (id),   -- Blitz: the fixture the squad is on; NULL for Draft
+    captain_id  integer NOT NULL REFERENCES players (id),
+    locked_at   timestamptz,                        -- set when it locks
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    updated_at  timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (contest_id, wallet, slot)
+);
+-- a wallet's three Blitz squads are on three different fixtures
+CREATE UNIQUE INDEX IF NOT EXISTS entries_wallet_fixture ON entries (contest_id, wallet, fixture_id)
+    WHERE fixture_id IS NOT NULL;
+
+-- the players in an entry
+CREATE TABLE IF NOT EXISTS entry_players (
+    entry_id    integer NOT NULL REFERENCES entries (id) ON DELETE CASCADE,
+    player_id   integer NOT NULL REFERENCES players (id),
+    PRIMARY KEY (entry_id, player_id)
+);
+
+-- the 15 players dealt to a wallet for a Draft week
+CREATE TABLE IF NOT EXISTS draft_packs (
+    contest_id  integer NOT NULL REFERENCES contests (id),
+    wallet      text NOT NULL,
+    pack        integer NOT NULL CHECK (pack BETWEEN 1 AND 5),
+    tier        text NOT NULL CHECK (tier IN ('top', 'mid', 'budget')),
+    player_id   integer NOT NULL REFERENCES players (id),
+    value       numeric(5,1) NOT NULL,              -- the player's value when dealt; the swap rule uses it
+    opened_at   timestamptz,                        -- NULL while the pack is sealed
+    PRIMARY KEY (contest_id, wallet, pack, tier),
+    UNIQUE (contest_id, wallet, player_id)
+);
+
+-- points of one entry
+CREATE TABLE IF NOT EXISTS entry_scores (
+    entry_id        integer PRIMARY KEY REFERENCES entries (id) ON DELETE CASCADE,
+    points          numeric(7,2) NOT NULL,
+    captain_points  numeric(7,2) NOT NULL DEFAULT 0,
+    players         jsonb NOT NULL DEFAULT '{}',    -- player_id -> points counted
+    banked_at       timestamptz,                    -- Blitz: when the squad's points became final
+    is_final        boolean NOT NULL DEFAULT false,
+    scored_at       timestamptz NOT NULL DEFAULT now()
+);
+
+-- a wallet's line on a contest's board
+CREATE TABLE IF NOT EXISTS results (
+    contest_id      integer NOT NULL REFERENCES contests (id),
+    wallet          text NOT NULL,
+    points          numeric(8,2) NOT NULL,
+    captain_points  numeric(8,2) NOT NULL DEFAULT 0,
+    place           integer,                        -- NULL until ranked
+    prize_lamports  bigint NOT NULL DEFAULT 0 CHECK (prize_lamports >= 0),
+    is_final        boolean NOT NULL DEFAULT false,
+    PRIMARY KEY (contest_id, wallet)
+);
+CREATE INDEX IF NOT EXISTS results_board ON results (contest_id, points DESC);
+
+-- one row per wallet: what it can collect now and what is locked
+CREATE TABLE IF NOT EXISTS winnings (
+    wallet             text PRIMARY KEY,
+    ready_lamports     bigint NOT NULL DEFAULT 0 CHECK (ready_lamports >= 0),   -- collectable now
+    locked_lamports    bigint NOT NULL DEFAULT 0 CHECK (locked_lamports >= 0),
+    first_collect_at   timestamptz,
+    next_withdraw_at   timestamptz,                 -- when the next 20% withdrawal opens; NULL before the first collect
+    frozen_at          timestamptz,                 -- set while the wallet holds under the freeze requirement; the timer is pushed back by the frozen time when it clears
+    updated_at         timestamptz NOT NULL DEFAULT now()
+);
+
+-- every change to a wallet's winnings, so balances can be rebuilt
+CREATE TABLE IF NOT EXISTS winnings_events (
+    id             bigserial PRIMARY KEY,
+    wallet         text NOT NULL,
+    kind           text NOT NULL CHECK (kind IN ('credit', 'collect', 'withdraw')),
+    ready_delta    bigint NOT NULL DEFAULT 0,
+    locked_delta   bigint NOT NULL DEFAULT 0,
+    contest_id     integer REFERENCES contests (id),   -- for a credit
+    signature      text,                               -- the Solana transaction, for collect and withdraw
+    status         text NOT NULL DEFAULT 'confirmed' CHECK (status IN ('pending', 'confirmed', 'failed')),
+    created_at     timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS winnings_events_wallet ON winnings_events (wallet, created_at);
+-- a prize is credited once
+CREATE UNIQUE INDEX IF NOT EXISTS winnings_events_credit ON winnings_events (contest_id, wallet) WHERE kind = 'credit';
