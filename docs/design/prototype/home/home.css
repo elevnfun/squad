@@ -110,7 +110,7 @@ ul, ol { list-style: none; }
   opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity 220ms linear, transform 0s linear 220ms, visibility 0s linear 220ms; }
 .js .beat.on .mode { opacity: 1; visibility: visible; transform: none; transition: opacity 700ms var(--ease) 200ms, transform 700ms var(--ease) 200ms, visibility 0s; }
 .icon svg { display: block; width: 100%; height: auto; overflow: visible; font-family: "Sora", system-ui, sans-serif; }
-.callouts { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px 32px; }
+.callouts { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .callouts li { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--steel); line-height: 1.35; padding: 5px 0 5px 14px; border-left: 1px solid rgba(255,255,255,.28);
   opacity: .38; transition: opacity 300ms linear, border-color 300ms linear; }
 .callouts li.lit { opacity: 1; border-left-color: var(--accent); }
@@ -189,8 +189,9 @@ ul, ol { list-style: none; }
 /* beat rail */
 .rail { display: none; }
 .js .rail { display: flex; position: fixed; z-index: 4; right: max(80px, calc((100vw - 1440px) / 2)); top: 50%; transform: translateY(-50%); flex-direction: column; gap: 6px; align-items: center; pointer-events: auto; transition: opacity 300ms linear; }
-.rail a { display: grid; place-items: center; width: 16px; height: 16px; }
-.rail a::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--steel-2); opacity: .55; transition: all 180ms ease-out; }
+.rail a { position: relative; display: grid; place-items: center; width: 16px; height: 16px; }
+.rail a::after { content: ""; position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; transform: translate(-50%, -50%); }
+.rail a::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--steel-2); opacity: .8; box-shadow: 0 0 0 2.5px rgba(8,9,12,.7); transition: all 180ms ease-out; }
 .rail a.on::before { width: 8px; height: 8px; background: var(--accent); opacity: 1; }
 .past-story .rail, .past-story .words, .past-story .mode, .past-story .hold { opacity: 0 !important; pointer-events: none; }
 
@@ -300,6 +301,6 @@ ul, ol { list-style: none; }
 
 /* the pack's number, drawn over shared artwork (art/pack.png) and its hover video */
 .pack-num { position: absolute; left: 0; right: 0; top: 86.2%; display: none; text-align: center; pointer-events: none;
-  font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: clamp(9px, 0.82vw, 14px); letter-spacing: .22em;
+  font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: clamp(12px, 0.86vw, 14px); letter-spacing: .22em;
   color: #F2C14E; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
 .pack.has-art .pack-num { display: block; }

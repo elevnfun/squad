@@ -54,8 +54,8 @@ function token(parent, id) {
 // The "x2" tag that sits on a captain's shoulder.
 function badge(parent) {
   const g = el('g', { opacity: 0 }, parent);
-  el('rect', { x: -10, y: -6.5, width: 20, height: 13, rx: 6.5, fill: '#f2c14e', stroke: '#0a0b0d', 'stroke-width': 1.5 }, g);
-  const t = el('text', { y: 3.2, 'text-anchor': 'middle', 'font-size': 9, 'font-weight': 700, fill: '#0a0b0d' }, g);
+  el('rect', { x: -14, y: -9, width: 28, height: 18, rx: 9, fill: '#f2c14e', stroke: '#0a0b0d', 'stroke-width': 1.5 }, g);
+  const t = el('text', { y: 4.9, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: '#0a0b0d' }, g);
   t.textContent = '×2';
   return g;
 }
