@@ -296,3 +296,24 @@ Reporting
 - Did: removed the prize card stretch, kept the six checks on one line each (one column from 1101 to 1439 wide, two columns from 1440), republished the screens.
 - Changed: the screens link was behind the repo (it had no `draft-page.css` or `tabbar.js` and an older `mock.css`), so the owner had been looking at an older Draft and phone view.
 - Rule for next time: after any mockup change, republish every file and compare `list_files` against the folder; render the widths either side of every breakpoint you add.
+
+## 2026-11-19 · head agent · review of the Draft chip overlap fix
+- Verdict: approved, with one tidy-up (no visual change). Rendered again by the head agent on
+  draft, draft-guest and draft-steel-green at 1920, 1440, 1439, 1366, 1280, 1200, 1101, 1100, 1024
+  and 390: no overlap of badge, club and tick, no cut name or club, nothing outside a chip, pack
+  labels and the six Team rules each on one line, no sideways scroll, no console errors. At 1440
+  and wider and at 1100 and narrower the chips are the same as before the change (same sizes; the
+  panel screenshots match pixel for pixel, bar one stray pixel at 1100).
+- What made it work: the fix removed the thing that did not fit (the words "In five") instead of
+  shrinking everything, and let long names wrap rather than cut them. The tick is a shape, the
+  chosen chip also has the brighter edge and lighter fill, and the board beside it shows the same
+  five, so the state is not colour alone. The old CSS really was broken from 1101 to about 1290
+  and had no spare room up to 1439, so the band is the right size and matches the Team rules band.
+- Weak: between 1101 and 1439 no words on the screen say what the tick means, and a short name
+  sitting beside a wrapped one leaves an empty line in its chip (Mbappé at 1280). Both are
+  acceptable. Tidy-up asked for: the comment "1024: two columns become one" now sits above the
+  new band instead of above `@media (max-width: 1100px)`; move it back.
+- Rule for next time: when a row runs out of room, drop or move the least important item and let
+  names wrap; never let flex items shrink below their text. Test every 20px across a band, not
+  only its two ends, and run the old CSS through the same measurements to prove the outside of
+  the band did not change.

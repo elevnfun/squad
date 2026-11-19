@@ -93,7 +93,6 @@
 
 .dp .steel2 { color: var(--steel-2); }
 
-/* 1024: two columns become one */
 /* 1101 to 1439: the three chip columns are narrow, so "In five" shows as its tick alone, in the
    chip's top corner (the words stay for screen readers), and a long name wraps instead of being cut */
 @media (min-width: 1101px) and (max-width: 1439px) {
@@ -105,6 +104,7 @@
   .dp-chip .nm { white-space: normal; }
   .dp-tiers span { padding-left: 8px; }
 }
+/* 1024: two columns become one */
 @media (max-width: 1100px) {
   .dp-head h1.word { font-size: clamp(64px, 9vw, 96px); }
   .dp-bar { flex-wrap: wrap; row-gap: var(--s3); }
