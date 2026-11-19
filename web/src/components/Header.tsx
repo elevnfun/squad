@@ -12,9 +12,7 @@ import UsernameDialog from "./UsernameDialog";
 // Ranks, Chat), then the wallet: a gold "Connect wallet" for a guest, or the wallet chip joined to Winnings. "Menu +"
 // is the StaggeredMenu, drawn over the bar's right edge (see elevn2.css), and holds the reading pages and a small
 // Penalty Shootout link. On a phone the three places move to the bottom tab bar (TabBar.tsx).
-// The bar slides away while scrolling down and returns on the way up; the owner's design file says it should stay
-// put, so switching that off is this one line.
-const HIDE_ON_SCROLL = true;
+// The bar stays put while scrolling (the owner's design file); only the home page's opening screen has no bar.
 
 const PLACES = [
   { label: "Today", path: "/today" },
@@ -28,9 +26,6 @@ const MENU = [
   { label: "About", link: "/about" },
   { label: "Roadmap", link: "/roadmap" },
 ];
-// what a wallet unlocks (config.toml [blitz] and [draft]; /api/today sends the same numbers to the Today page)
-const BLITZ_NEEDS = 150_000;
-const DRAFT_NEEDS = 300_000;
 
 function useMedia(query: string): boolean {
   return useSyncExternalStore(
@@ -58,9 +53,14 @@ function WalletChip({ label, balance }: { label: string; balance: number | null 
   const [copied, setCopied] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const blitz = balance != null && balance >= BLITZ_NEEDS;
-  const draft = balance != null && balance >= DRAFT_NEEDS;
-  const unlocked = draft ? "Blitz and Draft unlocked" : blitz ? "Blitz unlocked" : balance == null ? "Holding not shown" : "Nothing unlocked yet";
+  // what the wallet unlocks comes from /api/me (the API owns the requirements)
+  const access = me?.access;
+  const blitz = access?.blitz === true;
+  const draft = access?.draft === true;
+  const unlocked = !access ? "Holding not shown"
+    : draft ? "Blitz and Draft unlocked"
+    : blitz ? "Blitz unlocked. Hold more $ELEVN to unlock Draft"
+    : "Hold $ELEVN to unlock Blitz";
 
   useEffect(() => {
     if (!open) return;
@@ -124,20 +124,6 @@ export default function Header() {
   // On the home page the opening screen has no bar: it slides in once that screen has folded away.
   const home = pathname === "/";
   const [past, setPast] = useState(false);
-  // every other page: the bar slides away while scrolling down and comes back on the way up
-  const [tucked, setTucked] = useState(false);
-  useEffect(() => {
-    if (home || !HIDE_ON_SCROLL) { setTucked(false); return; }
-    let lastY = window.scrollY;
-    const check = () => {
-      const y = window.scrollY;
-      if (Math.abs(y - lastY) < 6) return;
-      setTucked(y > lastY && y > 72);
-      lastY = y;
-    };
-    window.addEventListener("scroll", check, { passive: true });
-    return () => window.removeEventListener("scroll", check);
-  }, [home]);
   useEffect(() => {
     if (!home) return;
     const check = () => setPast(window.scrollY >= window.innerHeight * 0.7);
@@ -145,7 +131,21 @@ export default function Header() {
     window.addEventListener("scroll", check, { passive: true });
     return () => window.removeEventListener("scroll", check);
   }, [home]);
-  const hidden = (home && !past) || tucked;
+  const hidden = home && !past;
+
+  // Escape closes the main menu and hands focus back to its "Menu" button (StaggeredMenu has no handle for this, so
+  // we press its own toggle, which runs its normal close)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const btn = document.querySelector<HTMLButtonElement>(".elevn-menu .sm-toggle");
+      if (!btn || btn.getAttribute("aria-expanded") !== "true") return;
+      btn.click();
+      btn.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   const phone = useMedia("(max-width: 700px)");
   const at = (path: string) => pathname === path || pathname.startsWith(`${path}/`);

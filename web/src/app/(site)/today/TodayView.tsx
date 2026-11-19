@@ -144,7 +144,7 @@ function BlitzCard({ c, loading, now, access, signedIn }: { c: Contest | null; l
           : <span className="e2-small e2-muted">Top 5 are paid</span>}
         {over
           ? <Link className="e2-btn e2-btn-line" href="/ranks">Open the board</Link>
-          : <Link className={`e2-btn ${signedIn ? "e2-btn-gold" : "e2-btn-line"}`} href="/blitz">Pick squads</Link>}
+          : <Link className={`e2-btn ${signedIn && access?.blitz !== false ? "e2-btn-gold" : "e2-btn-line"}`} href="/blitz">Pick squads</Link>}
       </div>
     </article>
   );
@@ -155,6 +155,8 @@ function DraftCard({ c, loading, now, access, signedIn }: { c: Contest | null; l
   const over = c != null && c.state !== "open" && c.state !== "live";
   const lock = c?.locks_at ? Date.parse(c.locks_at) : null;
   const open = lock != null && now != null && lock > now;
+  const lockedAt = lock != null && !open
+    ? `${new Date(lock).toLocaleDateString("en-GB", { weekday: "short", timeZone: "Europe/London" })} ${ukTime(c!.locks_at!)}` : null;
   return (
     <article className="e2-card e2-mode" aria-labelledby="t-Draft" aria-busy={loading || undefined}>
       <div className="top">
@@ -166,8 +168,8 @@ function DraftCard({ c, loading, now, access, signedIn }: { c: Contest | null; l
       </div>
       <div className="nums">
         <div>
-          <span className="lbl">{open ? "Locks in" : "Lock"}</span>
-          <span className="e2-clockbig">{c == null || lock == null ? "–" : open ? <Digits ms={lock - now!} /> : "Locked"}</span>
+          <span className="lbl">{open ? "Locks in" : "Locked"}</span>
+          <span className="e2-clockbig">{c == null || lock == null ? "–" : open ? <Digits ms={lock - now!} /> : lockedAt}</span>
         </div>
         <div><span className="lbl">Weekly pot</span><span className="e2-big">{c ? sol(c.pot_sol) : "–"}<small>SOL</small></span></div>
       </div>
@@ -250,7 +252,7 @@ export default function TodayView() {
                 <div className={upcoming ? "e2-cd" : "e2-cd word"}>
                   {upcoming ? <Digits ms={kick! - now!} /> : blitz.state === "live" ? "Under way" : blitz.state === "open" ? "–" : "Full time"}
                 </div>
-                <p className="e2-small e2-muted">Squads lock at their own kick-off.</p>
+                {(blitz.state === "open" || blitz.state === "live") && <p className="e2-small e2-muted">Squads lock at their own kick-off.</p>}
               </>
             ) : (
               <p className="who e2-small e2-muted" style={{ margin: "16px 0 0" }}>No matchday scheduled yet</p>

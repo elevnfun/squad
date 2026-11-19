@@ -37,6 +37,8 @@ export type Me = {
   wallet: string; balance: number; requirement: number; squads_allowed: number; is_admin: boolean;
   faucet: { amount: number; claimed: boolean } | null;   // the devnet test season's free tokens; null when off
   username: string | null; username_next_change: string | null;
+  access?: { blitz: boolean; draft: boolean };                                   // what the wallet's $ELEVN unlocks
+  winnings?: { ready_sol: number; locked_sol: number; frozen: boolean };
   chat: { can_post: boolean; reason: "username" | "squad" | "banned" | "muted" | null };
   squads:{ id: number; league: string; slot: number; name: string | null; frozen_at: string | null; unpaid: boolean; can_delete: boolean }[];
 };
