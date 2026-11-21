@@ -156,3 +156,52 @@ for the opening 8 s (timeline 0-8 s).
 ## Desert Eagle analysis, first pass (sandbox, not yet frame by frame)
 25.7 s, 25 fps, 720x900 with a Higgsfield prompt header above the picture. Automatic cut points at about 1.6, 2.6,
 4.6, 5.6, 6.4, 12.6, 13.1, 15.5, 18.6, 20.6, 21.5, 25.6 s: most land on whole seconds, with a long held hero section from 6.4 to 12.6 s.
+
+## Section: from the goal to the platform (8.0-14.0 s, 6 s, 8 beats)
+Replaces old shots 4, 5 and 6. Beats are 0.75 s: 8.0, 8.75, 9.5, 10.25, 11.0, 11.75, 12.5, 13.25, 14.0.
+The 10 s already made (clips A+B) fill 0-8 s; their goal moment is at about 8.4 s of raw footage, so the join trims
+about 0.4 s from the start so the ball is in the net on 8.0. The exact frame is measured when I cut it.
+
+| Sec | What is seen | Move and transition | Music | Effects |
+|---|---|---|---|---|
+| 8.0-8.75 | Clip B's goal view, net, floodlights. Slow motion (about 35% speed), the broadcast score graphic drops in, drawn in code | Speed ramp: slow on the goal | Drop lands, then ducked about 7 dB under the roar (not cut) | Crowd roar rises over the goal, net thump |
+| 8.75-9.5 | The same picture rushes backwards: the picture shrinks into a TV, gaining its frame, screen glow, reflections on the couch and table, with radial motion blur and a 3 degree rotation that settles | Fast pull-back, snap on **9.5** with a 3-frame overshoot and a glow flash | Ducked | Rising whoosh, a snap on 9.5 |
+| 9.5-10.25 | Student dorm room at evening, lit mainly by the TV. A 19-year-old student alone on a couch, laptop on his knees showing his Blitz squad with Haaland as captain (real elevn screen). The TV plays a broadcast replay of the strike | Locked camera, small parallax drift | Ducked | Room tone, muffled crowd from the TV |
+| 10.25-11.0 | He jumps up and celebrates, arms up, shouting. The laptop stays visible, left open on the cushion | Hold | Ducked, roar and shout clear | Viewer's shout and cheer, couch thump |
+| 11.0-12.5 | Camera drops from the celebrating viewer down and **through** the laptop screen, the real elevn screen swelling until it fills the frame | Push-in with motion blur, a flash as it passes the glass, **lands on 12.5** | Music back to full on 11.0 (the bar line) | Whoosh, soft glass pass, low swell |
+| 12.5-14.0 | Blitz screen: Haaland's points climb, the captain double (x2) applies, the viewer's place rises on the Blitz matchday board | Counters tick on beats 12.5, 13.25; a rank roll lands on **14.0** | Full | Clean interface ticks, one chime on the rank change |
+
+Then the platform section starts on 14.0 with the tabs (old shot 7) and continues as in the first brief.
+
+### How each part is made
+- **Join with clip B.** The pull-back starts from clip B's last frame at full size. The same frame becomes the TV picture
+  once the move lands, so teams, kits, stadium and angle match exactly. The TV then plays a replay of the strike cut from
+  clips A+B, so after the reveal the match keeps playing from footage already paid for.
+- **The room (new generation).** One still of the room first, then one 5 s locked-camera clip from it (viewer from behind and
+  to the side so the laptop screen faces the camera, TV across the room on the right, viewer on the left so he does not cross the TV).
+  The model draws the TV and laptop screens; I cover both with the real pictures, so it never invents the interface or its text.
+  No blue light: the room is lit warm white from the TV.
+- **Screens.** Copies of the real mockup pages (`blitz-pick`, `today`, `ranks`) in a browser, with a Man City v Chelsea
+  fixture, Haaland as captain and counting numbers, using web/DESIGN.md colours and type. The mockups are not edited.
+- **Done in code (free):** speed ramp, pull-back, TV frame and glow, push through the screen, score graphic, counters, sound mix.
+- **Sound:** crowd roar, shout and cheer, whooshes and ticks. Whooshes, hits and ticks come from Katana's free library. Crowd and
+  the viewer's shout are generated at about 1 credit per clip.
+
+### Price (live quotes)
+| Item | Credits |
+|---|---|
+| Room still, gpt_image_2_6 at 0.75, up to 3 takes | up to 2.25 |
+| Room clip, Seedance 2.5, 5 s, 720p (1080p quoted at 80, not needed) | 35 |
+| One retry of the room clip, if the first is unusable | 35 |
+| Crowd roar, shout, cheer: about 5 clips, rerolls included | about 8 |
+| **Section total with the retry** | **about 80** |
+Without the retry about 45. Balance now about 1,025, so about 945 after the section with the retry.
+
+### What may go wrong
+- The match on the TV after the reveal is reused footage (a replay), not new action.
+- The viewer's arms may cross the TV or laptop in the clip. I will cover the screens in order, and if it fails
+  I will report the frame. A cutout of the viewer would cost extra (not quoted).
+- The pull-back and the push are built from one still room, so room depth is faked with scale and slight rotation, not true 3D.
+- The room is one generated clip, so the same viewer, clothes and room hold in every shot by construction.
+- The Katana session expires at 03:11 UTC; I will open a new one if it has lapsed.
+- Music is ducked at the goal as you asked, so the drop is quieter than the track's own peak; the drop is still audible under the roar.
