@@ -834,12 +834,10 @@ def contest_detail(contest_id: int, conn=Depends(db)):
 
 
 def board_rows(conn, c):
-    """Every result of a contest, ranked. A live board is rebuilt first; places are filled in on the fly
+    """Every result of a contest, ranked. A live board is worked out from the scores (nothing written); places are filled in on the fly
     unless the contest is final (then the stored places stand, ties included)."""
-    if c["state"] not in ("final", "rolled"):
-        contests.build_results(conn, c["id"])
-        conn.commit()
-    rows = contests.board(conn, c["id"], 1_000_000)
+    live = c["state"] not in ("final", "rolled")
+    rows = contests.live_board(conn, c["id"]) if live else contests.board(conn, c["id"], 1_000_000)
     if c["state"] not in ("final", "rolled"):
         rows.sort(key=lambda r: (-r["points"], -r["captain_points"], r["wallet"]))
         prev = None

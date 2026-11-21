@@ -154,8 +154,8 @@ def tick(conn, now=None, sol_usd=None):
 
 
 # ---------------------------------------------------------------- results ---
-def build_results(conn, contest_id):
-    """(Re)write the results rows of a contest from the scores. Rows already final are left alone."""
+def _results_select(conn, contest_id):
+    """(select, args) giving (contest_id, wallet, points, captain_points) for every wallet of a contest."""
     kind, week = conn.execute("SELECT kind, week_start FROM contests WHERE id = %s", (contest_id,)).fetchone()
     if kind == "blitz_week":        # the sum of a wallet's best 3 matchday totals that week (all of them, if fewer)
         select, args = ("""SELECT %s, t.wallet, SUM(t.points), SUM(t.captain_points) FROM (
@@ -169,6 +169,21 @@ def build_results(conn, contest_id):
         select, args = ("""SELECT e.contest_id, e.wallet, COALESCE(SUM(s.points), 0), COALESCE(SUM(s.captain_points), 0)
                            FROM entries e LEFT JOIN entry_scores s ON s.entry_id = e.id
                            WHERE e.contest_id = %s GROUP BY e.contest_id, e.wallet""", (contest_id,))
+    return select, args
+
+
+def live_board(conn, contest_id):
+    """A board that is not final, worked out from the scores without writing anything (safe in a GET).
+    Same row shape as `board`; places are left to the caller. The weekly Blitz board reads the matchday
+    results rows, which the minute job keeps fresh."""
+    select, args = _results_select(conn, contest_id)
+    return [{"place": None, "wallet": w, "points": p, "captain_points": c, "prize_lamports": 0}
+            for _, w, p, c in conn.execute(select, args).fetchall()]
+
+
+def build_results(conn, contest_id):
+    """(Re)write the results rows of a contest from the scores. Rows already final are left alone."""
+    select, args = _results_select(conn, contest_id)
     conn.execute(f"""INSERT INTO results (contest_id, wallet, points, captain_points) {select}
                      ON CONFLICT (contest_id, wallet) DO UPDATE
                      SET points = EXCLUDED.points, captain_points = EXCLUDED.captain_points

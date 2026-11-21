@@ -31,11 +31,21 @@ def draft_step(conn, now):
             "scored": sum(draft.score(conn, i, now) for i in ids)}
 
 
+def results_step(conn):
+    """Keep the results rows of every unsettled contest fresh (matchdays first: the weekly board reads them)."""
+    ids = [r[0] for r in conn.execute("""SELECT id FROM contests WHERE state IN ('open', 'live', 'review')
+                                         ORDER BY (kind = 'blitz_week'), id""")]
+    for i in ids:
+        contests.build_results(conn, i)
+    return len(ids)
+
+
 def run_once(conn, rpc, now=None):
     now = now or datetime.now(timezone.utc)
     steps = [("ensure", lambda: contests.ensure(conn, now)),
              ("blitz", lambda: blitz_step(conn, now)),
              ("draft", lambda: draft_step(conn, now)),
+             ("results", lambda: results_step(conn)),
              ("tick", lambda: contests.tick(conn, now)),
              ("expire", lambda: winnings.expire(conn, now=now)),
              ("reconcile", lambda: winnings.reconcile(conn, rpc, now))]
