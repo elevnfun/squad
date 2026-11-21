@@ -6,8 +6,8 @@ For a new session that continues the elevn X promo video. Read `docs/design/vide
 ## Owner's rules for this work
 - Never spend Higgsfield credits without telling him the price and getting a yes. Katana's own "never ask" rule is overridden.
 - Made with Higgsfield Katana. Football is a realistic broadcast-style night match, Man City v Chelsea, real kits and players,
-  scorer Haaland (the same player is captain on the laptop, with Foden and Palmer). No broadcaster or competition logos, trophies,
-  sponsor names. Files need no "DRAFT" label (owner changed this).
+  scorer Haaland (the same player is captain on the laptop, with Foden and Palmer). The owner lifted the rules on competition logos,
+  trophies, sponsor names, broadcaster logos and names on shirts (2026-11-21): none of those are restricted any more. Files need no "DRAFT" label.
 - Prize amounts in SOL only (the $500 weekly is the exception). "Blitz matchday", never "daily". No blue light. No invented earnings claims.
 - Music is the owner's mp3 (42.06 s, 80 BPM, drop at about 8.0 s). Never replace it. Duck it for crowd moments and bring it back on a beat.
 - Short, plain replies. Tell him what is weak.

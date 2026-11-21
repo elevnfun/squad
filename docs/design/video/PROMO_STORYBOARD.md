@@ -30,8 +30,8 @@ now a reference for pace and energy only. The Desert Eagle clip stays the refere
   example Manchester City v Chelsea, in their real kits and colours. Same realistic top-level match, full
   stadium, live-TV look. The spine is unchanged. The scorer is the player in the viewer's Blitz squad on the
   laptop, with his real name on the elevn screen.
-- **Prompt rules kept as defaults** (the owner did not lift them): no broadcaster logos, no competition
-  logos or trophies, no sponsor names on shirts, no anthem. Every frame is checked for stray text.
+- **Prompt rules (owner, 2026-11-21): the restrictions on broadcaster logos, competition logos, trophies, sponsor names and names on shirts are lifted.**
+  Garbled or invented text is still checked in every frame.
 - **Swappable.** Camera angles, timing and transitions do not depend on the kits, so the same storyboard can
   be remade with other or invented teams.
 - **If Higgsfield refuses** a real face or badge, I do not work around it. I report which shot was blocked and
@@ -63,8 +63,7 @@ G = generated football clip. S = real elevn screen from `docs/design/mockups/sho
 | 15 | 38.0-42.0 | Glass ball swells, logo, elevn.fun | | end | "Weekly $500. Play free." |
 
 Checks against the rules: SOL only (the $500 weekly is the one exception, named as a weekly prize and
-nothing more); "Blitz matchday", never "daily"; no blue grade; no real players, clubs, kits, badges or
-sponsors; no promises of earnings; no dollar value beside any prize.
+nothing more); "Blitz matchday", never "daily"; no blue grade; real teams and players allowed (owner, 2026-11-21), no logo, trophy, sponsor or shirt-name restrictions; no promises of earnings; no dollar value beside any prize.
 
 ## Sound plan
 M = the owner's track. Mix target: about -14 LUFS, true peak under -1.5 dBTP, checked on a phone-speaker
