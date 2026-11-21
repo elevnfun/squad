@@ -158,6 +158,7 @@ export default function Intro() {
         autoPlay muted playsInline preload="auto" style={FILL} suppressHydrationWarning />
       {/* when the intro is off, stop the hidden video from loading at all (runs as the HTML is parsed) */}
       <script dangerouslySetInnerHTML={{ __html: STOP_IF_OFF }} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img id="intro-whip" src="/intro/elevn-intro-whip.jpg" alt="" style={{ ...FILL, opacity: 0 }} />
       <div id="intro-fly-x" style={{ position: "absolute", left: 0, top: 0, willChange: "transform" }}>
         <div id="intro-fly-y" style={{ willChange: "transform" }}>

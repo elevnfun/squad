@@ -6,10 +6,10 @@
 // happened; this page draws the goal, the keeper, the ball flight and the result. Ranked games need a connected wallet
 // and are limited per day; practice is unlimited and works for guests (nothing is saved).
 // Data: GET /api/shootout, POST /api/shootout/start, POST /api/shootout/{token}/shoot and /keep (all in lib/api.ts).
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/components/auth";
 import {
-  ApiError, ShootoutGame, ShootoutInfo, ShootoutKick, ShootoutMode, ShootoutPower, ShootoutRow, ShootoutScore, ShootoutSide,
+  ApiError, ShootoutInfo, ShootoutKick, ShootoutMode, ShootoutPower, ShootoutRow, ShootoutScore, ShootoutSide,
   fetchShootout, shootoutKeep, shootoutShoot, shortWallet, startShootout,
 } from "@/lib/api";
 import "./shootout.css";
@@ -32,6 +32,8 @@ const BOARD_ROWS = 10;
 const GOAL = { l: 100, r: 700, t: 56, b: 262 };
 const BACK = { l: 146, r: 654, t: 82, b: 246 };
 const VB_Y = 24, VB_H = 392;     // the visible slice of the scene
+// the visible slice sideways: wide on a desktop, trimmed to the posts on a phone so the goal uses the full width
+const VB_WIDE = { x: 0, w: 800 }, VB_NARROW = { x: 76, w: 648 };
 const KS = 1.12;                  // the keeper's scale
 const SPOT = { x: 400, y: 386, r: 17 };
 const TX: Record<ShootoutSide, number> = { left: 200, centre: 400, right: 600 };
@@ -73,29 +75,35 @@ function keeperEnd(side: ShootoutSide): Keeper {
 }
 
 // where a kick ends up: the ball's end point and what it does after it gets there
-function ballPlan(kick: ShootoutKick, kind: "shoot" | "keep", power: ShootoutPower | null, round: number) {
+// (the server names the power of every kick it resolves, the opponent's too, so both are drawn as they were played)
+function ballPlan(kick: ShootoutKick, power: ShootoutPower | null) {
   const side = kick.shot_side;
   const key = keeperEnd(kick.keeper_side);
-  const ty = power ? TY[power] : [TY.medium, TY.low, TY.high][(round + SIDES.indexOf(side)) % 3];
+  const pw = kick.power ?? power ?? "medium";
+  const ty = TY[pw];
   let end = { x: TX[side], y: ty, r: 10 };
-  let after = { x: end.x + (side === "left" ? 7 : side === "right" ? -7 : 0), y: end.y + 10, r: 8.5 };
+  // a goal ends in the net behind the line: smaller (further away) and settling towards the net's floor
+  let after = { x: end.x + (side === "left" ? 7 : side === "right" ? -7 : 0), y: Math.min(end.y + 22, BACK.b - 8), r: 8 };
   let over = false;
   if (kick.result === "missed") {
-    over = side === "centre" || power === "high" || (power == null && round % 2 === 0);
-    end = over ? { x: TX[side], y: 8, r: 8 } : { x: side === "left" ? 56 : 744, y: 150, r: 8 };
-    after = { x: end.x + (over ? 0 : side === "left" ? -30 : 30), y: end.y - (over ? 30 : 0), r: 6 };
+    over = side === "centre" || pw === "high";
+    // over: just above the bar and still in view; wide: beside the post, then rolling on
+    end = over ? { x: TX[side], y: 38, r: 9 } : { x: side === "left" ? 82 : 718, y: 150, r: 9 };
+    after = { x: end.x + (over ? 0 : side === "left" ? -6 : 6), y: end.y - (over ? 8 : 0), r: over ? 7 : 8 };
   } else if (kick.result === "saved") {
     const h = hands(key);
     const pick = side === "left" ? (h[0][0] < h[1][0] ? h[0] : h[1]) : side === "right" ? (h[0][0] > h[1][0] ? h[0] : h[1]) : (h[0][1] < h[1][1] ? h[0] : h[1]);
     end = { x: pick[0], y: pick[1], r: 10 };
-    after = { x: end.x + (side === "left" ? -34 : side === "right" ? 34 : 0), y: end.y + 44, r: 11 };
+    // low and medium: held in the gloves. High: too hot to hold, pushed away to the side and down
+    after = pw === "high"
+      ? { x: end.x + (side === "left" ? -46 : side === "right" ? 46 : 38), y: end.y + 38, r: 11 }
+      : { x: end.x, y: end.y + 3, r: 10 };
   }
-  void kind;
   return { end, after, key, over, ripple: kick.result === "goal" };
 }
 
 const NET_V = 20, NET_H = 9;
-function Net({ ripple }: { ripple: number }) {
+function netLines() {
   const lines: React.ReactNode[] = [];
   for (let i = 0; i <= NET_V; i++) {
     const x = lerp(BACK.l, BACK.r, i / NET_V);
@@ -117,6 +125,15 @@ function Net({ ripple }: { ripple: number }) {
     const f = i / 5;
     lines.push(<line key={`tl${i}`} x1={lerp(GOAL.l, BACK.l, f)} y1={lerp(GOAL.t, BACK.t, f)} x2={lerp(GOAL.r, BACK.r, f)} y2={lerp(GOAL.t, BACK.t, f)} />);
   }
+  return lines;
+}
+const NET_LINES = netLines();
+// the net's mesh drawn in front of the ball once a goal is in, so the ball sits behind the strings
+function NetFront() {
+  return <g className="so-netf" fill="none" stroke="rgba(244,244,241,.34)" strokeWidth="1" pointerEvents="none">{NET_LINES}</g>;
+}
+function Net({ ripple }: { ripple: number }) {
+  const lines = NET_LINES;
   return (
     <g className={`so-net${ripple ? ` rip${ripple % 2}` : ""}`} fill="none" stroke="rgba(244,244,241,.2)" strokeWidth="1">
       <polygon points={`${BACK.l},${BACK.t} ${BACK.r},${BACK.t} ${BACK.r},${BACK.b} ${BACK.l},${BACK.b}`} fill="rgba(6,7,9,.55)" stroke="none" />
@@ -191,7 +208,7 @@ function BallFigure({ b }: { b: Ball }) {
   );
 }
 
-function Scene({ anim, aim, power, mode }: { anim: Anim; aim: ShootoutSide | null; power: ShootoutPower; mode: "idle" | "shoot" | "keep" }) {
+function Scene({ anim, aim, power, mode, vb }: { anim: Anim; aim: ShootoutSide | null; power: ShootoutPower; mode: "idle" | "shoot" | "keep"; vb: { x: number; w: number } }) {
   const stripes = useMemo(() => {
     const out: React.ReactNode[] = [];
     for (let i = -14; i < 14; i += 2) {
@@ -201,7 +218,7 @@ function Scene({ anim, aim, power, mode }: { anim: Anim; aim: ShootoutSide | nul
     return out;
   }, []);
   return (
-    <svg className="so-svg" viewBox={`0 ${VB_Y} 800 ${VB_H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <svg className="so-svg" viewBox={`${vb.x} ${VB_Y} ${vb.w} ${VB_H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="so-ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#181b21" /><stop offset=".5" stopColor="#12151a" /><stop offset="1" stopColor="#0c0e11" /></linearGradient>
         <linearGradient id="so-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#0c0e11" /><stop offset="1" stopColor="#14171c" /></linearGradient>
@@ -236,6 +253,7 @@ function Scene({ anim, aim, power, mode }: { anim: Anim; aim: ShootoutSide | nul
         </g>
       )}
       <BallFigure b={anim.ball} />
+      {anim.ripple > 0 && <NetFront />}
     </svg>
   );
 }
@@ -263,6 +281,10 @@ function Arrow({ side }: { side: ShootoutSide }) {
   );
 }
 
+const NARROW_Q = "(max-width: 700px)";
+const subNarrow = (cb: () => void) => { const m = window.matchMedia(NARROW_Q); m.addEventListener("change", cb); return () => m.removeEventListener("change", cb); };
+const useNarrow = () => useSyncExternalStore(subNarrow, () => window.matchMedia(NARROW_Q).matches, () => false);
+
 const wait = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
 const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Something went wrong. Try again.");
 
@@ -270,6 +292,9 @@ const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Something 
 export default function ShootoutView() {
   const { wallet, token, signIn, signingIn } = useAuth();
   const signedIn = Boolean(wallet && token);
+  const vb = useNarrow() ? VB_NARROW : VB_WIDE;
+  // where the goal sits inside the stage, as a share of its width, for the three click areas
+  const stageVars = { "--gl": `${((GOAL.l - vb.x) / vb.w) * 100}%`, "--gw": `${((GOAL.r - GOAL.l) / vb.w) * 100}%`, aspectRatio: `${vb.w} / ${VB_H}` } as React.CSSProperties;
 
   const [info, setInfo] = useState<ShootoutInfo | null>(null);
   const [infoDown, setInfoDown] = useState(false);
@@ -319,8 +344,8 @@ export default function ShootoutView() {
   const inKick = busy || stamp != null;
 
   // ---- the kick: ask the server, then draw it
-  const playKick = useCallback((kick: ShootoutKick, kind: "shoot" | "keep", pw: ShootoutPower | null, round: number) => new Promise<void>((resolve) => {
-    const plan = ballPlan(kick, kind, pw, round);
+  const playKick = useCallback((kick: ShootoutKick, pw: ShootoutPower | null) => new Promise<void>((resolve) => {
+    const plan = ballPlan(kick, pw);
     const reduce = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const finalAnim: Anim = {
       ball: { x: plan.after.x, y: plan.after.y, r: plan.after.r, spin: 0, shadow: 0 }, k: plan.key, ripple: plan.ripple ? 1 : 0, moving: true,
@@ -328,7 +353,7 @@ export default function ShootoutView() {
     if (reduce) { setAnim(finalAnim); resolve(); return; }
     const T_BALL = 620, T_KEEP_AT = 90, T_KEEP = 520, T_END = 840;
     const t0 = performance.now();
-    const arc = pw === "low" ? 14 : pw === "high" ? 46 : 30;
+    const arc = kick.power === "low" ? 14 : kick.power === "high" ? 46 : 30;
     const frame = (now: number) => {
       if (!alive.current) { resolve(); return; }
       const el = now - t0;
@@ -362,9 +387,9 @@ export default function ShootoutView() {
       const res = kind === "shoot" ? await shootoutShoot(g.token, side, power, token) : await shootoutKeep(g.token, side, token);
       if (!alive.current) return;
       const k = res.kick ?? res.kicks[res.kicks.length - 1];
-      await playKick(k, kind, pw, g.round);
+      await playKick(k, pw);
       if (!alive.current) return;
-      const over = k.result === "missed" && (k.shot_side === "centre" || pw === "high" || (pw == null && g.round % 2 === 0));
+      const over = k.result === "missed" && (k.shot_side === "centre" || k.power === "high");
       const hist = [...g.history, { kind, result: k.result }];
       setStamp({ kind, result: k.result, over });
       setGame({ ...g, history: hist, score: res.score });
@@ -482,7 +507,7 @@ export default function ShootoutView() {
             <li>Aim at a third of the goal and choose a power. Then dive the right way.</li>
             <li>Most goals wins. {mode === "ranked" ? "It counts on today's board." : "Practice is not on the board."}</li>
           </ul>
-          <div className="so-act"><button type="button" className="e2-btn e2-btn-gold" onClick={() => start(mode)} disabled={busy}>{busy ? "Starting…" : mode === "ranked" ? "Start ranked game" : "Start practice game"}</button></div>
+          <div className="so-act"><button type="button" className="e2-btn e2-btn-gold" onClick={() => start(mode)} disabled={busy}>{busy ? "Starting…" : "Start game"}</button></div>
           {!signedIn && mode === "practice" && <p className="e2-small e2-muted">As a guest nothing is saved. Connect a wallet for ranked games.</p>}
           {err && <p className="so-err" role="alert">{err}</p>}
         </div>
@@ -571,8 +596,8 @@ export default function ShootoutView() {
 
         <div className="so-play">
           <div className="so-stagewrap">
-            <div className="so-stage" data-mode={gameMode} data-busy={inKick ? "1" : "0"}>
-              <Scene anim={anim} aim={aim} power={power} mode={gameMode} />
+            <div className="so-stage" data-mode={gameMode} data-busy={inKick ? "1" : "0"} style={stageVars}>
+              <Scene anim={anim} aim={aim} power={power} mode={gameMode} vb={vb} />
               <div className="so-thirds" role="radiogroup" aria-label={gameMode === "keep" ? "Where to dive" : "Where to aim"} onKeyDown={onGoalKey}>
                 {SIDES.map((s, i) => (
                   <button key={s} type="button" role="radio" aria-checked={aim === s} aria-label={goalLabel(s)} data-side={s}

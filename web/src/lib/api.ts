@@ -1,7 +1,7 @@
 // Typed client for the $ELEVN Python API (proxied at /api by next.config.ts).
 
 export type Me = {
-  wallet: string; balance: number; requirement: number; squads_allowed: number; is_admin: boolean;
+  wallet: string; balance: number; requirement: number; is_admin: boolean;
   faucet: { amount: number; claimed: boolean } | null;   // the devnet test season's free tokens; null when off
   username: string | null; username_next_change: string | null;
   access?: { blitz: boolean; draft: boolean };                                   // what the wallet's $ELEVN unlocks

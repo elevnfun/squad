@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth";
+import FaucetCard from "@/components/FaucetCard";
 import {
   api, ApiError, Board, BlitzDay, BlitzMineFull, Contest, ContestState, DraftMineFull, fetchBlitzDay, fetchBlitzMineFull, fetchDraftMine, sol, Today,
 } from "@/lib/api";
@@ -444,6 +445,7 @@ export default function TodayView() {
               </div>
               <Link className="e2-btn e2-btn-line e2-btn-sm" href="/shootout">Play</Link>
             </article>
+            <FaucetCard />
           </div>
         </div>
         <div className="e2-col" style={{ "--n": 4 } as React.CSSProperties}>

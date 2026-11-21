@@ -33,7 +33,7 @@
 
 /* play area */
 .so-play { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(280px, 1fr); gap: 32px; align-items: stretch; }
-.so-stage { position: relative; aspect-ratio: 800 / 392; border-radius: 14px; overflow: hidden; border: 1px solid var(--steel-edge); background: #0c0e11; }
+.so-stage { position: relative; aspect-ratio: 800 / 392; --gl: 12.5%; --gw: 75%; border-radius: 14px; overflow: hidden; border: 1px solid var(--steel-edge); background: #0c0e11; }
 .so-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .so-sway { animation: so-sway 2.6s ease-in-out infinite alternate; }
 @keyframes so-sway { from { transform: translateX(-7px); } to { transform: translateX(7px); } }
@@ -41,7 +41,7 @@
 @keyframes so-rip { 0% { transform: scale(1); } 35% { transform: scale(1.035, 1.05); } 100% { transform: scale(1); } }
 .so-aim { transition: none; }
 
-.so-thirds { position: absolute; left: 12.5%; top: 8.16%; width: 75%; height: 52.55%; display: grid; grid-template-columns: repeat(3, 1fr); }
+.so-thirds { position: absolute; left: var(--gl); top: 8.16%; width: var(--gw); height: 52.55%; display: grid; grid-template-columns: repeat(3, 1fr); }
 .so-third { position: relative; border: 0; border-left: 1px dashed rgba(244,244,241,.0); background: transparent; cursor: pointer; padding: 0; display: flex; align-items: flex-start; justify-content: center;
   transition: background var(--dur-hover) var(--ease), box-shadow var(--dur-hover) var(--ease); }
 .so-third:disabled { cursor: default; }
@@ -55,10 +55,13 @@
 .so-stage[data-busy="1"] .so-cue { opacity: 0 !important; }
 .so-hush { position: absolute; inset: 0; background: rgba(10,11,13,.18); pointer-events: none; }
 
-.so-stamp { position: absolute; left: 50%; top: 77%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 28px 10px; border-radius: 14px;
-  background: rgba(10,11,13,.78); border: 1px solid var(--edge-control); backdrop-filter: blur(8px); animation: so-stamp var(--dur-fast) var(--ease); pointer-events: none; white-space: nowrap; }
-@keyframes so-stamp { from { opacity: 0; transform: translate(-50%, -46%) scale(.94); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
-.so-word { font-family: var(--e2-display); font-weight: 700; text-transform: uppercase; font-size: clamp(36px, 5.2vw, 76px); line-height: 1; letter-spacing: .03em; }
+/* the result stamp sits on the grass below the goal line (never over the keeper or the ball) and fades out after about a second */
+.so-stamp { position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 0; padding: 4px 24px 6px; border-radius: 12px;
+  background: rgba(10,11,13,.78); border: 1px solid var(--edge-control); backdrop-filter: blur(8px); pointer-events: none; white-space: nowrap;
+  animation: so-stamp var(--dur-fast) var(--ease), so-stamp-out 300ms var(--ease) 950ms forwards; }
+@keyframes so-stamp { from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(.94); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+@keyframes so-stamp-out { to { opacity: 0; } }
+.so-word { font-family: var(--e2-display); font-weight: 700; text-transform: uppercase; font-size: clamp(30px, 4vw, 56px); line-height: 1; letter-spacing: .03em; }
 .so-sub { font-size: 14px; font-weight: 500; color: var(--muted); }
 
 /* side column */
@@ -125,9 +128,9 @@
   .so-side.r { align-items: flex-end; flex-direction: column; }
   .so-mks { gap: 5px; } .so-mk { width: 20px; height: 20px; } .so-mk svg { width: 12px; height: 12px; }
   .so-score { font-size: 36px; }
-  .so-stage { border-radius: 10px; margin: 0 -4px; }
-  .so-stamp { top: 80%; padding: 4px 18px 6px; }
-  .so-word { font-size: 34px; }
+  .so-stage { border-radius: 10px; margin: 0 -8px; }
+  .so-stamp { bottom: 4%; padding: 2px 16px 4px; }
+  .so-word { font-size: 28px; }
   .so-sub { font-size: 12px; }
   .so-cue { font-size: 12px; margin-top: 4px; letter-spacing: .04em; }
   .so-cue svg { width: 28px; height: 28px; }

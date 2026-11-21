@@ -166,7 +166,10 @@ export default function BankedView() {
 
   const figure = cap ? (
     <aside className="bk-fig" aria-label={`Captain: ${cap.name}`}>
-      <div className="bk-art"><img src="/blitz-captain.png" alt="" width={688} height={1024} /></div>
+      <div className="bk-art">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/blitz-captain.png" alt="" width={688} height={1024} />
+      </div>
       <div className="bk-lab">
         <span className="bk-row2"><span className="bk-cap">×2</span><span className="bk-name">{cap.name}</span></span>
         <span className="bk-role">Captain · double points</span>

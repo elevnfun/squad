@@ -1,8 +1,9 @@
 // Drives Today, Ranks, Winnings and /admin in a real browser against the local API (see docs/build/RUN_LOCAL.md).
 // A test wallet signs the real sign-in message (ed25519, node crypto). Usage:
-//   node scripts/dev_drive.cjs <step>      step: guest | me | release | after | blitz | draft | all
+//   node scripts/dev_drive.cjs <step>      step: guest | me | release | after | blitz | draft | shootout | all
 //   `blitz` plays a whole matchday on the real API (needs the seed, the API with RUN_JOBS=1 and DATABASE_URL set); see below.
 //   `draft` plays the weekly Draft the same way (a UK Friday to Monday; it moves all six seeded fixtures); see below.
+//   `shootout` plays Penalty Shootout on the real API: a guest practice game, a ranked game, the daily limit, a second wallet vs stored picks.
 // Env: SITE (default http://localhost:3000), OUT (screenshot dir). Keys come from scripts/dev_seed.py's scheme.
 const { chromium } = require("playwright");
 const crypto = require("crypto");
@@ -392,11 +393,150 @@ async function draftFlow(browser, width) {
   await ctx.close();
 }
 
+// ---------------------------------------------------------------- Penalty Shootout, end to end
+const DB = () => process.env.DATABASE_URL || "postgresql://localhost:5433/squad_dev";
+const psql = (sql) => execSync(`psql "${DB()}" -tA -c "${sql.replace(/"/g, '\\"')}"`, { cwd: ROOT }).toString().trim();
+const qshot = (page, name, width, full = true) => page.screenshot({ path: path.join(OUT, `real-shootout-${name}-${width}.png`), fullPage: full });
+// gold buttons that can be seen: judged on the rendered background, since the bar's "Connect wallet" turns outline when the page has a gold one
+const goldCount = (page) => page.evaluate(() => [...document.querySelectorAll("button, a")].filter((el) => {
+  const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+  return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.backgroundImage.includes("242, 193, 78");
+}).length);
+const SIDES3 = ["left", "centre", "right"];
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+// plays one whole game from the start panel: `hook(kind, state)` is called as each result stamp shows. Returns the kicks the server reported.
+async function playGame(page, { start = true, powers = ["low", "medium", "high"], before, hook } = {}) {
+  const kicks = [];
+  page.removeAllListeners("response");
+  page.on("response", async (r) => { if (/\/api\/shootout\/[\w-]+\/(shoot|keep)$/.test(r.url()) && r.request().method() === "POST") { try { const j = await r.json(); if (j.kicks) kicks.splice(0, kicks.length, ...j.kicks); } catch {} } });
+  if (start) await page.getByRole("button", { name: /^Start game$|^Play again$/ }).click();
+  const stage = page.locator(".so-stage");
+  for (let n = 0; n < 12; n++) {
+    if (await page.locator(".so-end").count()) break;
+    await stage.locator(`[data-mode]:not([data-mode=idle])`).waitFor({ timeout: 10000 }).catch(() => {});
+    const mode = await stage.getAttribute("data-mode");
+    if (mode === "idle") break;
+    if (before) await before(mode, n);
+    const side = pick(SIDES3);
+    await page.locator(`.so-third[data-side=${side}]`).click();
+    if (mode === "shoot") {
+      await page.locator(".so-pw button").filter({ hasText: new RegExp(`^${pick(powers)}$`, "i") }).click();
+      await page.getByRole("button", { name: /^Shoot/ }).click();
+    }
+    if (hook && hook.flight) await hook.flight(mode, n);
+    await page.locator(".so-stamp").waitFor({ timeout: 8000 });
+    await page.waitForTimeout(250);
+    const word = (await page.locator(".so-word").innerText()).toLowerCase();
+    if (hook && hook.stamp) await hook.stamp(mode, word, n);
+    await page.locator(".so-stamp").waitFor({ state: "detached", timeout: 8000 });
+  }
+  await page.locator(".so-end").waitFor({ timeout: 15000 });
+  return kicks;
+}
+
+async function shootoutFlow(browser, width) {
+  console.log(`== shootout at ${width}`);
+  psql("DELETE FROM shootout_games; DELETE FROM shootout_sets");
+  const wide = width > 600;
+  // 1. a guest plays a whole practice game: 5 penalties, 5 dives, to the end panel
+  {
+    const { ctx, page } = await open(browser, null, width);
+    await visit(page, "/shootout");
+    await qshot(page, "start", width);
+    check(await goldCount(page) === 1, `guest: one gold button before a game (${await goldCount(page)})`);
+    check(await page.getByRole("button", { name: "Start game", exact: true }).count() === 1, "guest: the gold button reads Start game");
+    check(!/prize/i.test((await page.locator("main").innerText()).replace(/no prize/gi, "")), "page mentions no prize except 'no prize'");
+    const seen = { saved: !wide, goal: !wide, keeping: !wide ? false : true, mid: !wide };
+    let games = 0, kicks = [];
+    while (true) {
+      games++;
+      let sawKeep = false, maxGold = 0;
+      kicks = await playGame(page, {
+        start: true,
+        before: async (mode, n) => {
+          maxGold = Math.max(maxGold, await goldCount(page));
+          if (mode === "keep" && !sawKeep) { sawKeep = true; if (!wide && !seen.keeping) { await qshot(page, "keeping", width); seen.keeping = true; } }
+        },
+        hook: {
+          flight: async (mode, n) => { if (mode === "shoot" && n === 0 && wide && !seen.mid) { await page.waitForTimeout(300); await qshot(page, "midflight", width, false); seen.mid = true; } },
+          stamp: async (mode, word) => {
+          if (wide && word === "saved" && !seen.saved) { await qshot(page, "save", width, false); seen.saved = true; }
+          if (wide && word === "goal" && !seen.goal) { await qshot(page, "goal", width, false); seen.goal = true; }
+        } },
+      });
+      if (!wide || (seen.saved && seen.goal) || games >= 6) break;
+      await page.getByRole("button", { name: "Play again" }).waitFor();
+    }
+    check(kicks.length === 10 && kicks.filter((k) => k.kind === "shoot").length === 5 && kicks.filter((k) => k.kind === "keep").length === 5, "guest: 5 penalties and 5 dives played");
+    const t = await page.locator(".so-end").innerText();
+    check(/Full time/.test(t) && /Practice games are not on the board/.test(t), "guest: the end panel says full time and that practice is not on the board");
+    check(await page.locator(".so-mk.p").count() === 0, "guest: all ten marks filled in");
+    await qshot(page, "end", width);
+    check(await goldCount(page) === 1, `guest: one gold button on the end panel (${await goldCount(page)})`);
+    if (wide) check(seen.saved && seen.goal, `guest: a save and a goal were photographed (${games} game${games > 1 ? "s" : ""})`);
+    await ctx.close();
+  }
+  // 2. a signing wallet: a ranked game, the count drops, the board lists the wallet
+  const { ctx, page } = await open(browser, "me", width);
+  await visit(page, "/shootout"); await signIn(page); await visit(page, "/shootout");
+  check(/10\s*of 10 ranked games left today/.test(await page.locator(".so-meta").innerText()), "me: 10 of 10 ranked games left before playing");
+  check(await page.locator(".so-tabs button.on").innerText() === "Ranked", "me: the Ranked tab is chosen for a connected wallet");
+  check(await goldCount(page) === 1, `me: one gold button before a game (${await goldCount(page)})`);
+  let maxGold = 0;
+  const kicks = await playGame(page, { before: async (mode) => { maxGold = Math.max(maxGold, await goldCount(page)); if (mode === "keep") check(true, "me: keep turn reached"); } });
+  check(maxGold <= 1, `me: never more than one gold button during the game (${maxGold})`);
+  check(kicks.length === 10, "me: ranked game played to the end");
+  await page.waitForTimeout(800);
+  check(/9\s*of 10 ranked games left today/.test(await page.locator(".so-meta").innerText()), "me: the count dropped to 9 of 10");
+  const home = await apiGet(page, "/shootout");
+  check(home.ranked_left === 9 && home.board.length === 1, `API: ranked_left ${home.ranked_left}, board rows ${home.board.length}`);
+  check((await page.locator(".so-row.you").count()) === 1 && /You/.test(await page.locator(".so-row.you").innerText()), "me: the board lists the wallet with a You tag");
+  check(/It counts on today's board/.test(await page.locator(".so-end").innerText()), "me: the end panel says it counts on the board");
+  await qshot(page, "ranked-board", width);
+  const me = psql("SELECT picks FROM shootout_sets WHERE wallet IS NOT NULL ORDER BY id DESC LIMIT 1");
+  check(me.includes("dives"), "DB: the finished ranked game's picks were stored for opponents");
+  const mine = JSON.parse(me);
+  // the daily limit: 9 more finished ranked games in the database take the wallet to 10 of 10
+  const w = b58(Buffer.from(keyOf("me").pub));
+  psql(`INSERT INTO shootout_games (token, wallet, mode, opp, state, goals_for, goals_against, finished_at) SELECT 'dev-limit-' || g || '-' || ${width}, '${w}', 'ranked', '{"shots":[],"dives":[]}', 'done', 3, 1, now() FROM generate_series(1, 9) g`);
+  await visit(page, "/shootout");
+  const lim = await page.locator(".so-pre").innerText();
+  check(/played all 10 ranked games for today/.test(lim) && await page.getByRole("button", { name: "Start game" }).count() === 0, "me: at the limit the page says so and offers no Start button");
+  check(/0\s*of 10 ranked games left today/.test(await page.locator(".so-meta").innerText()), "me: the header says 0 of 10 left");
+  await qshot(page, "limit", width);
+  const r = await page.evaluate(async () => {
+    const t = localStorage.getItem(Object.keys(localStorage).find((k) => k.startsWith("squad.token.")));
+    const x = await fetch("/api/shootout/start", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` }, body: JSON.stringify({ mode: "ranked" }) });
+    return { status: x.status, body: await x.json() };
+  });
+  check(r.status === 400 && /Daily limit reached/.test(r.body.detail || ""), `server refuses an 11th ranked game: ${r.status} "${r.body.detail}"`);
+  await page.getByRole("button", { name: "Play practice" }).click();
+  check(await page.getByRole("button", { name: "Start game", exact: true }).count() === 1, "me: at the limit, practice still starts");
+  await ctx.close();
+  // 3. a second wallet meets the first wallet's stored picks
+  {
+    const { ctx, page } = await open(browser, "ben", width);
+    await visit(page, "/shootout"); await signIn(page); await visit(page, "/shootout");
+    const k2 = await playGame(page);
+    const shots = k2.filter((k) => k.kind === "shoot"), keeps = k2.filter((k) => k.kind === "keep");
+    const dives = shots.map((k) => k.keeper_side).join(), theirShots = keeps.map((k) => k.shot_side).join();
+    // the wallet's stored set is the only other one the first time round, so the opponent is that exactly
+    {
+      check(dives === mine.dives.join() && theirShots === mine.shots.map((s) => s.side).join() && keeps.every((k, i) => k.power === mine.shots[i].power),
+        `ben meets me's stored picks: keeper dived ${dives}, shots came ${theirShots}`);
+    }
+    const home2 = await apiGet(page, "/shootout");
+    check(home2.board.some((x) => x.games >= 1) && (await page.locator(".so-row.you").count()) === 1, "ben: the board lists his wallet too");
+    await ctx.close();
+  }
+}
+
 async function run(step) {
   const browser = await chromium.launch();
   for (const width of [1440, 390]) {
     if (step === "blitz") await blitzFlow(browser, width);
     if (step === "draft") await draftFlow(browser, width);
+    if (step === "shootout") await shootoutFlow(browser, width);
     if (step === "guest" || step === "all") {
       const { ctx, page } = await open(browser, null, width);
       await visit(page, "/today"); await shot(page, "today-guest", width);
