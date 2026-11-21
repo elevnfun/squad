@@ -145,3 +145,14 @@ Opened on request: preset `/katana/chrome-noir-style-edit`, paid tracking (free_
 The session expires 03:11 UTC on 2026-11-21 and is passed with every later generation. Note: this preset's own
 reference is a black-and-white fashion edit, not the Desert Eagle clip, and its form asks for 1-10 images. The
 Desert Eagle clip and the football plan stay the creative brief; the preset was the closest published chrome-on-black match.
+
+## Clip B (2026-11-21)
+Cost 35 credits (Seedance 2.5, from the last frame of test shot 2, via the Katana session). Balance after: about 1,025.
+File: `docs/design/video/tests/test-clipB-goal.mp4` (1280x720, 5 s). Good: the second defender slides in and is beaten,
+the run, the right-foot strike, then a behind-the-goal view of the net under floodlights. Weak: the ball is never seen
+entering the net and the net does not clearly ripple; there is no crowd eruption on camera. Clips A+B join into 10 s
+for the opening 8 s (timeline 0-8 s).
+
+## Desert Eagle analysis, first pass (sandbox, not yet frame by frame)
+25.7 s, 25 fps, 720x900 with a Higgsfield prompt header above the picture. Automatic cut points at about 1.6, 2.6,
+4.6, 5.6, 6.4, 12.6, 13.1, 15.5, 18.6, 20.6, 21.5, 25.6 s: most land on whole seconds, with a long held hero section from 6.4 to 12.6 s.
