@@ -113,7 +113,7 @@ def tick(conn, now=None, sol_usd=None):
     out = []
     rows = conn.cursor(row_factory=dict_row).execute(
         "SELECT * FROM contests WHERE state NOT IN ('final', 'rolled') ORDER BY id").fetchall()
-    for c in sorted(rows, key=lambda c: (KIND_ORDER[c["kind"]], c["id"])):
+    for c in sorted(rows, key=lambda c: (KIND_ORDER[c["kind"]], c["day"] or c["week_start"], c["id"])):
         cid, state = c["id"], c["state"]
         fixtures = fixtures_of(conn, c)
         if not fixtures:
@@ -175,9 +175,11 @@ def build_results(conn, contest_id):
                      WHERE NOT results.is_final""", args)
 
 
-def release(conn, contest_id, by, now=None, sol_usd=None):
+def release(conn, contest_id, by, now=None, sol_usd=None, expect_pot=None):
     """The owner's release (or the automatic one): rank, split the pot and credit the winners. Nothing is sent.
-    Only from state 'review'. Returns [(wallet, place, lamports)]."""
+    Only from state 'review', and a Blitz matchday or Draft week only after the earlier result of its kind.
+    expect_pot (lamports), when given, is the pot the owner checked: a different pot refuses the release.
+    Returns [(wallet, place, lamports)]."""
     from . import winnings
     now = _now(now)
     kind, state = conn.execute("SELECT kind, state FROM contests WHERE id = %s FOR UPDATE", (contest_id,)).fetchone()
@@ -185,12 +187,22 @@ def release(conn, contest_id, by, now=None, sol_usd=None):
         raise ValueError(f"Contest {contest_id} is {state}; only a contest in review can be released.")
     if kind == "blitz_week" and not (sol_usd and sol_usd > 0):
         raise ValueError("The SOL price in dollars is needed to release the weekly Blitz prize.")
+    if kind != "blitz_week" and conn.execute(
+            """SELECT 1 FROM contests WHERE kind = %s AND state = 'review' AND id <> %s
+               AND COALESCE(day, week_start) < (SELECT COALESCE(day, week_start) FROM contests WHERE id = %s)""",
+            (kind, contest_id, contest_id)).fetchone():
+        raise ValueError("Release the earlier result of this kind first.")
     build_results(conn, contest_id)
     if kind == "blitz_week":
         pot = round(CFG["blitz"]["weekly_prize_usd"] / sol_usd * LAMPORTS)
         conn.execute("UPDATE contests SET pot_lamports = %s WHERE id = %s", (pot, contest_id))
     else:
         pots.fund(conn, contest_id)
+    if expect_pot is not None:
+        pot = conn.execute("SELECT pot_lamports FROM contests WHERE id = %s", (contest_id,)).fetchone()[0]
+        if pot != expect_pot:
+            raise ValueError(f"The pot is now {pot / LAMPORTS:.4f} SOL, not the {expect_pot / LAMPORTS:.4f} SOL you checked. "
+                             "Look at the new figures and release again.")
     prizes = pots.settle(conn, contest_id)
     for wallet, _, lamports in prizes:
         if lamports > 0:

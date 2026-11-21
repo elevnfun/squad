@@ -855,11 +855,17 @@ def contest_board(contest_id: int, limit: int = 50, wallet=Depends(optional_wall
     c = contest_row(conn, contest_id)
     rows = board_rows(conn, c)
     users = profiles.names(conn, [r["wallet"] for r in rows])
+    unsettled = c["state"] not in ("final", "rolled")
+    est = {}
+    if unsettled:      # before the result is final: the would-be prize from the shown pot
+        est = {w: lam for w, _, lam in pots.split(shown_pot(conn, c)[0],
+                                                   [(r["wallet"], r["points"], r["captain_points"]) for r in rows])}
 
     def line(r):
+        lam = est.get(r["wallet"], 0) if unsettled else r["prize_lamports"]
         return {"place": r["place"], "wallet": r["wallet"], "username": users.get(r["wallet"]),
                 "points": float(r["points"]), "captain_points": float(r["captain_points"]),
-                "prize_lamports": r["prize_lamports"], "prize_sol": sol(r["prize_lamports"]),
+                "prize_lamports": lam, "prize_sol": sol(lam),
                 "you": r["wallet"] == wallet}
     lines = [line(r) for r in rows]
     return {"contest": contest_json(conn, c), "rows": lines[:max(1, min(limit, 500))],
@@ -1147,13 +1153,14 @@ def admin_contests(sol_usd: float | None = None, _=Depends(admin_wallet), conn=D
 
 class ReleaseIn(BaseModel):
     sol_usd: float | None = None
+    expect_pot_lamports: int
 
 
 @app.post("/api/admin/contests/{contest_id}/release")
 def admin_release(contest_id: int, body: ReleaseIn, admin=Depends(admin_wallet), conn=Depends(db)):
     contest_row(conn, contest_id)
     try:
-        prizes = contests.release(conn, contest_id, admin, sol_usd=body.sol_usd)
+        prizes = contests.release(conn, contest_id, admin, sol_usd=body.sol_usd, expect_pot=body.expect_pot_lamports)
     except ValueError as e:
         conn.rollback()
         raise HTTPException(400, str(e))

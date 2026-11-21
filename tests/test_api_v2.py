@@ -185,7 +185,7 @@ def test_prize_path_through_the_api(world, conn):
     # guests and ordinary players cannot use the admin routes
     assert client.get("/api/admin/contests").status_code == 401
     assert client.get("/api/admin/contests", headers=hdr(player)).status_code == 403
-    assert client.post(f"/api/admin/contests/{cid}/release", json={}, headers=hdr(player)).status_code == 403
+    assert client.post(f"/api/admin/contests/{cid}/release", json={"expect_pot_lamports": 0}, headers=hdr(player)).status_code == 403
 
     listing = client.get("/api/admin/contests", headers=hdr(adm)).json()
     [item] = listing["review"]
@@ -193,10 +193,10 @@ def test_prize_path_through_the_api(world, conn):
     assert item["preview_prizes"][0] == {"wallet": me, "place": 1, "lamports": SOL // 2, "sol": 0.5}
     assert conn.execute("SELECT count(*) FROM winnings").fetchone()[0] == 0     # a preview writes no prize
 
-    r = client.post(f"/api/admin/contests/{cid}/release", json={}, headers=hdr(adm))
+    r = client.post(f"/api/admin/contests/{cid}/release", json={"expect_pot_lamports": SOL}, headers=hdr(adm))
     assert r.status_code == 200, r.text
     assert r.json()["prizes"][0]["lamports"] == SOL // 2 and r.json()["contest"]["state"] == "final"
-    assert client.post(f"/api/admin/contests/{cid}/release", json={}, headers=hdr(adm)).status_code == 400
+    assert client.post(f"/api/admin/contests/{cid}/release", json={"expect_pot_lamports": SOL}, headers=hdr(adm)).status_code == 400
 
     assert client.get("/api/winnings").status_code == 401
     w = client.get("/api/winnings", headers=hdr(player)).json()
@@ -240,7 +240,8 @@ def test_pot_is_estimated_until_release(world, conn):
     c = client.get(f"/api/contests/{cid}").json()
     assert (c["pot_lamports"], c["pot_sol"], c["pot_estimated"]) == (SOL, 1.0, True)
     assert client.get("/api/admin/contests", headers=hdr(adm)).json()["review"][0]["preview_pot_lamports"] == SOL
-    assert client.post(f"/api/admin/contests/{cid}/release", json={}, headers=hdr(adm)).status_code == 200
+    assert client.post(f"/api/admin/contests/{cid}/release", json={"expect_pot_lamports": SOL},
+                              headers=hdr(adm)).status_code == 200
     c = client.get(f"/api/contests/{cid}").json()
     assert (c["pot_lamports"], c["pot_estimated"]) == (SOL, False)
 
@@ -252,9 +253,9 @@ def test_release_errors(world, conn):
                  (date(2026, 11, 17),))
     conn.commit()
     wid = conn.execute("SELECT id FROM contests").fetchone()[0]
-    r = client.post(f"/api/admin/contests/{wid}/release", json={}, headers=hdr(adm))
+    r = client.post(f"/api/admin/contests/{wid}/release", json={"expect_pot_lamports": 0}, headers=hdr(adm))
     assert r.status_code == 400 and "SOL price" in r.json()["detail"]
-    assert client.post("/api/admin/contests/9999/release", json={}, headers=hdr(adm)).status_code == 404
+    assert client.post("/api/admin/contests/9999/release", json={"expect_pot_lamports": 0}, headers=hdr(adm)).status_code == 404
     # the listing shows no prizes for a week until a price is given
     assert client.get("/api/admin/contests", headers=hdr(adm)).json()["review"][0]["preview_prizes"] is None
     given = client.get("/api/admin/contests?sol_usd=250", headers=hdr(adm)).json()["review"][0]
@@ -320,3 +321,60 @@ def test_watcher_freezes_and_unfreezes_a_locked_balance(conn, monkeypatch):
     conn.execute("UPDATE winnings SET locked_lamports = 0 WHERE wallet = %s", (wallet,))
     conn.commit()
     assert wallet not in watcher.players(conn)
+
+
+def test_board_shows_would_be_prizes_before_release(world, conn):
+    client, _, _, _ = world
+    cid = matchday(conn)                                            # live: the pot is only estimated
+    for i, w in enumerate(("wA", "wB", "wC")):
+        enter(conn, cid, w, 60 - i)
+    payouts.add(conn, "pot:blitz", SOL, "test")
+    conn.commit()
+    rows = client.get(f"/api/contests/{cid}/board").json()["rows"]
+    assert [r["prize_lamports"] for r in rows] == [SOL // 2, SOL // 4, SOL * 12 // 100]
+    assert rows[0]["prize_sol"] == 0.5
+    enter(conn, cid, "wD", 60)                                      # a tie for 1st shares places 1 and 2
+    conn.commit()
+    rows = client.get(f"/api/contests/{cid}/board").json()["rows"]
+    assert [r["place"] for r in rows][:2] == [1, 1] and rows[0]["prize_lamports"] == SOL * 375 // 1000
+
+
+def test_release_refuses_a_changed_pot(world, conn):
+    client, _, _, adm = world
+    cid = matchday(conn, state="review")
+    for i, w in enumerate(("wA", "wB", "wC")):
+        enter(conn, cid, w, 60 - i)
+    payouts.add(conn, "pot:blitz", SOL, "test")
+    conn.commit()
+    url = f"/api/admin/contests/{cid}/release"
+    assert client.post(url, json={}, headers=hdr(adm)).status_code == 422          # the checked pot is required
+    payouts.add(conn, "pot:blitz", SOL // 5, "fee income arrives after the preview")
+    conn.commit()
+    r = client.post(url, json={"expect_pot_lamports": SOL}, headers=hdr(adm))
+    assert r.status_code == 400 and "The pot is now 1.2000 SOL, not the 1.0000 SOL you checked" in r.json()["detail"]
+    assert conn.execute("SELECT state, pot_lamports FROM contests WHERE id = %s", (cid,)).fetchone() == ("review", 0)
+    assert conn.execute("SELECT count(*) FROM winnings").fetchone()[0] == 0
+    assert client.post(url, json={"expect_pot_lamports": SOL + SOL // 5}, headers=hdr(adm)).status_code == 200
+
+
+def test_release_in_date_order(world, conn):
+    client, _, _, adm = world
+    fx(conn, 1, t(20, "15:00"), "FT")
+    fx(conn, 2, t(21, "15:00"), "FT")
+    contests.ensure(conn, t(20, "09:00"))
+    days = {d: conn.execute("SELECT id FROM contests WHERE kind = 'blitz_matchday' AND day = %s", (d,)).fetchone()[0]
+            for d in (date(2026, 11, 20), date(2026, 11, 21))}
+    for d, c in days.items():
+        for i, w in enumerate(("wA", "wB", "wC")):
+            enter(conn, c, w, 60 - i)
+    conn.execute("UPDATE contests SET state = 'review' WHERE kind = 'blitz_matchday'")
+    payouts.add(conn, "pot:blitz", SOL, "test")
+    conn.commit()
+    fri, sat = days[date(2026, 11, 20)], days[date(2026, 11, 21)]
+    r = client.post(f"/api/admin/contests/{sat}/release", json={"expect_pot_lamports": SOL}, headers=hdr(adm))
+    assert r.status_code == 400 and r.json()["detail"] == "Release the earlier result of this kind first."
+    assert conn.execute("SELECT state FROM contests WHERE id = %s", (sat,)).fetchone()[0] == "review"
+    assert client.post(f"/api/admin/contests/{fri}/release", json={"expect_pot_lamports": SOL}, headers=hdr(adm)).status_code == 200
+    r = client.post(f"/api/admin/contests/{sat}/release", json={"expect_pot_lamports": SOL // 4}, headers=hdr(adm))
+    assert r.status_code in (200, 400)                              # the earlier one is done: the order rule no longer applies
+    assert "earlier" not in r.text

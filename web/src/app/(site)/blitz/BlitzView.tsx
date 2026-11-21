@@ -479,7 +479,7 @@ export default function BlitzView() {
     else if (!ready.ready) reason = ready.hint;
     else if (checking) reason = "Checking your squad…";
     else if (problems.length) reason = problems.join(" ");
-    else if (blocked) reason = `Hold ${count(NEED)} $ELEVN to save squads.`;
+    else if (blocked) reason = `Hold ${count(NEED)} $ELEVN to save squads. Your picks stay here until you leave the page.`;
     else if (nt?.kind === "ok") reason = <span role="status">{nt.text}</span>;
     else if (!dirty) reason = "Saved. You can change it until kick-off.";
     else reason = signedIn ? `Ready. Squad ${active} can change until kick-off.` : "Ready. Connect a wallet to save it; nothing is saved as a guest.";
@@ -533,7 +533,9 @@ export default function BlitzView() {
         </div>
         <div className="bz-save">
           <p className="e2-small" aria-live="polite">{reason}</p>
-          {signedIn
+          {signedIn && blocked
+            ? <a className="e2-btn e2-btn-gold" href={process.env.NEXT_PUBLIC_ELEVN_BUY_URL ?? "https://jup.ag"} target="_blank" rel="noopener noreferrer">Get $ELEVN</a>
+            : signedIn
             ? <button type="button" className={`e2-btn${canSave ? " e2-btn-gold" : ""}`} disabled={!canSave} onClick={() => saveSquad(active, f.id)}>{busy ? "Saving…" : `Save squad ${active}`}</button>
             : <button type="button" className="e2-btn e2-btn-line" onClick={signIn} disabled={signingIn}>{signingIn ? "Check your wallet…" : "Connect wallet to save"}</button>}
         </div>
@@ -549,6 +551,7 @@ export default function BlitzView() {
     const fifth = Math.floor(contest.pot_sol * 0.05 * 1e9);
     const fifthText = `${contest.pot_estimated ? "about " : ""}${sol(top.find((r) => r.place === 5)?.prize_lamports || fifth)} SOL`;
     const line = top.length ? top[top.length - 1].points : null;
+    const scored = top.some((r) => r.points > 0);   // before the first kick-off everyone is level, so no places yet
     const squadsOpen = (mine?.squads ?? []).filter((s) => s.state === "open").length;
     const label = (r: { username: string | null; wallet: string }) => r.username || shortWallet(r.wallet);
     return (
@@ -560,20 +563,20 @@ export default function BlitzView() {
         {top.length === 0 && <p className="e2-small e2-muted" style={{ padding: "11px 0", borderTop: "1px solid var(--line)" }}>No squads on the board yet.</p>}
         {top.map((r) => (
           <div key={r.wallet} className={`bz-brow${r.you ? " you" : ""}`}>
-            <b>{r.place}</b><span className="nm">{label(r)}{r.you && <span className="bz-you">You</span>}</span><b>{r.points}</b>
+            <b>{scored ? r.place : "–"}</b><span className="nm">{label(r)}{r.you && <span className="bz-you">You</span>}</span><b>{r.points}</b>
           </div>
         ))}
         <div className="bz-pline"><span>Prize line</span></div>
         {you && (you.place == null || you.place > 5) && (
-          <div className="bz-brow you"><b>{you.place ?? "–"}</b><span className="nm">{label(you)}<span className="bz-you">You</span></span><b>{you.points}</b></div>
+          <div className="bz-brow you"><b>{scored ? (you.place ?? "–") : "–"}</b><span className="nm">{label(you)}<span className="bz-you">You</span></span><b>{you.points}</b></div>
         )}
         <div className="bz-lines">
           {signedIn ? (
             <>
               <p className="e2-small" style={{ fontWeight: 600 }}>
-                {!top.some((r) => r.points > 0) ? "Nobody has scored yet. Places appear once the first match kicks off."
+                {!scored ? "Nobody has scored yet. Places appear once the first match kicks off."
                   : you && you.place != null && you.place <= 5
-                  ? `If the day ended now you'd be ${you.place}${["st", "nd", "rd", "th", "th"][you.place - 1]} and win ${sol(you.prize_lamports)} SOL.`
+                  ? `If the day ended now you'd be ${you.place}${["st", "nd", "rd", "th", "th"][you.place - 1]} and win ${contest.pot_estimated ? "about " : ""}${sol(you.prize_lamports)} SOL.`
                   : `If the day ended now you'd win nothing yet. 5th place pays ${fifthText}.`}
               </p>
               {mine && mine.squads.length > 0 && (
@@ -594,6 +597,8 @@ export default function BlitzView() {
     );
   }
 
+  const ukToday = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/London" });
+  const dayWord = contest.day === ukToday ? "today's" : `${new Date(`${contest.day}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", timeZone: "UTC" })}'s`;
   const stamp = now == null ? dayLabel(contest.day) : `${dayLabel(contest.day)} · ${new Date(now).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" })}`;
   const colStyle = (n: number) => ({ "--n": n } as React.CSSProperties);
 
@@ -605,7 +610,7 @@ export default function BlitzView() {
         <div>
           <span className="e2-eyebrow">{stamp}</span>
           <h1 className="bz-h1">Pick your squads</h1>
-          <p className="bz-lead">{allowed >= 3 ? "Three squads on any three of today's matches, three players each." : `${allowed === 1 ? "One squad" : "Two squads"} on today's matches, three players each.`} Each squad locks at its own kick-off.</p>
+          <p className="bz-lead">{allowed >= 3 ? `Three squads on any three of ${dayWord} matches, three players each.` : `${allowed === 1 ? "One squad" : "Two squads"} on ${dayWord} matches, three players each.`} Each squad locks at its own kick-off.</p>
           <p className="bz-meta">{readyCount} <small>of {allowed} ready{!signedIn ? " · nothing saved yet" : ""}</small></p>
         </div>
         <div className="w"><span className="e2-word" aria-hidden="true">Blitz</span></div>
@@ -613,7 +618,7 @@ export default function BlitzView() {
 
       <div className="e2-g" style={{ paddingBottom: 128, alignItems: "start" }}>
         <div className="e2-col bz-fx" style={colStyle(4)}>
-          <span className="e2-eyebrow bz-fxhd">{`Today's ${fixtures.length} fixture${fixtures.length === 1 ? "" : "s"}`}</span>
+          <span className="e2-eyebrow bz-fxhd">{`${dayWord[0].toUpperCase()}${dayWord.slice(1)} ${fixtures.length} fixture${fixtures.length === 1 ? "" : "s"}`}</span>
           <div className="e2-card bz-flist">
             {[...grouped.entries()].map(([lg, list]) => (
               <div key={lg || "all"} className="bz-group">

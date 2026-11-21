@@ -129,10 +129,14 @@ export default function BankedView() {
   // the prize if the matchday ended now: the board's own figure, else what 5th place would pay from the pot
   const contest = load.day?.contest ?? null;
   const fifth = contest ? Math.floor(contest.pot_sol * 0.05 * 1e9) : 0;
+  const cstate = contest?.state;
+  const won = cstate === "final" && mine.place != null && mine.place <= 5 && mine.prize_lamports > 0;
   let prize: string;
   if (mine.place == null) prize = "Your place appears once the board has your squads.";
+  else if (cstate === "final") prize = won ? `You won ${sol(mine.prize_lamports)} SOL.` : "The matchday is over. You did not win a prize.";
+  else if (cstate === "review") prize = "The matchday is over. Prizes are released once the result is checked.";
   else if (mine.place <= 5 && mine.prize_lamports > 0) prize = `If the matchday ended now you would win ${sol(mine.prize_lamports)} SOL.`;
-  else if (mine.place <= 5) prize = "You are in the prizes if the matchday ended now.";
+  else if (mine.place <= 5) prize = mine.entrants < 3 ? "Fewer than 3 players so far. With under 3 the pot rolls forward." : "You are in the prizes if the matchday ended now.";
   else prize = `If the matchday ended now you would win nothing yet.${fifth > 0 ? ` 5th place pays ${contest?.pot_estimated ? "about " : ""}${sol(fifth)} SOL.` : ""}`;
   const placeText = mine.place != null ? `${ordinal(mine.place)}${mine.entrants ? ` of ${count(mine.entrants)}` : ""}` : null;
 
@@ -146,7 +150,7 @@ export default function BankedView() {
               {p.is_captain ? <span className="bk-cap" aria-label="Captain, double points">×2</span> : <span className="bk-cap ghost" aria-hidden="true" />}
               <span className="nm">{p.name}</span>
               <span className="bk-pos">{posOf(p.position)}</span>
-              {hasPts && p.is_captain && <span className="bk-x">{`C ×2 · ${Math.round((p.points! / 2) * 100) / 100} × 2`}</span>}
+              {hasPts && p.is_captain && <span className="bk-x">{`${Math.round((p.points! / 2) * 100) / 100} × 2`}</span>}
             </span>
             <span className="v">{hasPts ? p.points : "-"}</span>
           </div>
@@ -178,7 +182,7 @@ export default function BankedView() {
           <div className="bk-in">
             <div className="bk-top">
               <h1 id="bk-t" className={`e2-word bk-word${banked ? "" : " off"}`}>{banked ? "Banked" : "Not banked yet"}</h1>
-              <span className="bk-small bk-mut">{`Squad ${slotN} of 3 · ${banked ? "final" : sq.state === "live" ? "live" : sq.state === "full_time" ? "full time" : "kicks off " + ukTime(sq.kickoff)}`}</span>
+              <span className="bk-small bk-mut">{`Squad ${slotN} of ${load.day?.squads_allowed ?? 3} · ${banked ? "final" : sq.state === "live" ? "live" : sq.state === "full_time" ? "full time" : "kicks off " + ukTime(sq.kickoff)}`}</span>
             </div>
             {fixtureLine}
             {banked ? (
@@ -189,12 +193,13 @@ export default function BankedView() {
                   {prize}{line != null ? ` The prize line is 5th place, currently ${count(line)} pts.` : ""}
                   {left > 0 ? ` ${left === 1 ? "One squad" : `${left === 2 ? "Two" : left} squads`} still to play.` : ""}
                 </p>
+                {won && <div className="bk-act"><Link className="e2-btn e2-btn-line" href="/winnings">Collect on Winnings</Link></div>}
               </>
             ) : (
               <>
                 <div className="bk-num"><span className="n">{sq.points ?? 0}</span><span className="u">points so far</span></div>
-                <p className="bk-place">{sq.state === "open" ? "This squad has not kicked off." : "Full time. Points are final about 15 minutes after the whistle."}</p>
-                <p className="bk-small bk-mut bk-tight">{sq.state === "live" ? "The match is live, so these points can still change. " : sq.state === "open" ? "" : "Until then these points are provisional. "}{placeText ? `You are ${placeText} on the Blitz matchday board now.` : ""}</p>
+                <p className="bk-place">{sq.state === "open" ? "This squad has not kicked off." : sq.state === "live" ? "The match is live." : "Full time. Points are final about 15 minutes after the whistle."}</p>
+                <p className="bk-small bk-mut bk-tight">{sq.state === "live" ? "These points can still change. " : sq.state === "open" ? "" : "Until then these points are provisional. "}{placeText ? `You are ${placeText} on the Blitz matchday board now.` : ""}</p>
               </>
             )}
             {rows}

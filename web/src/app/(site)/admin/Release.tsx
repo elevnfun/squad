@@ -5,7 +5,7 @@
 // locked. Nothing is sent from here and a release cannot be undone, so every release goes through an
 // inline confirm step. This section loads and fails on its own; the old payouts below do not depend on it.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, ApiError, fmtSol, shortWallet } from "@/lib/api";
+import { api, ApiError, shortWallet, sol } from "@/lib/api";
 import "./release.css";
 
 type Kind = "blitz_matchday" | "blitz_week" | "draft_week";
@@ -41,7 +41,8 @@ function when(iso: string | null) {
 }
 const pts = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(1));
 const validPrice = (s: string) => { const n = Number(s); return s.trim() !== "" && Number.isFinite(n) && n > 0 ? n : null; };
-const total = (p: Prize[] | null) => (p ?? []).reduce((s, x) => s + x.sol, 0);
+const total = (p: Prize[] | null) => (p ?? []).reduce((s, x) => s + x.lamports, 0);   // lamports, shown with the flooring `sol`
+const WEEKLY_LAMPORTS = (usd: number) => Math.round(WEEKLY_USD / usd * 1e9);
 
 export default function Release({ token }: { token: string | null }) {
   const [data, setData] = useState<AdminContests | null>(null);
@@ -95,12 +96,13 @@ export default function Release({ token }: { token: string | null }) {
     setRunning(c.id);
     clearRefusal(c.id);
     try {
-      const body = { sol_usd: c.kind === "blitz_week" ? validPrice(prices[c.id] ?? "") : null };
+      // the pot the owner checked: the server refuses if the pot it is about to release is different
+      const body = { sol_usd: c.kind === "blitz_week" ? validPrice(prices[c.id] ?? "") : null, expect_pot_lamports: c.preview_pot_lamports };
       const res = await api<{ prizes: Prize[]; contest: AdminContest }>(`/admin/contests/${c.id}/release`, { body, token });
       const sum = total(res.prizes);
       const text = res.contest.state === "rolled" || res.prizes.length === 0
         ? `${title(c)}: pot rolled forward, nobody credited.`
-        : `${title(c)}: released. ${res.prizes.length} ${res.prizes.length === 1 ? "winner" : "winners"} credited ${fmtSol(sum)} in all (half ready to collect, half locked): ${res.prizes.map((p) => `${p.place}. ${shortWallet(p.wallet)} ${fmtSol(p.sol)}`).join(", ")}.`;
+        : `${title(c)}: released. ${res.prizes.length} ${res.prizes.length === 1 ? "winner" : "winners"} credited ${sol(sum)} SOL in all (half ready to collect, half locked): ${res.prizes.map((p) => `${p.place}. ${c.board.find((r) => r.wallet === p.wallet)?.username ?? shortWallet(p.wallet)} ${sol(p.lamports)} SOL`).join(", ")}.`;
       setReleased((r) => [{ id: c.id, text }, ...r]);
       setConfirmId(null);
       await load();
@@ -108,6 +110,7 @@ export default function Release({ token }: { token: string | null }) {
       setRefusal((r) => ({ ...r, [c.id]: e instanceof ApiError && e.status === 400 ? e.message : (e as Error).message }));
       setConfirmId(null);
       inFlight.current.delete(c.id);   // refused: it may be tried again after the owner reads why
+      await load();                    // a changed pot: show the new figures under the refusal
     } finally {
       setRunning(null);
     }
@@ -137,9 +140,11 @@ export default function Release({ token }: { token: string | null }) {
         const under = c.entrants < 3;
         const prizes = c.preview_prizes ?? [];
         const synced = !weekly || (p !== null && fetchedFor === p);
-        const ready = !weekly || (p !== null && synced);
+        // an earlier result of the same mode is still waiting: this pot is only known after it is released
+        const earlier = weekly ? undefined : data.review.find((o) => o.id !== c.id && o.kind === c.kind && (o.day ?? o.week_start) < (c.day ?? c.week_start));
+        const ready = !earlier && c.preview_pot_lamports !== null && (!weekly || (p !== null && synced));
         const sum = total(c.preview_prizes);
-        const half = sum / 2;
+        const half = Math.floor(sum / 2);
         const confirming = confirmId === c.id;
         const hid = `rl-c${c.id}`;
         return (
@@ -174,26 +179,28 @@ export default function Release({ token }: { token: string | null }) {
                 <input id={`${hid}-p`} inputMode="decimal" autoComplete="off" placeholder="for example 150" value={price}
                   onChange={(e) => typed(c.id, e.target.value)} disabled={busy} aria-describedby={`${hid}-pn`} />
                 <p id={`${hid}-pn`} className="rl-sub">
-                  {p !== null ? `$${WEEKLY_USD} at $${p} per SOL = ${fmtSol(WEEKLY_USD / p)}` : "Required. The prize is $500 paid in SOL, so enter today's SOL price."}
+                  {p !== null ? `$${WEEKLY_USD} at $${p} per SOL = ${sol(WEEKLY_LAMPORTS(p))} SOL` : "Required. The prize is $500 paid in SOL, so enter today's SOL price."}
                 </p>
               </div>
             )}
 
             <div className="rl-prev" aria-live="polite">
               <p className="rl-eyebrow">Release will credit</p>
-              {under ? (
+              {earlier ? (
+                <p className="rl-note">Release {title(earlier)} first. This pot is worked out from what is left after it.</p>
+              ) : under ? (
                 <p className="rl-warn">Under 3 entrants: releasing rolls the pot forward and credits nobody.</p>
               ) : !synced || c.preview_prizes === null ? (
                 <p className="rl-note">{weekly && p === null ? "Enter the SOL price to see the amounts." : "Working out the amounts…"}</p>
               ) : (
                 <>
-                  <p className="rl-pot">Pot {fmtSol(c.preview_pot_sol ?? sum)}</p>
+                  <p className="rl-pot">Pot {sol(c.preview_pot_lamports ?? sum)} SOL</p>
                   <ul className="rl-prizes">
                     {prizes.map((x) => (
-                      <li key={`${x.place}-${x.wallet}`}><span>{x.place}.</span><span title={x.wallet}>{shortWallet(x.wallet)}</span><b>{fmtSol(x.sol)}</b></li>
+                      <li key={`${x.place}-${x.wallet}`}><span>{x.place}.</span><span title={x.wallet}>{c.board.find((r) => r.wallet === x.wallet)?.username ?? shortWallet(x.wallet)}</span><b>{sol(x.lamports)} SOL</b></li>
                     ))}
                   </ul>
-                  <p className="rl-sub">Each winner: half ready to collect, half locked. In all {fmtSol(half)} ready, {fmtSol(half)} locked.</p>
+                  <p className="rl-sub">Each winner: half ready to collect, half locked. In all {sol(half)} SOL ready, {sol(half)} SOL locked.</p>
                 </>
               )}
             </div>
@@ -206,14 +213,14 @@ export default function Release({ token }: { token: string | null }) {
                   onClick={() => { clearRefusal(c.id); setConfirmId(c.id); }}>
                   Release result<span className="e2-sr"> for {title(c)}</span>
                 </button>
-                {!ready && <span className="rl-sub">Enter the SOL price first.</span>}
+                {!ready && <span className="rl-sub">{earlier ? `Release ${title(earlier)} first.` : weekly && !synced ? "Enter the SOL price first." : "Working out the amounts…"}</span>}
               </div>
             ) : (
               <div className="rl-confirm" role="group" aria-label={`Confirm release of ${title(c)}`}>
                 <p>
                   Release {title(c)}?{" "}
                   {under ? "The pot rolls forward and nobody is credited."
-                    : `${prizes.length} ${prizes.length === 1 ? "winner is" : "winners are"} credited ${fmtSol(sum)} in all.`}
+                    : `${prizes.length} ${prizes.length === 1 ? "winner is" : "winners are"} credited ${sol(sum)} SOL in all.`}
                   {weekly && p !== null && !under ? ` ($${WEEKLY_USD} at $${p} per SOL.)` : ""}{" "}
                   <b>This cannot be undone.</b>
                 </p>
@@ -238,7 +245,7 @@ export default function Release({ token }: { token: string | null }) {
                 <li key={c.id}>
                   <span className="t">{heading(c)}</span>
                   <span className={`e2-badge ${c.state === "final" ? "ft" : "steel"}`}>{c.state === "final" ? "Final" : "Rolled forward"}</span>
-                  <b>{fmtSol(c.pot_sol)}</b>
+                  <b>{sol(c.pot_lamports)} SOL</b>
                 </li>
               ))}
             </ul>

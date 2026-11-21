@@ -265,6 +265,20 @@ def test_under_three_entrants_rolls_and_credits_nobody(conn):
     assert payouts.bucket(conn, "pot:blitz") == SOL                 # the money stays for the next board
 
 
+def test_release_checks_the_expected_pot_and_the_date_order(conn):
+    fri, sat = two_days(conn)
+    contests.tick(conn, t(21, "15:00"))
+    assert state(conn, fri) == state(conn, sat) == "review"
+    payouts.add(conn, "pot:blitz", SOL, "test")
+    with pytest.raises(ValueError, match="earlier result"):
+        contests.release(conn, sat, "admin", t(21, "15:05"))
+    assert state(conn, sat) == "review"
+    with pytest.raises(ValueError, match="not the 2.0000 SOL you checked"):
+        contests.release(conn, fri, "admin", t(21, "15:05"), expect_pot=2 * SOL)
+    assert contests.release(conn, fri, "admin", t(21, "15:05"), expect_pot=SOL)
+    assert state(conn, fri) == "final"
+
+
 # ------------------------------------------------------------- blitz week ---
 def two_days(conn):
     """Fri 20 15:00 (fixture 2) and Sat 21 12:30 (fixture 4), both played."""

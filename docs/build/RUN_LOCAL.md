@@ -40,6 +40,7 @@ node scripts/dev_drive.cjs release    # admin signs in, releases the first conte
 node scripts/dev_drive.cjs after      # Ranks (final) and Winnings
 node scripts/dev_drive.cjs collect    # presses Collect (needs a funded payout wallet to succeed)
 node scripts/dev_drive.cjs blitz      # a whole Blitz matchday (below); about 8 minutes per width, waits on the minute job
+node scripts/dev_drive.cjs draft      # a whole Draft week (below); needs a UK Friday to Monday
 ```
 Shots go to `docs/build/shots/real-*.png` at 1440 and 390 wide.
 
@@ -60,3 +61,15 @@ rewinds it and moves the fixtures to that phase (the API with `RUN_JOBS=1` then 
 `--clean` also drops the `me` wallet's squads. `node scripts/dev_drive.cjs blitz` runs all of it at 1440 and 390 (guest builds and
 checks a squad; `me` saves 3, changes one, removes one, saves again; live; banked; Banked screen; Ranks; the Today card in each
 state) and prints PASS/FAIL lines. It needs `DATABASE_URL` set as in step 1. Shots: `docs/build/shots/real-blitz-*.png`.
+
+## Weekly Draft run
+The Draft week's window is Friday to Monday, and the six seeded fixtures (900001 to 900006) fill it, so a Draft phase moves ALL SIX
+(and the next Blitz seed puts them back; do not run the two drives at the same time).
+`PYTHONPATH=. uv run python scripts/dev_seed.py --draft-phase pre|live|final [--clean]` rewinds the week and moves the fixtures:
+every player gets a price, `ann ben cat dan admin` get dealt packs and a saved team, started matches get scores. `pre` also
+works Tuesday to Thursday (kick-offs on Friday); `live` and `final` need a UK Friday to Monday, and `pre` clears the `me` wallet's
+packs and team. `--draft-release` releases the week once the job has moved it to review. `node scripts/dev_drive.cjs draft`
+runs all of it at 1440 and 390 (about 5 minutes per width): a guest opens sample packs, builds a team and the server checks it;
+`me` opens 5 packs, saves a team, changes the captain, saves again, is refused a 3-Top team with the server's words; the lock passes
+and the minute job locks and scores; live; every match over and review; released and final; the board on Ranks; the Today card in
+each state. It prints PASS/FAIL. Shots: `docs/build/shots/real-draft-*.png`.

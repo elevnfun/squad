@@ -35,7 +35,7 @@
 .bz-fxr:disabled { cursor: default; }
 .bz-fxr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 12px; }
 .bz-fxr .t { font-weight: 600; color: var(--muted); font-size: 13px; }
-.bz-fxr .m { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.bz-fxr .m { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .bz-fxr .m .v { color: var(--steel-2); font-weight: 500; font-size: 12px; }
 .bz-fxr .s { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .bz-fxr.sel { background: var(--row-2); border-radius: 12px; border-top-color: transparent; box-shadow: inset 0 0 0 1px var(--steel), 0 0 18px -6px rgba(242,193,78,.35); }
@@ -174,7 +174,6 @@
   .bz .e2-ph .bz-h1 { font-size: 30px; letter-spacing: -.025em; }
   .bz-banner { text-align: left; }
   .bz-fxr { grid-template-columns: 24px 50px minmax(0, 1fr); gap: 4px 10px; padding: 10px 8px; min-height: 56px; font-size: 15px; }
-  .bz-fxr .m { white-space: normal; overflow: visible; }
   .bz-fxr .s { grid-column: 3; text-align: left; font-size: 13px; }
   .bz-fxr .t { font-size: 14px; }
   .bz-flist { padding: 4px 8px 8px; }

@@ -477,3 +477,14 @@ Reporting
 - Changed: at 1440 and up the content is 1280 wide, the same as the mockup's 1439 case, so the "In five" tick-only chip had to apply from 1101 up once the captain button took 40px.
 - Rule for next time: mockup breakpoints are in window width, the page's content width stops growing at 1440; test chips at 1440 and 1920, not only below.
 - Weak: guest sample is fetched once and never polled (it must not reshuffle); API shape for `contest`, `fixtures` and limits is guessed (numbers or per-key objects both handled).
+
+## 2026-11-21 · draft agent · Draft against the real API
+- Did: types and page matched to the real routes, Today's Draft card made live (packs, team, set, running, closed), Ranks line links to /draft, seed phases and a `draft` run in dev_drive.
+- Changed: the page guessed the saved team carries club and tier; it carries neither (read them from the packs). The captain's points are already doubled by the API.
+- Rule for next time: read the real response in `squad/api.py` before typing it; a Draft week's window holds the Blitz fixtures too, so seed phases move them together.
+
+## 2026-11-21 · release and Blitz fixes · REVIEW_BLITZ_ADMIN sections 1 to 3
+- Did: board prizes filled from the shown pot before final; release takes `expect_pot_lamports` and refuses a changed pot; same-kind results release in date order (server and page); Blitz and Banked review items.
+- How: one server rule per risk, each with a test; checked in a browser with `/api/auth/dev` (DEV_LOGIN) because :3000 was in use.
+- Changed: `tick` now walks contests in date order, so an automatic release respects the same rule.
+- Rule for next time: any POST that credits money carries the figure the owner saw, and the server compares it.
