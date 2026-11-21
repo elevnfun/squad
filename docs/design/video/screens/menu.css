@@ -1,0 +1,44 @@
+/* Side menu for the elevn mockups. Needs mock.css. Injected by menu.js. */
+.menu-btn { min-width: 78px; justify-content: center; font: inherit; border: 0; background: none; cursor: pointer; display: inline-flex; align-items: center;  gap: 4px; height: 40px; font-size: 14px; font-weight: 500; color: var(--steel); padding: 0 12px; border-radius: 999px; transition: color 150ms var(--ease), background 150ms var(--ease); }
+.menu-btn:hover, .menu-btn[aria-expanded="true"] { color: var(--text); background: rgba(255,255,255,.07); }
+body.menu-open .nav { z-index: 60; }
+html.menu-lock { overflow: hidden; }
+.menu-scrim { position: fixed; inset: 0; z-index: 50; background: rgba(4,5,7,.62); opacity: 0; visibility: hidden; transition: opacity var(--dur-normal, 240ms) var(--ease), visibility 0s linear var(--dur-normal, 240ms); }
+.menu-panel { position: fixed; z-index: 55; top: var(--menu-top, 0px); right: 0; bottom: 0; width: min(420px, 100vw); display: flex; flex-direction: column; overflow-y: auto;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)), #0b0c0e; backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+  box-shadow: inset 1px 0 0 var(--steel-edge), inset 0 1px 0 rgba(255,255,255,.2), -28px 0 56px -22px rgba(0,0,0,.8);
+  transform: translateX(100%); visibility: hidden; transition: transform var(--dur-normal, 300ms) var(--ease), visibility 0s linear var(--dur-normal, 300ms); }
+body.menu-open .menu-scrim { opacity: 1; visibility: visible; transition-delay: 0s; }
+body.menu-open .menu-panel { transform: none; visibility: visible; transition-delay: 0s; }
+.menu-panel .mp-in { padding: 24px 32px 24px; display: flex; flex-direction: column; flex: 1; min-height: min-content; }
+.menu-panel .mp-title { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 40px; line-height: .9; letter-spacing: .06em; color: transparent; -webkit-text-stroke: 1.1px rgba(244,244,241,.88); margin: 0 0 16px; user-select: none; }
+.menu-panel ul { list-style: none; margin: 0; padding: 0; }
+.menu-panel .mp-main a { display: block; padding: 11px 12px; margin: 0 -12px; border-top: 1px solid var(--line); border-radius: 0; }
+.menu-panel .mp-main li:last-child a { border-bottom: 1px solid var(--line); }
+.menu-panel .mp-main .t { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 34px; line-height: 1.05; color: var(--text); }
+.menu-panel .mp-main .d { display: block; margin-top: 2px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.menu-panel .mp-main a:hover { background: rgba(255,255,255,.05); }
+.menu-panel .here { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--steel); }
+.menu-panel .here::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+/* quiet row at the bottom */
+.menu-panel .mp-foot { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--steel-edge); display: flex; gap: 24px; }
+.menu-panel .mp-foot a { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; font-size: 14px; font-weight: 500; color: var(--steel); border-radius: 6px; }
+.menu-panel .mp-foot a:hover { color: var(--text); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.menu-panel a:focus-visible, .menu-panel button:focus-visible, .menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.menu-panel .mp-main a:focus-visible { outline-offset: -3px; }
+@media (max-width: 700px) { .menu-btn { min-width: 40px; padding: 0 10px; font-size: 20px; } .menu-btn .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .menu-panel { width: 100vw; } .menu-panel .mp-in { padding: 24px 20px; } .menu-panel .mp-main .t { font-size: 30px; } }
+@media (prefers-reduced-motion: reduce) { .menu-panel, .menu-scrim { transition: none !important; } }
+.menu-panel:focus, .menu-panel:focus-visible { outline: none; }
+/* Winnings sits in the bar on desktop; on a phone the bar shows only a compact chip, so the menu carries it (not for guests) */
+.menu-panel .mp-foot a.mp-win { display: none; }
+@media (max-width: 700px) {
+  .menu-panel .mp-foot { flex-wrap: wrap; gap: 4px 24px; }
+  .menu-panel .mp-foot a { min-height: 44px; font-size: 15px; }
+  .menu-panel .mp-foot a.mp-win { display: inline-flex; }
+  body.guest .menu-panel .mp-foot a.mp-win { display: none; }
+  .menu-panel .mp-main a { padding: 12px; }
+  .menu-panel .mp-main .d { font-size: 15px; }
+  .menu-panel .here { font-size: 12px; }
+  body.menu-open .tabbar { display: none; }
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video screen: Blitz squad (copy of the elevn mockup style)</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+html,body{width:1440px;height:900px;overflow:hidden}
+.v-wrap{display:grid;place-items:center;height:calc(900px - 96px)}
+.v-card{width:760px}
+.v-row{display:grid;grid-template-columns:54px 1fr auto;gap:18px;align-items:center;padding:18px 0;border-top:1px solid var(--line);font-size:20px}
+.v-row:first-of-type{border-top:0}
+.v-pos{display:inline-grid;place-items:center;height:30px;border-radius:8px;border:1px solid var(--edge-control);font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--steel)}
+.v-name{font-weight:600}.v-name small{display:block;font-size:14px;color:var(--muted);font-weight:400;margin-top:2px}
+.v-c{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;border:2px solid var(--accent);color:var(--accent);font-weight:800;font-size:16px}
+.v-pts{font-weight:700;min-width:64px;text-align:right}
+</style></head><body>
+<header class="nav"><div class="wrap">
+<a class="logo" href="#">elevn<i></i></a>
+<nav class="links" aria-label="Main"><a href="#" class="cur" aria-current="page">Today</a><a href="#">Ranks</a><a href="#">Chat</a></nav>
+</div></header>
+<main class="wrap"><div class="v-wrap"><article class="card v-card">
+<div class="top"><div><span class="eyebrow">Squad 3 · Matchday Blitz</span><h2 class="score name" style="margin-top:6px">Man City v Chelsea</h2><p class="status">Premier League · Saturday 21 November</p></div><span class="badge live">Live</span></div>
+<div style="margin-top:22px">
+<div class="v-row"><span class="v-pos">FWD</span><span class="v-name">E. Haaland<small>Man City · Captain, double points</small></span><span class="v-c" aria-label="Captain">C</span></div>
+<div class="v-row"><span class="v-pos">MID</span><span class="v-name">P. Foden<small>Man City</small></span><span class="v-pts">0</span></div>
+<div class="v-row"><span class="v-pos">MID</span><span class="v-name">C. Palmer<small>Chelsea</small></span><span class="v-pts">0</span></div>
+</div>
+</article></div></main></body></html>

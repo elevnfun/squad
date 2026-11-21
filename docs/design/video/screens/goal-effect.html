@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video screen: the goal's effect (animated by ?p=0..1)</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+html,body{width:1440px;height:900px;overflow:hidden}
+.v-grid{display:grid;grid-template-columns:1fr 520px;gap:28px;margin-top:34px}
+.v-hero{position:relative}
+.v-row{display:grid;grid-template-columns:54px 1fr auto auto;gap:16px;align-items:center;padding:16px 0;border-top:1px solid var(--line);font-size:19px}
+.v-row:first-of-type{border-top:0}
+.v-pos{display:inline-grid;place-items:center;height:28px;border-radius:8px;border:1px solid var(--edge-control);font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--steel)}
+.v-name small{display:block;font-size:13px;color:var(--muted);font-weight:400;margin-top:2px}
+.v-name{font-weight:600}
+.v-c{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;border:2px solid var(--accent);color:var(--accent);font-weight:800;font-size:15px}
+.v-pts{font-weight:700;min-width:70px;text-align:right;font-size:22px}
+.v-pill{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;font-weight:800;font-size:14px;letter-spacing:.06em;background:var(--accent);color:var(--accent-ink);opacity:0;transform:translateY(-10px) scale(.9)}
+.v-x2{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;font-weight:800;font-size:14px;border:1.5px solid var(--accent);color:var(--accent);opacity:0;transform:scale(1.6)}
+.v-board .r{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;height:54px;padding:0 14px;border-radius:12px;font-size:17px;font-weight:600;position:absolute;left:0;right:0}
+.v-board .r b{font-weight:700}
+.v-board .r.you{background:rgba(242,193,78,.12);border:1px solid rgba(242,193,78,.55)}
+.v-board .r .n{color:var(--steel)}
+.v-board{position:relative;height:6*60px;margin-top:18px}
+</style></head><body>
+<header class="nav"><div class="wrap">
+<a class="logo" href="#">elevn<i></i></a>
+<nav class="links" aria-label="Main"><a href="#" class="cur" aria-current="page">Today</a><a href="#">Ranks</a><a href="#">Chat</a></nav>
+</div></header>
+<main class="wrap"><div class="v-grid">
+<article class="card mode"><div class="top"><div><h2 class="score name">Blitz</h2><p class="status">Squad 3 · Man City v Chelsea</p></div><span class="badge live">Live</span></div>
+<div class="nums" style="margin-top:20px">
+<div><span class="lbl">Squad 3 total</span><span class="big" id="tot">54</span></div>
+<div><span class="lbl">Your rank</span><span class="big"><span id="rank">8th</span> <span class="muted" style="font-size:18px;font-weight:500;letter-spacing:0">of 487</span></span></div>
+</div>
+<div style="margin-top:14px">
+<div class="v-row"><span class="v-pos">FWD</span><span class="v-name">E. Haaland<small>Man City · Captain</small></span><span><span class="v-pill" id="goal">GOAL +8</span> <span class="v-x2" id="x2">C x2</span></span><span class="v-pts" id="hp">4</span></div>
+<div class="v-row"><span class="v-pos">MID</span><span class="v-name">P. Foden<small>Man City</small></span><span></span><span class="v-pts">16</span></div>
+<div class="v-row"><span class="v-pos">MID</span><span class="v-name">C. Palmer<small>Chelsea</small></span><span></span><span class="v-pts">34</span></div>
+</div></article>
+<aside class="glass"><span class="eyebrow">Blitz matchday board</span><div class="v-board" id="board"></div></aside>
+</div></main>
+<script>
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=t=>{t=clamp(t);return t*t*(3-2*t)}, seg=(p,a,b)=>ease((p-a)/(b-a));
+const ROW=60;
+// ranks 4..9 slots 0..5. Before: 4th 78, 5th 74, 6th 68, 7th 63, You 54 (8th), 9th 52.
+const others=[{n:"7xKp…q9Fa",p:78,base:0},{n:"Dm3a…ZL2t",p:74,base:1},{n:"h8Qe…u4Rw",p:68,base:2},{n:"Lk9v…c1Ny",p:63,base:3},{n:"Rr5n…a8Vd",p:52,base:5}];
+function build(){const b=document.getElementById('board');b.innerHTML='';
+ others.forEach((o,i)=>{const d=document.createElement('div');d.className='r';d.id='o'+i;d.innerHTML=`<span class="n"></span><span>${o.n}</span><b>${o.p}</b>`;b.appendChild(d)});
+ const y=document.createElement('div');y.className='r you';y.id='you';y.innerHTML='<span class="n"></span><span>You</span><b id="yp">54</b>';b.appendChild(y)}
+function setP(p){
+ const g=seg(p,0,.2);document.getElementById('goal').style.cssText=`opacity:${g};transform:translateY(${(1-g)*-10}px) scale(${.9+.1*g})`;
+ const x=seg(p,.28,.42);document.getElementById('x2').style.cssText=`opacity:${x};transform:scale(${1.6-.6*x})`;
+ const c=seg(p,.35,.8);const tot=Math.round(54+16*c);
+ document.getElementById('tot').textContent=tot;document.getElementById('yp').textContent=tot;
+ document.getElementById('hp').textContent=Math.round(4+16*c);
+ const y=4-2*seg(p,.55,.95); // you slot, float
+ document.getElementById('you').style.top=(y*ROW)+'px';
+ others.forEach((o,i)=>{const shift=o.base>=2&&o.base<=3?clamp(o.base+1-y):0;
+  document.getElementById('o'+i).style.top=((o.base+shift)*ROW)+'px'});
+ const els=[...document.querySelectorAll('.v-board .r')].map(e=>({e,t:parseFloat(e.style.top)||0})).sort((a,b)=>a.t-b.t);
+ els.forEach((it,i)=>it.e.querySelector('.n').textContent=(4+i));
+ const rk=4+els.findIndex(it=>it.e.id==='you');
+ document.getElementById('rank').textContent=rk+'th';
+}
+build();setP(parseFloat(new URLSearchParams(location.search).get('p')||'0'));
+</script></body></html>
