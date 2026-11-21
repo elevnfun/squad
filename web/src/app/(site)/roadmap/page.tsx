@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Roadmap | elevn" };
 const STAGES = [
   { label: "Now", title: "Testing", status: "now", items: [
     "The full game running on Solana devnet with test tokens",
-    "Squads, live scoring, leaderboards and prize payouts end to end",
+    "Matchday Blitz, Draft, live scoring, leaderboards and prize collection end to end",
   ] },
   { label: "Launch", title: "elevn goes live", status: "next", items: [
     "$ELEVN launches on Solana",
@@ -19,10 +19,8 @@ const STAGES = [
   { label: "Next", title: "More football", status: "later", items: [
     "Serie A and Ligue 1",
     "Match bonus points and defensive contribution points",
-    "A Dark Horse squad slot",
   ] },
   { label: "Later", title: "New ways to play", status: "later", items: [
-    "Squad Battles: play other squads head to head with attack, defend and control tactics",
     "Off-season events to keep playing between seasons",
     "Faster, richer match data as elevn grows",
   ] },

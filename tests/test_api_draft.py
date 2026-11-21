@@ -11,7 +11,7 @@ from solders.keypair import Keypair
 from squad import api, auth, contests, jobs
 from squad.config import CFG
 from squad.db import init_schema
-from tests.test_payouts import LocalChain
+from tests.helpers import LocalChain
 
 URL = "postgresql://localhost:5433/{}"
 DB = "squad_test_api_draft"

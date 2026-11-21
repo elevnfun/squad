@@ -44,8 +44,8 @@ export function Points({ items }: { items: { title: string; text: string }[] }) 
 export function PlayCta() {
   return (
     <Reveal className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-wash px-6 py-6">
-      <p className="text-xl font-bold tracking-[-0.01em]">Ready to pick your eleven?</p>
-      <Link href="/#leagues" className="btn btn-primary">Choose a league</Link>
+      <p className="text-xl font-bold tracking-[-0.01em]">Ready to play?</p>
+      <Link href="/today" className="btn btn-primary">Open Today</Link>
     </Reveal>
   );
 }

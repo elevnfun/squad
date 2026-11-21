@@ -7,10 +7,10 @@ export const metadata: Metadata = { title: "FAQ | elevn" };
 const FAQ: { q: string; a: React.ReactNode }[] = [
   { q: "Does it cost anything to play?",
     a: "No. There are no entry fees. You need to hold $ELEVN in your wallet, and you keep it." },
-  { q: "How many squads can I run?",
-    a: "One squad for every 150,000 $ELEVN you hold. Each squad plays in one league, so you can run several in the same league or spread them across leagues." },
+  { q: "How much do I need to hold?",
+    a: "150,000 $ELEVN unlocks Matchday Blitz, the main mode. 150,000 more (300,000 in all) also unlocks Draft. It is one entry per wallet, however much it holds." },
   { q: "What happens if I sell some tokens?",
-    a: "Your squads are checked in real time. If your balance drops below what your squads need, your newest squads freeze straight away and stop scoring until you hold enough again." },
+    a: "If your wallet drops below 150,000 $ELEVN, your locked winnings and their withdrawal timer freeze until you hold enough again. Nothing is forfeited." },
   { q: "Is signing in safe?",
     a: "Signing in only asks your wallet to sign a message. It's free, sends no transaction and can't move your tokens." },
   { q: "Which wallets work?",
@@ -18,15 +18,11 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
   { q: "Where does the prize money come from?",
     a: "From the trading fees on $ELEVN. Each week, 60% of the fees goes to prizes, 20% buys back and burns $ELEVN, 10% is a reserve for quiet weeks and 10% covers running costs." },
   { q: "How are prizes paid?",
-    a: "In SOL. The top three squads in each league get 50%, 30% and 20% of that league's pool, which is at least 1 SOL. 30% is sent when the gameweek settles, and the other 70% in 14 daily parts on days your wallet still holds the requirement." },
+    a: "In SOL. Every prize board pays its top 5: 50%, 25%, 12%, 8% and 5% of the pot. Winners press Collect on the Winnings page: half is yours at once, the other half is locked, and 20% of the locked balance can be withdrawn every 24 hours." },
   { q: "What is the test season?",
-    a: "elevn is playable now on Solana devnet, a test network. Sign in, get free test $ELEVN from the league page and play for real points. Prizes are paid in devnet SOL, at least 0.1 SOL per league, and have no real value. The test season resets when $ELEVN launches." },
-  { q: "Can one wallet win more than one prize?",
-    a: "Not in the same league. Each wallet can win one prize per league each gameweek, even with several squads there." },
-  { q: "When does a gameweek lock?",
-    a: <>Squads lock at the first kickoff of the gameweek. Each league page shows a countdown to the deadline. See <Link href="/how-to-play" className="link">How to play</Link> for the full rules.</> },
-  { q: "Can I check the payouts?",
-    a: <>Yes. Every payout goes out from one public fee wallet, and the <Link href="/admin" className="link">payouts page</Link> lists them.</> },
+    a: "elevn is playable now on Solana devnet, a test network. Sign in with free test $ELEVN and play for real points. Prizes are paid in devnet SOL, at least 0.05 SOL per Blitz matchday and 0.1 SOL per Draft week, and have no real value. The test season resets when $ELEVN launches." },
+  { q: "When do my picks lock?",
+    a: <>Each Matchday Blitz squad locks at its own kickoff. Draft opens on Tuesday and locks at Friday&apos;s first kickoff. See <Link href="/how-to-play" className="link">How to play</Link> for the full rules.</> },
 ];
 
 export default function Faq() {

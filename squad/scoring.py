@@ -1,6 +1,6 @@
 """$ELEVN scoring engine: the one code path for live scores, settlement and pricing.
 
-Match score = (Core+ + Involvement) x RisingStar x Captain + Core-
+Match score = Core+ + Involvement + Core- (before any captain multiplier)
   Core+   positive core points (FPL x2): appearance, goals, assists, clean sheet, saves, pen saves
   Core-   negative core points: cards, own goals, missed pens, goals conceded; never multiplied
   Involvement  accurate passes, key passes, shots on target, tackles, duels won; capped per match
@@ -132,7 +132,7 @@ class MatchScore:
 
     @property
     def base(self):
-        """Points before Rising Stars and captain multipliers."""
+        """Points before any captain multiplier."""
         return self.core_plus + self.involvement + self.core_minus
 
 
@@ -179,122 +179,3 @@ def score_match(pm, cfg=CFG):
     if s.involvement:
         s.breakdown.append(("involvement", s.involvement))
     return s
-
-
-# ----------------------------------------------------------- rising stars ---
-def rising_star_multiplier(level, cfg=CFG):
-    rs = cfg["rising_stars"]
-    level = max(rs["start_level"], min(level, rs["max_level"]))
-    return round(rs["start_multiplier"] + rs["level_step"] * (level - rs["start_level"]), 4)
-
-
-def rising_star_next_level(level, ms, cfg=CFG):
-    """Level after a match: +1 for 12+ base points or a 7.5+ rating, capped at max_level."""
-    rs = cfg["rising_stars"]
-    if ms.minutes > 0 and (ms.base >= rs["upgrade_min_points"] or ms.rating >= rs["upgrade_min_rating"]):
-        return min(level + 1, rs["max_level"])
-    return level
-
-
-def advance_rising_stars(levels, scores, cfg=CFG):
-    """Walk a Rising Star's matches in kickoff order.
-
-    levels: player_id -> current level; scores: MatchScores in kickoff order.
-    Returns ({(player_id, fixture_id): level used for that match}, levels after the matches).
-    Levels belong to the player (not a squad) and persist for the season.
-    """
-    levels, used = dict(levels), {}
-    for ms in scores:
-        if ms.player_id not in levels:
-            continue
-        used[(ms.player_id, ms.fixture_id)] = levels[ms.player_id]
-        levels[ms.player_id] = rising_star_next_level(levels[ms.player_id], ms, cfg)
-    return used, levels
-
-
-def final_match_points(ms, rs_mult=1.0, captain_mult=1.0, cfg=CFG):
-    """(Core+ + Involvement) x RisingStar x Captain + Core-.
-
-    Negatives are multiplied only if config says so (both flags are false: never multiplied).
-    """
-    positive = (ms.core_plus + ms.involvement) * rs_mult * captain_mult
-    negative = ms.core_minus
-    if cfg["rising_stars"]["multiply_negatives"]:
-        negative *= rs_mult
-    if cfg["scoring"]["captain_doubles_negatives"]:
-        negative *= captain_mult
-    return round(positive + negative, 2)
-
-
-# --------------------------------------------------------- squad gameweek ---
-@dataclass
-class Picks:
-    """A saved squad for one gameweek. starters: 11 player ids; bench: 4 ids, bench[0] is the GK."""
-    starters: list
-    bench: list
-    captain: int
-    vice_captain: int
-    positions: dict              # player_id -> GK / DEF / MID / FWD
-
-
-@dataclass
-class GameweekResult:
-    points: float
-    players: dict                 # player_id -> points counted (after multipliers)
-    final_xi: list
-    auto_subs: list               # [(out_id, in_id)]
-    captain_used: int | None
-
-
-def formation_ok(xi, positions, cfg=CFG):
-    mins = cfg["squad"]["starting_xi_min"]
-    count = Counter(positions[p] for p in xi)
-    return all(count[pos] >= n for pos, n in mins.items())
-
-
-def auto_substitute(picks, played, cfg=CFG):
-    """FPL-style auto-subs: each non-playing starter (in XI order) is replaced by the first
-    bench player, in bench order, who played and keeps a legal formation. GK only for GK."""
-    xi, bench_left, subs = list(picks.starters), list(picks.bench), []
-    pos = picks.positions
-    for out_id in picks.starters:
-        if played(out_id):
-            continue
-        for in_id in bench_left:
-            if not played(in_id) or (pos[out_id] == "GK") != (pos[in_id] == "GK"):
-                continue
-            trial = [in_id if p == out_id else p for p in xi]
-            if formation_ok(trial, pos, cfg):
-                xi, subs = trial, subs + [(out_id, in_id)]
-                bench_left.remove(in_id)
-                break
-    return xi, subs
-
-
-def score_gameweek(picks, match_scores, rs_levels=None, cfg=CFG):
-    """Squad total for one round.
-
-    match_scores: player_id -> list of MatchScore for the round's matches
-    rs_levels:    (player_id, fixture_id) -> Rising Star level used for that match
-                  (from advance_rising_stars); players not in it get no bonus
-    A player "played" if they had minutes in any of the round's matches.
-    """
-    rs_levels = rs_levels or {}
-
-    def played(pid):
-        return any(ms.minutes > 0 for ms in match_scores.get(pid, []))
-
-    xi, subs = auto_substitute(picks, played, cfg)
-    captain = next((c for c in (picks.captain, picks.vice_captain) if c in xi and played(c)), None)
-    cap_mult = cfg["squad"]["captain_multiplier"]
-
-    per_player = {}
-    for pid in xi:
-        total = 0.0
-        for ms in match_scores.get(pid, []):
-            level = rs_levels.get((pid, ms.fixture_id))
-            rs_mult = rising_star_multiplier(level, cfg) if level is not None else 1.0
-            total += final_match_points(ms, rs_mult, cap_mult if pid == captain else 1.0, cfg)
-        per_player[pid] = round(total, 2)
-    return GameweekResult(points=round(sum(per_player.values()), 2), players=per_player, final_xi=xi,
-                          auto_subs=subs, captain_used=captain)

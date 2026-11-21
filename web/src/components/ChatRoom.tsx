@@ -1,7 +1,7 @@
 "use client";
 
 // The community chat (GET/POST /api/chat, squad/chat.py): one room for every player. Anyone can read it;
-// posting needs a username and a saved squad. New messages are fetched every few seconds while the page is
+// posting needs a username and $ELEVN in the wallet. New messages are fetched every few seconds while the page is
 // visible (and at once when it becomes visible again); messages removed by their author, by reports or by the
 // admin disappear on the next fetch. What players write is shown as plain text only: React escapes it and no
 // link is ever made from it. Every change to the list goes through one merge, so a fetch landing late can't
@@ -197,10 +197,11 @@ export default function ChatRoom() {
         ) : !me ? <p className="text-[14px] text-muted">Loading your account…</p>
           : me.chat.reason === "username" ? (
           <Prompt text="Pick a username to chat."><button onClick={openUsername} className="btn btn-primary btn-sm">Pick username</button></Prompt>
-        ) : me.chat.reason === "squad" ? (
-          <Prompt text="Save a squad in any league to chat."><Link href="/premier-league" className="btn btn-primary btn-sm">Build a squad</Link></Prompt>
         ) : me.chat.reason === "banned" ? <p className="text-[14px] text-muted">You&apos;re banned from the chat.</p>
           : me.chat.reason === "muted" ? <p className="text-[14px] text-muted">You&apos;re muted for now. You can read along.</p>
+          : me.chat.reason ? (
+          <Prompt text="Hold $ELEVN to chat. Reading is open to everyone."><Link href="/today" className="btn btn-primary btn-sm">See what unlocks</Link></Prompt>
+        )
           : <Composer token={token} onSent={sent} />}
         {error && <p role="alert" className="mt-2 text-[14px] text-danger">{error}</p>}
       </div>

@@ -10,7 +10,7 @@ const display = Barlow_Condensed({ variable: "--font-display", subsets: ["latin"
 
 export const metadata: Metadata = {
   title: "elevn: $ELEVN fantasy football",
-  description: "Hold $ELEVN, pick your squad of real players, score live and win every gameweek.",
+  description: "Hold $ELEVN, pick real players, score live and win SOL.",
   metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
 };
 

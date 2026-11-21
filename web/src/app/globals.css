@@ -123,13 +123,6 @@ a { text-underline-offset: 3px; }
 .intro-on { overflow: hidden; }
 .intro-dot-hidden .logo-fold .fold-text-segment:has(> [data-fold-text="."]) { opacity: 0; }
 
-/* The pitch: grass with mowing stripes, darker at the far end like a floodlit stadium */
-.pitch-grass {
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, .28), transparent 35%, transparent 80%, rgba(0, 0, 0, .18)),
-    repeating-linear-gradient(180deg, var(--pitch) 0 9%, var(--pitch-2) 9% 18%);
-}
-
 /* React Bits StaggeredMenu as the phone menu: its toggle sits in our header bar, its own logo bar is
    hidden (our header has the logo), and the panel takes the night palette with big white words. */
 .elevn-menu .sm-logo { display: none; }
@@ -147,11 +140,6 @@ a { text-underline-offset: 3px; }
 .elevn-menu .sm-socials-link:hover { color: var(--accent); }
 /* from desktop width the Menu button sits on the page's own right edge */
 @media (min-width: 1024px) { .elevn-menu .staggered-menu-header { padding: 0 max(80px, calc((100% - 1360px) / 2 + 80px)); } }
-
-/* The league page's season rail: the ticks fill in from the left once, on arrival. */
-@keyframes rail-in { from { opacity: 0; transform: scaleY(.3); } }
-.rail-tick { animation: rail-in .5s cubic-bezier(.22, .61, .36, 1) backwards; animation-delay: calc(var(--i) * 14ms); }
-@media (prefers-reduced-motion: reduce) { .rail-tick { animation: none; } }
 
 /* No typing cursor over ordinary text: the arrow everywhere, the hand on what can be clicked, and the
    text cursor only where you can actually type. */
@@ -196,10 +184,6 @@ html.slides { scroll-snap-type: y proximity; }
 .slide-rail a:hover .rail-line { background: var(--text); }
 .slide-rail a[aria-current="true"] .rail-line { width: 32px; background: var(--accent); }
 
-/* The hero squad walks on: each shirt rises in after the one before, once the squad has loaded */
-@keyframes shirt-in { from { opacity: 0; transform: translateY(12px) scale(.94); } }
-.shirt-in { animation: shirt-in .6s var(--ease-soft) both; animation-delay: calc(var(--i, 0) * 55ms); }
-
 /* Any page of the full site fades in when you arrive on it (app/(site)/template.tsx; the home page has its
    own intro and skips it). Backwards fill only, so no stacking context is left behind once it has played. */
 @keyframes page-enter { from { opacity: 0; } }
@@ -230,5 +214,5 @@ html.slides { scroll-snap-type: y proximity; }
 @media (prefers-reduced-motion: reduce) {
   .slide-inner, .slide [data-rise], .reveal, .road-line { opacity: 1; transform: none; filter: none; transition: none; }
   .slide[data-seen]:not([data-on]) > .slide-inner { opacity: 1; transform: none; filter: none; }
-  .shirt-in, .page-enter { animation: none; }
+  .page-enter { animation: none; }
 }

@@ -494,3 +494,9 @@ Reporting
 - How: `draft.check` now takes the wallet and uses its stored 15, so a team the check accepts is never refused on save.
 - Changed: `dev_drive.cjs draft` asserts old copy (guest card "Open your 5 packs"/"Play", "Guest view: nothing is saved."); it needs the new strings ("Try Draft", "Sample team: connecting deals").
 - Rule for next time: release yesterday's review (`dev_drive.cjs release`) before `blitz`, or Today and Ranks show that board and 3 checks fail; ports 3000/8000 may hold a stale server, check `ps` first.
+
+## 2026-11-21 · web agent · remove Season from the site
+- Did: deleted `[league]` pages, `card`, SeasonRail, league-fan, pitch, PlayerCard, StepVisuals, lib/squad, clubs, copy; Season types in `lib/api.ts`; the old payout batch block on /admin; Season text on the home, info pages, footer and chat prompt.
+- How: grepped every import before deleting; checked in a private copy (/tmp/web-season) with mocked API routes at 1440 and 390; screenshots `docs/build/shots/noseason-*.png`.
+- Changed: the home page was entirely Season (league fan, prizes, steps), so it is now two slides (start, the two modes) until the real home page is built.
+- Rule for next time: `FaucetCard` (devnet test tokens) is kept but mounted nowhere now; `web/e2e` still tests Season and needs rewriting.

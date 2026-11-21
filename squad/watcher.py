@@ -2,26 +2,23 @@
 
 One WebSocket subscription to every $ELEVN token account (Token and Token-2022 programs,
 filtered by the mint). Solana pushes each balance change the moment it happens; when the
-owner is a player, their balance is re-read and squads it no longer pays for freeze at once
-(squad.holdings.enforce). No polling. On (re)connect, every player's balance is read once so
-nothing missed while disconnected slips through; new players are picked up every minute.
+owner has a locked winnings balance, their balance is re-read and the balance and its withdraw
+timer freeze at once when it drops below the line (squad.winnings.sync_freeze). No polling. On
+(re)connect, every tracked wallet's balance is read once so nothing missed while disconnected slips
+through; new wallets are picked up every minute.
 """
 
 import asyncio
 import base64
 import json
 import time
-from datetime import datetime, timezone
 
 import websockets
 from solders.pubkey import Pubkey
 
 from . import holdings, winnings
 from .chain import TOKEN_PROGRAMS, Rpc, mint_address, parse_token_account, ws_url
-from .config import CFG
 from .db import connect
-
-SEASON = CFG["seasons"]["current"]
 
 
 def is_address(wallet):
@@ -33,26 +30,22 @@ def is_address(wallet):
 
 
 def players(conn):
-    # simulation databases hold made-up wallets; only real addresses can be watched
-    # also every wallet with a locked winnings balance: selling below the line must freeze it at once
-    return {r[0] for r in conn.execute(
-        """SELECT wallet FROM squads WHERE season = %s UNION SELECT wallet FROM winnings WHERE locked_lamports > 0""",
-        (SEASON,)).fetchall() if is_address(r[0])}
+    """Every wallet with a locked winnings balance: selling below the line must freeze it at once.
+    Simulation databases hold made-up wallets; only real addresses can be watched."""
+    return {r[0] for r in conn.execute("SELECT wallet FROM winnings WHERE locked_lamports > 0").fetchall()
+            if is_address(r[0])}
 
 
 def check(conn, rpc, wallet, now=None):
-    """Re-read a player's balance and apply the freeze rule. Returns newly frozen [(squad, gameweek)]."""
+    """Re-read a wallet's balance, keep it, and freeze or unfreeze its locked winnings."""
     bal = holdings.balance(wallet, rpc)
-    frozen = holdings.enforce(conn, wallet, bal, now)
+    holdings.store(conn, wallet, bal, now)
     winnings.sync_freeze(conn, wallet, bal, now)
     conn.commit()
-    if frozen:
-        print(f"{datetime.now():%H:%M:%S} {wallet[:4]}…{wallet[-4:]} holds {bal:,.0f}: froze squads {[s for s, _ in frozen]}")
-    return frozen
 
 
 def handle(conn, rpc, notification, tracked, mint):
-    """One programNotification: if the account's owner plays, re-check them."""
+    """One programNotification: if the account's owner is tracked, re-check them."""
     value = notification["params"]["result"]["value"]
     data = base64.b64decode(value["account"]["data"][0])
     if len(data) < 72:
@@ -78,7 +71,7 @@ async def watch(once=False):
                 tracked = players(conn)
                 for wallet in tracked:             # catch up on anything missed while disconnected
                     check(conn, rpc, wallet)
-                print(f"watching {len(tracked)} players' $ELEVN balances in real time")
+                print(f"watching {len(tracked)} wallets' $ELEVN balances in real time")
                 backoff, refreshed = 1, time.time()
                 while True:
                     try:

@@ -76,7 +76,7 @@ function WalletChip({ label, balance }: { label: string; balance: number | null 
     { id: "copy", label: copied ? "Copied" : "Copy address", run: () => {
       if (!wallet) return;
       navigator.clipboard?.writeText(wallet).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {}); } },
-    ...(me?.is_admin ? [{ id: "payouts", label: "Payouts", run: () => { close(false); router.push("/admin"); } }] : []),
+    ...(me?.is_admin ? [{ id: "payouts", label: "Admin", run: () => { close(false); router.push("/admin"); } }] : []),
     { id: "disconnect", label: "Disconnect", run: () => { close(false); signOut(); } },
   ];
   const onKey = (e: React.KeyboardEvent) => {

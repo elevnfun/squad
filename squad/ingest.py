@@ -1,11 +1,11 @@
 """Ingestion service: API-Football -> Postgres, scoring every player-match as data arrives.
 
   python -m squad.ingest init                          create tables, load leagues
-  python -m squad.ingest fixtures [--league SLUG]      fixture list + gameweeks for the season
+  python -m squad.ingest fixtures [--league SLUG]      fixture list (grouped by league round) for the season
   python -m squad.ingest round --league SLUG --round N finished/played matches of one round
   python -m squad.ingest final --league SLUG --round N settlement re-pull, marks scores final
   python -m squad.ingest live                          poll live matches (15 s events, 60 s player stats)
-  python -m squad.ingest injuries [--league SLUG]      injured / suspended players for the open gameweek
+  python -m squad.ingest prices --league SLUG [--round N]  starting prices (player_prices) from out/prices_<league>.csv
   python -m squad.ingest rescore [--league SLUG]       re-derive stored scores at each player's game position
 
 Players score at their game position (their builder section, set by the starting prices),
@@ -15,6 +15,7 @@ Every raw response is stored in api_responses so scores can be re-derived and au
 """
 
 import argparse
+import csv
 import json
 import os
 import re
@@ -28,7 +29,6 @@ from psycopg.types.json import Jsonb
 from .apifootball import Client
 from .config import CFG, ROOT, launch_leagues
 from .db import connect, init_schema
-from .game import refresh_gameweeks, window_gameweek
 from .scoring import PlayerMatch, parse_fixture, score_match
 
 API = CFG["api_football"]
@@ -65,7 +65,7 @@ def upsert_fixture(conn, fx):
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now())
                     ON CONFLICT (id) DO UPDATE SET
                       round = EXCLUDED.round, kickoff = EXCLUDED.kickoff,
-                      -- keep a rescheduled match's gameweek (see game.assign_gameweeks) unless its round changed
+                      -- keep the fixture's gameweek row unless its round changed
                       gameweek_id = CASE WHEN fixtures.round = EXCLUDED.round THEN fixtures.gameweek_id
                                          ELSE EXCLUDED.gameweek_id END,
                       status = EXCLUDED.status, elapsed = EXCLUDED.elapsed, home_goals = EXCLUDED.home_goals,
@@ -168,16 +168,14 @@ def fetch_details(client, conn, ids, use_cache=True):
 
 
 def ingest_fixtures(client, conn, slugs, season=SEASON):
-    """Season fixture list -> fixtures + gameweeks with lock / settlement times. 1 call per league."""
+    """Season fixture list -> fixtures, each in its league round. 1 call per league."""
     for slug in slugs:
         params = {"league": launch_leagues()[slug], "season": season}
         data = client.api("/fixtures", params)
         store_response(conn, "/fixtures", params, data)
         gws = [upsert_fixture(conn, fx) for fx in data.get("response", [])]
-        moved = refresh_gameweeks(conn, launch_leagues()[slug], season)
         conn.commit()
-        print(f"{slug}: {len(gws)} fixtures in {len(set(gws))} rounds"
-              + (f", {moved} rescheduled into the gameweek they are played in" if moved else ""))
+        print(f"{slug}: {len(gws)} fixtures in {len(set(gws))} rounds")
 
 
 def ingest_round(client, conn, slug, rnd, season=SEASON, final=False):
@@ -193,51 +191,55 @@ def ingest_round(client, conn, slug, rnd, season=SEASON, final=False):
         players += upsert_player_stats(conn, fx, final=final and fx["fixture"]["status"]["short"] in FINISHED)
     for fx in data.get("response", []):
         upsert_fixture(conn, fx)   # unplayed fixtures keep their kickoff/status current
-    refresh_gameweeks(conn, params["league"], season)
     conn.commit()
     print(f"{slug} {round_name}: {len(played)} played matches, {players} player-matches scored"
           + (" (final)" if final else ""))
 
 
 def final_pull(client, conn, fixture_ids, use_cache=False):
-    """Settlement re-pull: fresh full-time data for a gameweek's fixtures, scores marked final."""
+    """Re-pull: fresh full-time data for fixtures, scores marked final."""
     for fx in fetch_details(client, conn, fixture_ids, use_cache=use_cache):
         upsert_fixture(conn, fx)
         upsert_player_stats(conn, fx, final=fx["fixture"]["status"]["short"] in FINISHED)
 
 
-def injury_status(entry):
-    """API-Football /injuries entry -> injured / suspended / doubtful."""
-    p = entry["player"]
-    if p.get("type") == "Questionable":
-        return "doubtful"
-    return "suspended" if re.search(r"suspen|red card|yellow card", p.get("reason") or "", re.I) else "injured"
-
-
-def ingest_injuries(client, conn, slug, season=SEASON):
-    """Who misses the open gameweek's matches (1 call per league). Drives free replacements."""
-    league_id = launch_leagues()[slug]
-    gw = window_gameweek(conn, league_id, season)
-    if gw is None:
-        print(f"{slug}: transfer window closed, nothing to check")
-        return
-    fids = {r[0] for r in conn.execute("SELECT id FROM fixtures WHERE gameweek_id = %s", (gw.id,)).fetchall()}
-    params = {"league": league_id, "season": season}
-    data = client.api("/injuries", params)
-    store_response(conn, "/injuries", params, data)
-    known = {r[0] for r in conn.execute("SELECT id FROM players WHERE league_id = %s", (league_id,)).fetchall()}
-    conn.execute("DELETE FROM player_availability WHERE gameweek_id = %s AND status <> 'left_league'", (gw.id,))
+def load_prices(conn, slug, gameweek_id, path=None):
+    """Starting prices from the pricing script's CSV (squad_pricing.py), into player_prices (Draft ranks
+    players by their latest price). The CSV's position is the player's game position (most frequent across
+    the data)."""
+    league_id = launch_leagues()[slug] if slug in launch_leagues() else CFG["leagues"][slug]["id"]
+    path = path or ROOT / "out" / f"prices_{slug}.csv"
     n = 0
-    for e in data.get("response", []):
-        pid = e["player"]["id"]
-        if e["fixture"]["id"] in fids and pid in known:
-            conn.execute("""INSERT INTO player_availability (gameweek_id, player_id, status, reason)
-                            VALUES (%s, %s, %s, %s) ON CONFLICT (gameweek_id, player_id) DO UPDATE SET
-                              status = EXCLUDED.status, reason = EXCLUDED.reason, checked_at = now()""",
-                         (gw.id, pid, injury_status(e), e["player"].get("reason")))
+    with open(path, newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            conn.execute("INSERT INTO clubs (id, name) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING",
+                         (int(r["team_id"]), r["team"]))
+            conn.execute("""INSERT INTO players (id, name, position, club_id, league_id, updated_at)
+                            VALUES (%s, %s, %s, %s, %s, now())
+                            ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, position = EXCLUDED.position,
+                              club_id = EXCLUDED.club_id, league_id = EXCLUDED.league_id, updated_at = now()""",
+                         (int(r["player_id"]), r["name"], r["position"], int(r["team_id"]), league_id))
+            conn.execute("""INSERT INTO player_prices (player_id, gameweek_id, price, source) VALUES (%s, %s, %s, %s)
+                            ON CONFLICT (player_id, gameweek_id) DO UPDATE SET price = EXCLUDED.price,
+                              source = EXCLUDED.source""",
+                         (int(r["player_id"]), gameweek_id, float(r["price"]), r["price_source"]))
             n += 1
     conn.commit()
-    print(f"{slug} {gw.round}: {n} players out or doubtful")
+    return n
+
+
+def price_gameweek(conn, league_id, rnd=None, season=SEASON):
+    """The league round row the prices hang on: the named round, else the first with a match still to play."""
+    if rnd is not None:
+        name = f"Regular Season - {rnd}" if str(rnd).isdigit() else rnd
+        row = conn.execute("SELECT id FROM gameweeks WHERE league_id = %s AND season = %s AND round = %s",
+                           (league_id, season, name)).fetchone()
+    else:
+        row = conn.execute("""SELECT g.id FROM gameweeks g WHERE g.league_id = %s AND g.season = %s
+                              AND EXISTS (SELECT 1 FROM fixtures f WHERE f.gameweek_id = g.id
+                                          AND f.status IN ('NS', 'TBD'))
+                              ORDER BY g.number NULLS LAST, g.id LIMIT 1""", (league_id, season)).fetchone()
+    return row[0] if row else None
 
 
 # ------------------------------------------------------------------- live ---
@@ -306,8 +308,9 @@ def main(argv=None):
         p.add_argument("--round", required=True, help='number (9) or full name ("Regular Season - 9")')
     p = sub.add_parser("live")
     p.add_argument("--once", action="store_true", help="one poll, then exit")
-    p = sub.add_parser("injuries")
-    p.add_argument("--league", choices=launch_leagues(), action="append")
+    p = sub.add_parser("prices")
+    p.add_argument("--league", choices=launch_leagues(), required=True)
+    p.add_argument("--round", help="league round to hang the prices on (default: the next one with a match to play)")
     p = sub.add_parser("rescore")
     p.add_argument("--league", choices=launch_leagues())
     args = ap.parse_args(argv)
@@ -316,6 +319,14 @@ def main(argv=None):
     if args.cmd == "init":
         init_schema(conn)
         print("schema ready")
+        return
+    if args.cmd == "prices":
+        league_id = launch_leagues()[args.league]
+        gw = price_gameweek(conn, league_id, args.round)
+        if gw is None:
+            raise SystemExit("no such round (run `python -m squad.ingest fixtures` first)")
+        print(f"{args.league}: {load_prices(conn, args.league, gw)} prices loaded")
+        print(f"{rescore(conn, league_id)} player-matches rescored at their game positions")
         return
     if args.cmd == "rescore":
         n = rescore(conn, launch_leagues()[args.league] if args.league else None)
@@ -331,9 +342,6 @@ def main(argv=None):
         ingest_round(client, conn, args.league, args.round, final=args.cmd == "final")
     elif args.cmd == "live":
         live_loop(client, conn, once=args.once)
-    elif args.cmd == "injuries":
-        for slug in args.league or list(launch_leagues()):
-            ingest_injuries(client, conn, slug)
     print(f"API calls: {client.calls}")
 
 

@@ -28,7 +28,7 @@ def minimum(kind):
 
 
 def allocate(conn, ref=None):
-    """Move the prize money no Season area owns (pot:unassigned) into the mode buckets.
+    """Move the prize money not yet split (pot:unassigned) into the mode buckets.
     Blitz gets 60% rounded down, Draft the rest. Returns (blitz, draft) lamports moved."""
     amount = payouts.bucket(conn, "pot:unassigned")
     if amount <= 0:

@@ -2,7 +2,7 @@ import Link from "next/link";
 import Social from "./Social";
 
 const COLUMNS = [
-  { title: "Play", links: [["Premier League", "/premier-league"], ["La Liga", "/la-liga"], ["Bundesliga", "/bundesliga"], ["Chat", "/chat"]] },
+  { title: "Play", links: [["Today", "/today"], ["Ranks", "/ranks"], ["Chat", "/chat"]] },
   { title: "Learn", links: [["How to play", "/how-to-play"], ["FAQ", "/faq"], ["Roadmap", "/roadmap"]] },
   { title: "elevn", links: [["About", "/about"], ["News", "/news"]] },
 ];
@@ -30,7 +30,7 @@ export default function Footer() {
       </div>
       <div className="mx-auto max-w-[1360px] px-6 lg:px-20">
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line py-4">
-          <p className="text-[13px] text-muted">© {new Date().getFullYear()} elevn. Prizes are paid in SOL from trading fees on $ELEVN.</p>
+          <p className="text-[13px] text-muted">© {new Date().getFullYear()} elevn. Prizes are paid in SOL.</p>
           <Social className="-mr-2" />
         </div>
       </div>

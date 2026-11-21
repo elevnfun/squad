@@ -440,7 +440,7 @@ export default function TodayView() {
               <div>
                 <span className="e2-eyebrow">Side game</span>
                 <h2 id="t-Shootout">Penalty Shootout</h2>
-                <p className="e2-small e2-muted">10 ranked games a day · no prize</p>
+                <p className="e2-small e2-muted">10 ranked games a day</p>
               </div>
               <Link className="e2-btn e2-btn-line e2-btn-sm" href="/shootout">Play</Link>
             </article>

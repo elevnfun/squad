@@ -1,7 +1,6 @@
 """The community chat: one room for every player (config.toml [chat]).
 
-Anyone can read it, signed in or not. Posting needs a username and a squad saved at least once, so a
-throwaway wallet can't post the moment it signs in. Messages are plain text, up to 500 characters and 8
+Anyone can read it, signed in or not. Posting needs a username. Messages are plain text, up to 500 characters and 8
 lines, with no links (the commonest scam on crypto sites) and no slurs or abuse (squad/moderation.py).
 Each wallet and each connection is slowed down; the connection is kept only as a keyed hash (an IPv6
 network counts as one connection). Players delete their own messages and report others: three reports from
@@ -21,7 +20,6 @@ from . import auth, chain, faucet, moderation, profiles
 from .config import CFG
 
 C = CFG["chat"]
-SEASON = CFG["seasons"]["current"]
 TEN_MIN = timedelta(minutes=10)
 _IP_KEY = hmac.new(auth._SECRET, b"chat-ip", hashlib.sha256).digest()   # its own key, not the session key
 # characters that show nothing: format marks (zero-width, direction overrides, tags), line and paragraph
@@ -42,7 +40,7 @@ def ip_key(ip):
 
 
 def can_post(conn, wallet, now=None):
-    """(allowed, reason): reason is username, squad, banned or muted."""
+    """(allowed, reason): reason is username, banned or muted."""
     now = now or datetime.now(timezone.utc)
     row = conn.execute("SELECT chat_banned, chat_muted_until FROM profiles WHERE wallet = %s", (wallet,)).fetchone()
     if row is None:
@@ -51,9 +49,7 @@ def can_post(conn, wallet, now=None):
         return False, "banned"
     if row[1] and row[1] > now:
         return False, "muted"
-    saved = conn.execute("""SELECT EXISTS (SELECT 1 FROM squad_picks p JOIN squads s ON s.id = p.squad_id
-                                           WHERE s.wallet = %s AND s.season = %s)""", (wallet, SEASON)).fetchone()[0]
-    return (True, None) if saved else (False, "squad")
+    return True, None
 
 
 def _require(conn, wallet, now):
@@ -63,7 +59,7 @@ def _require(conn, wallet, now):
     if why == "muted":
         (until,) = conn.execute("SELECT chat_muted_until FROM profiles WHERE wallet = %s", (wallet,)).fetchone()
         raise ChatError(f"You're muted until {until:%d %b, %H:%M} UTC", 403)
-    raise ChatError({"username": "Pick a username to chat", "squad": "Save a squad to chat",
+    raise ChatError({"username": "Pick a username to chat",
                      "banned": "You're banned from the chat"}[why], 403)
 
 

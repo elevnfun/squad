@@ -13,7 +13,7 @@ from solders.transaction import Transaction
 from squad import api, auth, contests, holdings, jobs, payouts, watcher, winnings
 from squad.config import CFG
 from squad.db import init_schema
-from tests.test_payouts import LocalChain
+from tests.helpers import LocalChain
 
 URL = "postgresql://localhost:5433/{}"
 DB = "squad_test_api2"
@@ -141,8 +141,8 @@ def test_access_follows_balance(world, monkeypatch):
 def test_me_keeps_its_keys_and_adds_two(world):
     client, _, player, _ = world
     me = client.get("/api/me", headers=hdr(player)).json()
-    for key in ("wallet", "balance", "requirement", "squads_allowed", "is_admin", "faucet", "username",
-                "username_next_change", "chat", "squads"):
+    for key in ("wallet", "balance", "requirement", "is_admin", "faucet", "username",
+                "username_next_change", "chat"):
         assert key in me
     assert me["access"] == {"blitz": True, "draft": False}
     assert me["winnings"] == {"ready_sol": 0.0, "locked_sol": 0.0, "frozen": False}

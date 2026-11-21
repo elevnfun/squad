@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import { InfoPage, Panel, PlayCta, Section } from "@/components/InfoPage";
-import Reveal from "@/components/Reveal";
-import { STEPS } from "@/lib/copy";
-import StepVisual from "@/components/StepVisuals";
 
 export const metadata: Metadata = { title: "How to play | elevn" };
 
@@ -17,37 +14,28 @@ const POINTS = [
 
 export default function HowToPlay() {
   return (
-    <InfoPage title="Four steps to your first squad"
-      intro="Pick real players, score points from their real matches and climb the leaderboard every gameweek.">
-      <ol className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
-        {STEPS.map((s, i) => (
-          <Reveal as="li" key={s.title} delay={i} className="flex gap-4">
-            <span className="text-5xl font-extrabold leading-none tabular-nums text-link">{i + 1}</span>
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-bold">{s.title}</p>
-              <p className="mt-1 text-muted">{s.text}</p>
-              <div className="mt-4"><StepVisual step={i} /></div>
-            </div>
-          </Reveal>
-        ))}
-      </ol>
-      <Section title="Your squad">
+    <InfoPage title="How to play"
+      intro="Pick real players, score points from their real matches and climb the leaderboard.">
+      <Section title="Matchday Blitz">
         <p>
-          A squad has <strong>eleven players | 4 substitutions</strong>: 2 goalkeepers, 5 defenders, 5 midfielders and 3
-          forwards in all, built with a <strong>100M budget</strong> and at most <strong>3 players from one club</strong>.
-          The eleven start each gameweek. If a starter doesn&apos;t play, a substitute comes on automatically.
+          Hold <strong>150,000 $ELEVN</strong> to play. Each matchday you build <strong>3 squads</strong> on any 3 matches you
+          choose. A squad is 3 players from one match, with at least 1 from each club, and it locks at its own kickoff.
         </p>
         <p>
-          Pick a <strong>captain</strong> to double their points (negative points still count once) and a vice-captain
-          who takes over if the captain doesn&apos;t play.
+          Every squad has a <strong>captain</strong> who scores double points (negative points still count once).
+          One live leaderboard runs all matchday.
         </p>
       </Section>
-      <Section title="Transfers">
+      <Section title="Draft">
         <p>
-          You get <strong>3 free transfers</strong> every gameweek. Unused ones don&apos;t carry over, and each extra
-          transfer costs 8 points. Replacing an injured or suspended player is always free.
+          Hold <strong>300,000 $ELEVN</strong> in all to play. Each week you open <strong>5 personal packs of 3 players</strong>,
+          different for every wallet, and build a five-a-side from the 15: at least 1 defender, 1 midfielder and 1 attacker,
+          no goalkeepers, at most 2 players from one club.
         </p>
-        <p>Prices move with form, and players sell at today&apos;s price, so a rising player grows your budget.</p>
+        <p>
+          Draft opens on Tuesday and locks at Friday&apos;s first kickoff. It scores from Friday to Monday, and a captain
+          on double points is mandatory.
+        </p>
       </Section>
       <Section title="Points">
         <Panel className="p-0">
@@ -65,8 +53,9 @@ export default function HowToPlay() {
       </Section>
       <Section title="Prizes">
         <p>
-          The <strong>top three squads in each league</strong> share that league&apos;s prize pool: 50%, 30% and 20%.
-          30% of a prize is sent when the gameweek settles, and the rest arrives in 14 daily parts while you keep holding.
+          Every prize board pays its <strong>top 5</strong> in SOL: 50%, 25%, 12%, 8% and 5% of the pot. A result is final
+          15 minutes after the day&apos;s last match. Winners press <strong>Collect</strong> on the Winnings page: half is
+          yours at once, and 20% of the locked half can be withdrawn every 24 hours while you hold 150,000 $ELEVN.
         </p>
       </Section>
       <PlayCta />

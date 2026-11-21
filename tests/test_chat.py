@@ -1,29 +1,24 @@
-"""Community chat: one room, readable by anyone; posting needs a username and a saved squad."""
+"""Community chat: one room, readable by anyone; posting needs a username."""
 
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from squad import chat, game, profiles
-from tests.test_game_db import A_BENCH, A_XI, D1, LEAGUE, conn, setup_world  # noqa: F401
+from squad import chat, profiles
 
-NOW = D1 - timedelta(days=2)
+NOW = datetime(2026, 8, 20, 14, 0, tzinfo=timezone.utc)
 ADMIN = "FeeWalletAdmin0000"
 
 
-def player(c, wallet, name, saved=True):
-    """A wallet with a username and, unless saved=False, a squad saved for round 1."""
+def player(c, wallet, name):
+    """A wallet with a username."""
     profiles.claim(c, wallet, name, NOW - timedelta(days=1))
-    if saved:
-        sid = game.create_squad(c, wallet, LEAGUE, name=name)
-        assert game.save_squad(c, sid, A_XI, A_BENCH, 107, 307, NOW - timedelta(hours=1)).ok
     c.commit()
     return wallet
 
 
 @pytest.fixture
 def room(conn, monkeypatch):
-    setup_world(conn)
     monkeypatch.setenv("FEE_WALLET", ADMIN)
     return conn
 
@@ -41,12 +36,12 @@ def test_a_player_posts_and_everyone_reads_it(room):
     assert page["messages"][0]["admin"] is False
 
 
-def test_posting_needs_a_username_and_a_saved_squad(room):
+def test_posting_needs_a_username(room):
     assert chat.can_post(room, "NoNameWallet") == (False, "username")
-    w = player(room, "WalletNoSquad", "Squadless", saved=False)
-    assert chat.can_post(room, w) == (False, "squad")
-    with pytest.raises(chat.ChatError, match="Save a squad"):
-        say(room, w, "hello")
+    with pytest.raises(chat.ChatError, match="Pick a username"):
+        say(room, "NoNameWallet", "hello")
+    w = player(room, "WalletNamed", "Named")
+    assert chat.can_post(room, w) == (True, None)
 
 
 @pytest.mark.parametrize("body, why", [

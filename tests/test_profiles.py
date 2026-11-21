@@ -5,7 +5,6 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from squad import profiles
-from tests.test_game_db import conn  # noqa: F401
 
 NOW = datetime(2026, 11, 13, 12, 0, tzinfo=timezone.utc)
 A, B = "WalletAAAA1111", "WalletBBBB2222"

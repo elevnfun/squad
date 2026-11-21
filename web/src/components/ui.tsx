@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Gameweek } from "@/lib/api";
 import LatticeLoader from "@/components/lattice-loader/LatticeLoader";
 import CountUp from "@/components/count-up/CountUp";
 import GlideSelect from "@/components/glide-select/GlideSelect";
@@ -49,42 +48,6 @@ export function Button({ children, variant = "primary", className = "", ...props
       {children}
     </button>
   );
-}
-
-function left(ms: number) {
-  if (ms <= 0) return "now";
-  const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24, m = Math.floor(ms / 60000) % 60;
-  return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m ${Math.floor(ms / 1000) % 60}s`;
-}
-
-export function Countdown({ to }: { to: string }) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
-  return <span className="tabular-nums">{left(new Date(to).getTime() - now)}</span>;
-}
-
-const LABEL: Record<Gameweek["state"], string> = {
-  open: "Transfers open", locked: "Locked", live: "Live", settling: "Final whistle", settled: "Settled",
-};
-
-export function StateBadge({ state }: { state: Gameweek["state"] }) {
-  const live = state === "live";
-  return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[13px] font-semibold ${
-      live ? "bg-live text-black" : "bg-surface-2 text-muted"}`}>
-      {live && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-black" />}
-      {LABEL[state]}
-    </span>
-  );
-}
-
-export function GameweekLine({ window, current, next }: { window: Gameweek | null; current: Gameweek | null; next: Gameweek | null }) {
-  if (current) return <span className="inline-flex items-center gap-2">Gameweek {current.number} <StateBadge state={current.state} /></span>;
-  if (window?.deadline) return <span>Gameweek {window.number} deadline in <Countdown to={window.deadline} /></span>;
-  if (next?.deadline) return new Date(next.deadline).getTime() <= Date.now()
-    ? <span>Gameweek {next.number} is kicking off</span>
-    : <span>Gameweek {next.number} kicks off in <Countdown to={next.deadline} /></span>;
-  return <span className="text-muted">No upcoming gameweek</span>;
 }
 
 // Shown while a page waits on the server or the chain.

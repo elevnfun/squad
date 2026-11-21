@@ -5,9 +5,8 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from solders.keypair import Keypair
 
-from squad import chain, faucet, payouts
-from tests.test_game_db import conn  # noqa: F401
-from tests.test_payouts import SOL, LocalChain, make_mint
+from squad import faucet
+from tests.helpers import SOL, LocalChain, make_mint
 
 NOW = datetime(2026, 11, 13, 12, 0, tzinfo=timezone.utc)
 RAW = 10 ** 6   # the test mint has 6 decimals
@@ -119,10 +118,3 @@ def test_a_claim_cut_off_mid_send_can_be_tried_again_later(tap):
 def test_a_wallet_address_must_be_real(tap):
     with pytest.raises(faucet.FaucetError, match="address"):
         claim(tap, wallet="not-a-wallet")
-
-
-def test_devnet_pots_are_topped_up_to_a_smaller_minimum(monkeypatch):
-    monkeypatch.setitem(payouts.FEES, "cluster", "devnet")
-    assert payouts.minimum_pot() == round(payouts.PZ["minimum_per_area_sol_devnet"] * chain.LAMPORTS)
-    monkeypatch.setitem(payouts.FEES, "cluster", "mainnet")
-    assert payouts.minimum_pot() == round(payouts.PZ["minimum_per_area_sol"] * chain.LAMPORTS)

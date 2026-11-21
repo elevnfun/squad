@@ -1,38 +1,5 @@
 // Typed client for the $ELEVN Python API (proxied at /api by next.config.ts).
 
-export type Position = "GK" | "DEF" | "MID" | "FWD";
-export const POSITIONS: Position[] = ["GK", "DEF", "MID", "FWD"];
-export const SECTION: Record<Position, string> = {
-  GK: "Goalkeepers", DEF: "Defenders", MID: "Midfielders", FWD: "Attackers",
-};
-export const SHORT: Record<Position, string> = { GK: "GK", DEF: "DEF", MID: "MID", FWD: "ATT" };
-export const QUOTA: Record<Position, number> = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
-export const BUDGET = 100;
-export const LEAGUE_NAMES: Record<string, string> = {
-  "premier-league": "Premier League", "la-liga": "La Liga", "bundesliga": "Bundesliga",
-};
-
-export type Gameweek = {
-  number: number; round: string; state: "open" | "locked" | "live" | "settling" | "settled";
-  deadline: string | null; settles_at: string | null;
-};
-export type LeagueSummary = { slug: string; id: number; window: Gameweek | null; current: Gameweek | null; next: Gameweek | null };
-export type Player = {
-  id: number; name: string; position: Position; club: { id: number; name: string; logo: string | null };
-  photo: string | null; price: number; points: number; appearances: number; form: number | null;
-  status: string | null; status_reason: string | null;
-};
-export type Picks = { starters: number[]; bench: number[]; captain: number | null; vice_captain: number | null };
-export type Problem = { code: string; message: string; players: number[] };
-export type Transfer = { player_out: number; player_in: number; kind: "free" | "replacement" | "extra"; penalty: number };
-export type CheckResult = {
-  ok: boolean; problems: Problem[]; cost: number; budget: number; penalty: number; transfers: Transfer[];
-};
-export type SquadView = {
-  id: number; league: string; slot: number; name: string | null; window: Gameweek | null;
-  picks: Picks | null; saved_for_window: boolean; draft: Picks | null; budget: number | null;
-  transfers: { out: number; in: number; kind: string; penalty: number }[];
-};
 export type Me = {
   wallet: string; balance: number; requirement: number; squads_allowed: number; is_admin: boolean;
   faucet: { amount: number; claimed: boolean } | null;   // the devnet test season's free tokens; null when off
@@ -40,62 +7,12 @@ export type Me = {
   access?: { blitz: boolean; draft: boolean };                                   // what the wallet's $ELEVN unlocks
   winnings?: { ready_sol: number; locked_sol: number; frozen: boolean };
   chat: { can_post: boolean; reason: "username" | "squad" | "banned" | "muted" | null };
-  squads:{ id: number; league: string; slot: number; name: string | null; frozen_at: string | null; unpaid: boolean; can_delete: boolean }[];
-};
-export type Prize = {
-  id: number; league: string; gameweek: number; place: number; sol: number; sent_sol: number;
-  instant_sol: number; vest_sol: number; days_paid: number; days: number; paused: boolean; returned_sol: number;
-};
-export type BatchItem = {
-  id: number; kind: "instant" | "vest" | "buyback" | "burn" | "operations"; wallet: string | null; sol: number;
-  tokens: number; prize: number | null; status: "pending" | "paid" | "failed" | "skipped"; signature: string | null; note: string | null;
-};
-export type Batch = { id: number; created_at: string; status: string; summary: { income?: number }; items: BatchItem[] };
-export type AdminOverview = {
-  fee_wallet: string; cluster: string; wallet_sol: number | null; accounted_sol: number;
-  buckets: Record<string, number>; last_batch: Batch | null;
-};
-export type BatchTx = { idx: number; tx: string; items: number[]; label: string; versioned: boolean };
-export type MatchLine = {
-  fixture: number; match: string; status: string; minutes: number; points: number; breakdown: [string, number][];
-};
-export type GameweekPoints = {
-  squad: { id: number; name: string | null; wallet: string; username: string | null; slot: number };
-  gameweek: Gameweek; points: number; transfer_penalty: number; captain_used: number | null;
-  auto_subs: [number, number][]; is_final: boolean; rank: number | null; squads: number; frozen_at: string | null;
-  players: {
-    id: number; slot: number; captain: boolean; vice_captain: boolean; name: string; position: Position;
-    club: string; photo: string | null; counted: number | null; matches: MatchLine[];
-  }[];
-};
-export type TableRow = {
-  rank: number; squad: number; name: string; wallet: string; username: string | null; points: number; transfer_penalty: number; final: boolean;
-  frozen: boolean;
-};
-
-export type Club = { id: number; name: string; logo: string | null };
-export type Fixture = {
-  id: number; kickoff: string; status: string; elapsed: number | null;
-  home: Club & { goals: number | null }; away: Club & { goals: number | null };
-};
-export type StandingRow = { rank: number; squad: number; name: string; wallet: string; username: string | null; points: number; gameweeks: number };
-export type SquadHistory = {
-  squad: { id: number; name: string | null; wallet: string; username: string | null; slot: number };
-  total: number; rank: number | null; squads: number;
-  gameweeks: { number: number; points: number; transfer_penalty: number; final: boolean; rank: number; squads: number }[];
-};
-export type PlayerDetail = {
-  recent: { gameweek: number; points: number; opponent: string; home: boolean; minutes: number }[];
-  upcoming: { gameweek: number; kickoff: string; home: boolean; opponent: Club; difficulty: number }[];
-  selected: number | null;
 };
 export type ChatMessage = {
   id: number; wallet: string; username: string | null; body: string; at: string; admin: boolean;
   reports?: number; held?: boolean;   // admin only: report count, and hidden by reports until restored
 };
 export type ChatPage = { messages: ChatMessage[]; hidden: number[] };
-export const FINISHED = ["FT", "AET", "PEN"];
-export const NOT_STARTED = ["NS", "TBD", "PST", "CANC"];
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public detail?: unknown) {
@@ -118,16 +35,12 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
   if (!res.ok) {
     let detail: unknown;
     try { detail = (await res.json()).detail; } catch { detail = undefined; }
-    const message = typeof detail === "string" ? detail : res.status === 422 ? "Squad can't be saved yet"
-      : res.status >= 500 ? UNREACHABLE : `Request failed (${res.status})`;
+    const message = typeof detail === "string" ? detail : res.status >= 500 ? UNREACHABLE : `Request failed (${res.status})`;
     throw new ApiError(res.status, message, detail);
   }
   return res.json() as Promise<T>;
 }
 
-export const fmtM = (n: number | null | undefined) => (n == null ? "-" : `${n.toFixed(1)}M`);
-export const fmtPts = (n: number | null | undefined) => (n == null ? "-" : Number.isInteger(n) ? `${n}` : n.toFixed(1));
-export const fmtSol = (n: number) => `${n.toFixed(n >= 1 ? 2 : 4)} SOL`;
 // whole lamports, floored to 4 decimals, shown with at least 2 ("1.00", "0.4032"). Flooring means shares never add up to more than the pot.
 export function sol(lamports: number): string {
   const units = Math.floor(Math.max(0, lamports) / 100_000);       // 1e-4 SOL
@@ -246,21 +159,23 @@ export type ShootoutRow = {
   wallet: string; name?: string | null; wins: number; draws: number; losses: number; goals_for: number; goals_against: number; games: number;
 };
 export type ShootoutInfo = {
-  rules: { rounds: number; ranked_games_per_day: number; powers: unknown[] }; ranked_left?: number; board: ShootoutRow[];
+  rules: { rounds: number; ranked_games_per_day: number; sides?: unknown; powers: unknown; miss?: unknown; save?: unknown }; ranked_left?: number; board: ShootoutRow[];
 };
-export type ShootoutScore = { me: number; them: number };
-export type ShootoutStart = {
-  token: string; mode: ShootoutMode; round: number; turn: "shoot" | "keep"; score: ShootoutScore; state: "playing" | "done";
-};
+export type ShootoutScore = { for: number; against: number };
 export type ShootoutKick = {
-  shot_side: ShootoutSide; keeper_side: ShootoutSide; result: "goal" | "saved" | "missed";
-  round: number; turn: "shoot" | "keep"; score: ShootoutScore; state: "playing" | "done";
+  kind: "shoot" | "keep"; round: number; shot_side: ShootoutSide; power: ShootoutPower | null; keeper_side: ShootoutSide;
+  result: "goal" | "saved" | "missed";
+};
+// start, shoot, keep and GET /shootout/{token} all return a game view; `kick` is present on shoot and keep only
+export type ShootoutGame = {
+  token: string; mode: ShootoutMode; state: "playing" | "done"; turn: "shoot" | "keep" | null; round: number; rounds: number;
+  score: ShootoutScore; kicks: ShootoutKick[]; kick?: ShootoutKick; result?: "win" | "draw" | "loss";
 };
 
 export const fetchShootout = (token?: string | null) => api<ShootoutInfo>("/shootout", { token });
 export const startShootout = (mode: ShootoutMode, token?: string | null) =>
-  api<ShootoutStart>("/shootout/start", { method: "POST", body: { mode }, token });
-export const shootoutShoot = (game: string, side: ShootoutSide, power: ShootoutPower) =>
-  api<ShootoutKick>(`/shootout/${encodeURIComponent(game)}/shoot`, { method: "POST", body: { side, power } });
-export const shootoutKeep = (game: string, side: ShootoutSide) =>
-  api<ShootoutKick>(`/shootout/${encodeURIComponent(game)}/keep`, { method: "POST", body: { side } });
+  api<ShootoutGame>("/shootout/start", { method: "POST", body: { mode }, token });
+export const shootoutShoot = (game: string, side: ShootoutSide, power: ShootoutPower, token?: string | null) =>
+  api<ShootoutGame>(`/shootout/${encodeURIComponent(game)}/shoot`, { method: "POST", body: { side, power }, token });
+export const shootoutKeep = (game: string, side: ShootoutSide, token?: string | null) =>
+  api<ShootoutGame>(`/shootout/${encodeURIComponent(game)}/keep`, { method: "POST", body: { side }, token });

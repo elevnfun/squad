@@ -19,7 +19,7 @@ from solders.transaction import Transaction
 from squad import chain, winnings
 from squad.db import init_schema
 from squad.winnings import ClaimError
-from tests.test_payouts import LocalChain
+from tests.helpers import LocalChain
 
 SOL = chain.LAMPORTS
 T0 = datetime(2026, 11, 20, 12, 0, tzinfo=timezone.utc)
