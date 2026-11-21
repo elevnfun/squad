@@ -131,3 +131,11 @@ fixture (they show Liverpool v Man City and Chelsea v Newcastle) or the scorer i
 I render a copy of the pick, Today and Ranks pages in a browser with that fixture and scorer filled in (free).
 Only sample text changes; the mockups themselves are not touched. Club crests on the screens stay as the
 mockups draw them (three-letter codes), not real badges.
+
+## Test shot 2: Man City v Chelsea (2026-11-21)
+Cost 35 credits. Balance after: about 1,060. File: `docs/design/video/tests/test-shot-2-city-chelsea.mp4` (1280x720, 5 s).
+Higgsfield did not refuse. Good: broadcast look, wide then close tracking camera, sky-blue number 9 with a
+Haaland-like build and hair, first defender beaten, referee in frame. Weak: garbled text on the pitch-side
+boards and on the shirt chest (reads as fake sponsors), the stadium resembles a real ground, the ball is yellow,
+the second defender is not shown yet. Fix: ask for blank boards and a plain chest, a white ball, and mask any
+leftover text when compositing.
