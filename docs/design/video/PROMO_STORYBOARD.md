@@ -259,3 +259,11 @@ library effects: boom and hit 8.0, long whoosh 8.75, hit 9.5, blips 14.0 and 14.
 Mix: -14.5 LUFS, true peak -4.0 dBFS after encoding. The generated sounds were not listened to (no way to listen here); the shout and the boots clip are the least certain.
 Frame joins (mean difference between neighbours, normal about 2-12): slow-mo to pull-back 0.6, room to push 3.0, push to full screen 2.0, screen to goal effect 0.0; snap flash at 9.5 is intended.
 Credits: 948.5 before clip E, about 913.5 after; spent in total about 217.
+
+## Section v5 (2026-11-21): audio fix for 7-12 s (replaces v4)
+File: `docs/design/video/sections/section_goal_to_platform_v5.mp4`. Picture is identical to v4.
+Cause found by measuring each sound: the mix before limiting peaked at 1.73 (1.0 is full scale) at 8-9 s, with several sounds stacking (music drop, boom, roar, shout), so the limiter pumped and distorted; the shout (boosted +12 dB) was the loudest sound at 9.5-10.5 s;
+the music duck began 0.2 s after the drop and cut it off.
+Changes: shout trimmed to its loud part, much quieter (+6 dB instead of +12) and placed so its peak is on the first fist pump (10.7 s); crowd build, roar, tail and library effects lowered; boots clip faded out before the roar;
+music duck now gentler (4.4 dB, starting 8.45 over 0.5 s); no limiter squeeze, the whole mix is scaled down in one linear step. Result -13.7 LUFS, true peak -1.8 dBFS.
+Not verified by ear.
