@@ -788,7 +788,8 @@ def winnings_json(st):
 def today(wallet=Depends(optional_wallet), conn=Depends(db)):
     """What a visitor sees today. Works without a wallet; access and winnings are null for a guest."""
     out = {"now": datetime.now(timezone.utc),
-           "contests": [{**c, "pot_sol": sol(c["pot_lamports"])} for c in contests.current(conn)],
+           "contests": [{**c, "pot_lamports": shown_pot(conn, c)[0], "pot_sol": sol(shown_pot(conn, c)[0]),
+                      "pot_estimated": shown_pot(conn, c)[1]} for c in contests.current(conn)],
            "access": None, "winnings": None}
     if wallet:
         bal = read_balance(wallet)
@@ -807,10 +808,18 @@ def contest_row(conn, contest_id):
     return row
 
 
-def contest_json(c):
+def shown_pot(conn, c):
+    """(lamports, estimated). An unfunded open, live or review contest shows what its pot would be."""
+    if c["kind"] in pots.MODE_OF and not c["pot_lamports"] and c["state"] in ("open", "live", "review"):
+        return pots.estimate(conn, c["kind"]), True
+    return c["pot_lamports"], False
+
+
+def contest_json(conn, c):
+    pot, estimated = shown_pot(conn, c)
     return {"id": c["id"], "kind": c["kind"], "day": c["day"], "week_start": c["week_start"], "state": c["state"],
-            "locks_at": c["locks_at"], "final_at": c["final_at"], "pot_lamports": c["pot_lamports"],
-            "pot_sol": sol(c["pot_lamports"])}
+            "locks_at": c["locks_at"], "final_at": c["final_at"], "pot_lamports": pot,
+            "pot_sol": sol(pot), "pot_estimated": estimated}
 
 
 @app.get("/api/contests/{contest_id}")
@@ -820,7 +829,7 @@ def contest_detail(contest_id: int, conn=Depends(db)):
     rows = conn.execute("""SELECT f.id, f.kickoff, f.status, hc.name, f.home_goals, ac.name, f.away_goals
                            FROM fixtures f JOIN clubs hc ON hc.id = f.home_club_id JOIN clubs ac ON ac.id = f.away_club_id
                            WHERE f.id = ANY(%s) ORDER BY f.kickoff, f.id""", (ids,)).fetchall()
-    return {**contest_json(c), "fixtures": [{"id": i, "kickoff": ko, "status": st, "home": h, "home_goals": hg,
+    return {**contest_json(conn, c), "fixtures": [{"id": i, "kickoff": ko, "status": st, "home": h, "home_goals": hg,
                                              "away": a, "away_goals": ag} for i, ko, st, h, hg, a, ag in rows]}
 
 
@@ -853,7 +862,7 @@ def contest_board(contest_id: int, limit: int = 50, wallet=Depends(optional_wall
                 "prize_lamports": r["prize_lamports"], "prize_sol": sol(r["prize_lamports"]),
                 "you": r["wallet"] == wallet}
     lines = [line(r) for r in rows]
-    return {"contest": contest_json(c), "rows": lines[:max(1, min(limit, 500))],
+    return {"contest": contest_json(conn, c), "rows": lines[:max(1, min(limit, 500))],
             "you": next((x for x in lines if x["you"]), None), "entrants": len(rows)}
 
 
@@ -904,18 +913,10 @@ def prize_preview(conn, c, sol_usd):
             return None, None
         pot = round(CFG["blitz"]["weekly_prize_usd"] / sol_usd * chain.LAMPORTS)
     else:
-        name = f"pot:{pots.MODE_OF[kind]}"
-        have = payouts.bucket(conn, name)
+        have = payouts.bucket(conn, f"pot:{pots.MODE_OF[kind]}")
         pot = c["pot_lamports"]
         if not pot:
-            extra = payouts.bucket(conn, "pot:unassigned")
-            if extra > 0:       # as pots.allocate would move it
-                blitz = extra * round(CFG["boards"]["mode_split"]["blitz"] * 100) // 100
-                have += blitz if kind == "blitz_matchday" else extra - blitz
-            short = pots.minimum(kind) - have
-            if short > 0:
-                have += min(short, max(payouts.bucket(conn, "reserve"), 0))
-            pot = have
+            pot = have = pots.estimate(conn, kind)
         pot = min(pot, max(have, 0))
     ranked = [(r["wallet"], r["points"], r["captain_points"]) for r in board_rows(conn, c)]
     return pot, pots.split(pot, ranked)
@@ -935,14 +936,14 @@ def admin_contests(sol_usd: float | None = None, _=Depends(admin_wallet), conn=D
         pot, prizes = prize_preview(conn, c, sol_usd)
         rows = board_rows(conn, c)
         users = profiles.names(conn, [r["wallet"] for r in rows[:10]])
-        out.append({**contest_json(c), "entrants": len(rows), "preview_pot_lamports": pot,
+        out.append({**contest_json(conn, c), "entrants": len(rows), "preview_pot_lamports": pot,
                     "preview_pot_sol": sol(pot) if pot is not None else None,
                     "preview_prizes": prizes_json(prizes) if prizes is not None else None,
                     "board": [{"place": r["place"], "wallet": r["wallet"], "username": users.get(r["wallet"]),
                                "points": float(r["points"]), "captain_points": float(r["captain_points"])}
                               for r in rows[:10]]})
     conn.commit()
-    return {"review": out, "recent": [contest_json(c) for c in done]}
+    return {"review": out, "recent": [contest_json(conn, c) for c in done]}
 
 
 class ReleaseIn(BaseModel):
@@ -958,7 +959,7 @@ def admin_release(contest_id: int, body: ReleaseIn, admin=Depends(admin_wallet),
         conn.rollback()
         raise HTTPException(400, str(e))
     conn.commit()
-    return {"prizes": prizes_json(prizes), "contest": contest_json(contest_row(conn, contest_id))}
+    return {"prizes": prizes_json(prizes), "contest": contest_json(conn, contest_row(conn, contest_id))}
 
 
 @app.get("/api/health")

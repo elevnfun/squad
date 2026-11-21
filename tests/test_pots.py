@@ -252,3 +252,16 @@ def test_settle_never_pays_more_than_the_bucket_holds(conn):
     assert sum(p[2] for p in pots.settle(conn, ids[0])) == 1_000_000_000
     assert sum(p[2] for p in pots.settle(conn, ids[1])) == 0
     assert payouts.bucket(conn, "pot:blitz") == 0
+
+
+def test_estimate_matches_fund_and_moves_nothing(conn):
+    payouts.add(conn, "pot:unassigned", 7, "income")             # odd amount: blitz share rounds down
+    payouts.add(conn, "pot:blitz", 10_000_000, "income")
+    payouts.add(conn, "reserve", SOL, "income")                  # blitz ends below the 0.05 SOL minimum
+    cid = contest(conn)
+    before = conn.execute("SELECT bucket, lamports FROM fee_buckets ORDER BY bucket").fetchall()
+    est = pots.estimate(conn, "blitz_matchday")
+    assert conn.execute("SELECT bucket, lamports FROM fee_buckets ORDER BY bucket").fetchall() == before
+    assert est == 50_000_000
+    assert pots.fund(conn, cid) == est
+    assert pots.estimate(conn, "blitz_week") == 0 and pots.estimate(conn, "nonsense") == 0

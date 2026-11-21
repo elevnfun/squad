@@ -41,6 +41,7 @@
 
 .rk-side { position: sticky; top: calc(var(--e2-bar) + 32px); }
 .rk-pot { margin: 12px 0 8px; font-size: 40px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
+.rk-pot.rk-pot-set { font-size: 26px; }
 .rk-pot small { font-size: 18px; font-weight: 500; letter-spacing: 0; color: var(--muted); margin-left: 8px; }
 .rk-prz { margin-top: 20px; font-size: 14px; }
 .rk-prz .r { display: grid; grid-template-columns: 40px 52px 1fr; gap: 8px; align-items: baseline; padding: 11px 0; border-top: 1px solid var(--line); }
@@ -57,7 +58,8 @@
 }
 @media (max-width: 900px) { .rk-side { position: static; } }
 @media (max-width: 700px) {
-  .rk-tabs { gap: 24px; margin-bottom: 24px; }
+  .rk-tabs { gap: 0; margin-bottom: 24px; overflow: visible; }
+  .rk-tabs a { flex: 1 1 0; justify-content: center; text-align: center; white-space: normal; font-size: 14px; line-height: 1.25; padding: 4px; }
   .rk-you { flex-direction: column; align-items: flex-start; gap: 12px; padding: 20px 16px; }
   .rk-you .tail { max-width: none; text-align: left; font-size: 15px; }
   .rk-title { align-items: flex-start; }

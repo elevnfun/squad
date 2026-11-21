@@ -59,6 +59,22 @@ def fund(conn, contest_id):
     return pot
 
 
+def estimate(conn, kind):
+    """What `fund` would set as the pot for a contest of this kind right now, moving no money."""
+    mode = MODE_OF.get(kind)
+    if mode is None:
+        return 0
+    have = payouts.bucket(conn, f"pot:{mode}")
+    extra = payouts.bucket(conn, "pot:unassigned")
+    if extra > 0:       # as allocate would move it
+        blitz = extra * round(BOARDS["mode_split"]["blitz"] * 100) // 100
+        have += blitz if mode == "blitz" else extra - blitz
+    short = minimum(kind) - have
+    if short > 0:
+        have += min(short, max(payouts.bucket(conn, "reserve"), 0))
+    return have
+
+
 def _groups(ranked):
     """Wallets (one line each, best line kept) ordered by points then captain points, grouped by
     ties. Returns [(place, [wallet, ...])] where a tied group shares the best place it covers."""

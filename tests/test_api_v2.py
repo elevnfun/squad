@@ -230,6 +230,21 @@ def test_prize_path_through_the_api(world, conn):
     assert local.sol_balance(player.pubkey()) == before + SOL // 20 - 10_000
 
 
+def test_pot_is_estimated_until_release(world, conn):
+    client, _, _, adm = world
+    cid = matchday(conn, state="review")
+    for i, w in enumerate(("wA", "wB", "wC")):
+        enter(conn, cid, w, 60 - i)
+    payouts.add(conn, "pot:blitz", SOL, "test")
+    conn.commit()
+    c = client.get(f"/api/contests/{cid}").json()
+    assert (c["pot_lamports"], c["pot_sol"], c["pot_estimated"]) == (SOL, 1.0, True)
+    assert client.get("/api/admin/contests", headers=hdr(adm)).json()["review"][0]["preview_pot_lamports"] == SOL
+    assert client.post(f"/api/admin/contests/{cid}/release", json={}, headers=hdr(adm)).status_code == 200
+    c = client.get(f"/api/contests/{cid}").json()
+    assert (c["pot_lamports"], c["pot_estimated"]) == (SOL, False)
+
+
 def test_release_errors(world, conn):
     client, _, _, adm = world
     fx(conn, 1, t(20, "15:00"), "FT")

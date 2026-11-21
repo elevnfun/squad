@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth";
-import { api, ApiError, Contest, ContestState, Today } from "@/lib/api";
+import { api, ApiError, Contest, ContestState, sol, Today } from "@/lib/api";
 
 const POLL_MS = 30_000;
 const GIVE_UP_MS = 6_000;
@@ -56,7 +56,6 @@ const dayLabel = (day: string) =>
   new Date(`${day}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 const ukToday = (ms: number) => new Date(ms).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/London" });
 const ukTime = (iso: string) => new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
-const sol = (n: number) => (n === 0 ? "0" : n < 0.01 ? "<0.01" : n.toFixed(2));
 const count = (n: number) => n.toLocaleString("en-GB");
 
 function ago(ms: number): string {
@@ -90,6 +89,11 @@ const BADGE: Record<ContestState, { cls: string; text: string }> = {
   rolled: { cls: "steel", text: "Rolled forward" },
 };
 const Badge = ({ state }: { state: ContestState }) => <span className={`e2-badge ${BADGE[state].cls}`}>{BADGE[state].text}</span>;
+
+// the pot is funded at release, so before that the server sends an estimate (pot_estimated); with no figure yet, say so
+const potUnset = (c: Contest) => c.pot_lamports === 0 && (c.state === "open" || c.state === "live" || c.state === "review");
+const potLabel = (c: Contest | null, name: string) => (c == null ? name : c.pot_estimated && !potUnset(c) && c.state !== "final" ? "Estimated pot" : potUnset(c) ? `${name} · set at full time` : name);
+const potText = (c: Contest) => (potUnset(c) ? "–" : sol(c.pot_lamports));
 
 type Access = NonNullable<Today["access"]>;
 
@@ -136,7 +140,7 @@ function BlitzCard({ c, loading, now, access, signedIn }: { c: Contest | null; l
             {c == null || kick == null ? "–" : now != null && kick > now ? <Digits ms={kick - now} /> : <>{ukTime(c.first_kickoff!)}</>}
           </span>
         </div>
-        <div><span className="lbl">Matchday pot</span><span className="e2-big">{c ? sol(c.pot_sol) : "–"}<small>SOL</small></span></div>
+        <div><span className="lbl">{potLabel(c, "Matchday pot")}</span><span className="e2-big">{c ? potText(c) : "–"}<small>SOL</small></span></div>
       </div>
       <div className="foot">
         {signedIn && access && !access.blitz && access.balance != null
@@ -171,7 +175,7 @@ function DraftCard({ c, loading, now, access, signedIn }: { c: Contest | null; l
           <span className="lbl">{open ? "Locks in" : "Locked"}</span>
           <span className="e2-clockbig">{c == null || lock == null ? "–" : open ? <Digits ms={lock - now!} /> : lockedAt}</span>
         </div>
-        <div><span className="lbl">Weekly pot</span><span className="e2-big">{c ? sol(c.pot_sol) : "–"}<small>SOL</small></span></div>
+        <div><span className="lbl">{potLabel(c, "Weekly pot")}</span><span className="e2-big">{c ? potText(c) : "–"}<small>SOL</small></span></div>
       </div>
       <div className="foot">
         {signedIn && access && !access.draft && access.balance != null
@@ -223,9 +227,9 @@ export default function TodayView() {
               <Link className="e2-glass e2-strip" href="/winnings">
                 <span className="e2-eyebrow">Winnings</span>
                 <span className="msg">
-                  {w.ready_sol > 0 && <><b>{sol(w.ready_sol)} SOL</b> ready to collect</>}
+                  {w.ready_sol > 0 && <><b>{sol(w.ready_lamports)} SOL</b> ready to collect</>}
                   {w.ready_sol > 0 && w.locked_sol > 0 && " · "}
-                  {w.locked_sol > 0 && <><b>{sol(w.locked_sol)} SOL</b> locked</>}
+                  {w.locked_sol > 0 && <><b>{sol(w.locked_lamports)} SOL</b> locked</>}
                 </span>
                 {w.frozen && <span className="e2-badge frozen">Frozen</span>}
                 <span className="go">Open Winnings</span>

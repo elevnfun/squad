@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth";
-import { api, ApiError, Board, BoardRow, Contest, ContestKind, ContestState, shortWallet, Today } from "@/lib/api";
+import { api, ApiError, Board, BoardRow, Contest, ContestKind, ContestState, shortWallet, sol, Today } from "@/lib/api";
 import "./ranks.css";
 
 const POLL_MS = 30_000;
@@ -33,7 +33,6 @@ const BADGE: Record<ContestState, { cls: string; text: string }> = {
 };
 
 // ---- formatting ----
-const sol = (n: number) => (n === 0 ? "0" : n < 0.01 ? "<0.01" : n.toFixed(2));
 const count = (n: number) => n.toLocaleString("en-GB");
 const ordinal = (n: number) => {
   const v = n % 100;
@@ -42,7 +41,6 @@ const ordinal = (n: number) => {
 };
 const longDay = (iso: string) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
-const shortDay = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 const plusDays = (iso: string, n: number) => new Date(Date.parse(`${iso}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
 const ago = (ms: number) => {
   const s = Math.max(0, Math.round(ms / 1000));
@@ -94,19 +92,34 @@ async function withGuestFallback<T>(path: string, token: string | null): Promise
 }
 
 // ---- what each place pays ----
-function pays(c: Contest, place: number): { text: string; usd: boolean } | null {
+// A board that is not final has no prize_lamports yet, so each place is worked out from the pot and the split.
+// "unset": the server has no pot figure yet (not even an estimate), so only percentages can be shown.
+// "short": fewer than 3 entrants, so nothing is paid unless more join. Tied places share the prizes they cover.
+const unsetPot = (c: Contest) => c.state !== "final" && c.state !== "rolled" && c.kind !== "blitz_week" && c.pot_lamports === 0;
+const shortBoard = (c: Contest, entrants: number) => c.state !== "final" && c.state !== "rolled" && entrants < 3;
+const solOf = (lamports: number) => `${sol(Math.floor(lamports))} SOL`;
+
+function pays(c: Contest, place: number, n = 1): { text: string; usd: boolean } | null {
   if (place < 1 || place > 5) return null;
-  if (c.kind === "blitz_week" && c.state !== "final") return { text: `$${WEEKLY_USD[place - 1]}`, usd: true };
-  return { text: `${sol(c.pot_sol * SPLIT[place - 1] / 100)} SOL`, usd: false };
+  const idx = Array.from({ length: n }, (_, k) => place - 1 + k).filter((i) => i < 5);
+  const pct = idx.reduce((t, i) => t + SPLIT[i], 0);
+  if (c.kind === "blitz_week" && c.state !== "final") return { text: `$${idx.reduce((t, i) => t + WEEKLY_USD[i], 0) / n}`, usd: true };
+  if (unsetPot(c)) return { text: `${pct / n}%`, usd: false };
+  return { text: solOf(c.pot_lamports * pct / 100 / n), usd: false };
 }
-function prizeCell(c: Contest, r: BoardRow): string {
+// how many rows share this place (a tie)
+const tied = (rows: BoardRow[], you: BoardRow | null, place: number) => {
+  const all = you && !rows.some((r) => r.you) ? [...rows, you] : rows;
+  return Math.max(1, all.filter((r) => r.place === place).length);
+};
+function prizeCell(c: Contest, r: BoardRow, rows: BoardRow[], you: BoardRow | null, entrants: number): string {
   if (c.state === "rolled") return "–";
-  if (c.state === "final") return r.prize_sol > 0 ? `${sol(r.prize_sol)} SOL` : "–";
-  if (r.place == null || r.place > 5) return "–";
-  return pays(c, r.place)?.text ?? "–";
+  if (c.state === "final") return r.prize_lamports > 0 ? solOf(r.prize_lamports) : "–";
+  if (r.place == null || r.place > 5 || shortBoard(c, entrants)) return "–";
+  return pays(c, r.place, tied(rows, you, r.place))?.text ?? "–";
 }
 
-function Row({ c, r, paid }: { c: Contest; r: BoardRow; paid: boolean }) {
+function Row({ c, r, paid, b }: { c: Contest; r: BoardRow; paid: boolean; b: Board }) {
   const name = r.username || shortWallet(r.wallet);
   return (
     <li className={`rk-row${paid ? " paid" : ""}${r.you ? " you" : ""}`}>
@@ -116,14 +129,14 @@ function Row({ c, r, paid }: { c: Contest; r: BoardRow; paid: boolean }) {
       </span>
       <span className="cp">{count(r.captain_points)}</span>
       <span className="pts">{count(r.points)}</span>
-      <span className="pz">{prizeCell(c, r)}</span>
+      <span className="pz">{prizeCell(c, r, b.rows, b.you, b.entrants)}</span>
     </li>
   );
 }
 
 function BoardTable({ b }: { b: Board }) {
   const c = b.contest;
-  const rolled = c.state === "rolled";
+  const noLine = c.state === "rolled" || shortBoard(c, b.entrants);
   const rows = b.rows;
   // the prize line sits after the last paid place shown; places can repeat on a tie, so use the place the API gives
   let lastPaid = -1;
@@ -139,14 +152,14 @@ function BoardTable({ b }: { b: Board }) {
       ) : (
         <ol className="rk-rows" aria-label="Ranking">
           {rows.map((r, i) => (
-            <FragmentRow key={`${r.wallet}-${i}`} c={c} r={r} i={i} lastPaid={lastPaid} rolled={rolled} />
+            <FragmentRow key={`${r.wallet}-${i}`} b={b} r={r} i={i} lastPaid={lastPaid} noLine={noLine} />
           ))}
         </ol>
       )}
       {b.you && !youShown && (
         <>
           <div className="rk-gap" aria-hidden="true">Your place</div>
-          <ol className="rk-rows" aria-label="Your place"><Row c={c} r={b.you} paid={b.you.place != null && b.you.place <= 5} /></ol>
+          <ol className="rk-rows" aria-label="Your place"><Row c={c} b={b} r={b.you} paid={!noLine && b.you.place != null && b.you.place <= 5} /></ol>
         </>
       )}
       <div className="rk-foot">
@@ -157,11 +170,11 @@ function BoardTable({ b }: { b: Board }) {
   );
 }
 
-function FragmentRow({ c, r, i, lastPaid, rolled }: { c: Contest; r: BoardRow; i: number; lastPaid: number; rolled: boolean }) {
+function FragmentRow({ b, r, i, lastPaid, noLine }: { b: Board; r: BoardRow; i: number; lastPaid: number; noLine: boolean }) {
   return (
     <>
-      <Row c={c} r={r} paid={!rolled && r.place != null && r.place <= 5} />
-      {i === lastPaid && !rolled && <li className="rk-pline" aria-label="Prize line: places above are paid"><span>Prize line</span></li>}
+      <Row c={b.contest} b={b} r={r} paid={!noLine && r.place != null && r.place <= 5} />
+      {i === lastPaid && !noLine && <li className="rk-pline" aria-label="Prize line: places above are paid"><span>Prize line</span></li>}
     </>
   );
 }
@@ -172,45 +185,55 @@ function YourLine({ b }: { b: Board }) {
   if (!you || you.place == null) return null;
   const c = b.contest;
   const fifth = b.rows.find((r) => r.place === 5);
-  const my = pays(c, you.place);
+  const short = shortBoard(c, b.entrants);
+  const my = short ? null : pays(c, you.place, tied(b.rows, you, you.place));
   let head = `You are ${ordinal(you.place)}`;
   let tail = "";
   if (c.state === "rolled") tail = "This pot rolled forward, so nothing is paid here.";
-  else if (c.state === "final") tail = you.prize_sol > 0 ? `You won ${sol(you.prize_sol)} SOL. Collect it on Winnings.` : "Not in the prizes this time.";
-  else if (you.place <= 5) { head += ", in the prizes"; tail = my ? `${ordinal(you.place)} pays ${my.text}.` : ""; }
+  else if (c.state === "final") tail = you.prize_lamports > 0 ? `You won ${solOf(you.prize_lamports)}. Collect it on Winnings.` : "Not in the prizes this time.";
+  else if (short) tail = "Needs 3 players, or the pot rolls forward.";
+  else if (you.place <= 5) { head += ", in the prizes"; tail = my ? `${ordinal(you.place)} pays ${my.text}${unsetPot(c) ? " of the pot" : ""}.` : ""; }
   else if (fifth) {
     const gap = fifth.points - you.points;
-    const p5 = pays(c, 5);
-    tail = `${count(Math.max(0, gap))} ${gap === 1 ? "point" : "points"} behind 5th place (${count(fifth.points)})${p5 ? `, which pays ${p5.text}` : ""}.`;
+    const p5 = pays(c, 5, tied(b.rows, null, 5));
+    tail = `${count(Math.max(0, gap))} ${gap === 1 ? "point" : "points"} behind 5th place (${count(fifth.points)})${p5 ? `, which pays ${p5.text}${unsetPot(c) ? " of the pot" : ""}` : ""}.`;
   }
   return (
     <div className="e2-card rk-you">
       <div><span className="e2-eyebrow">Your place</span><p className="big">{head}</p></div>
-      <p className="e2-small e2-muted tail">{count(you.points)} points{tail ? `. ${tail}` : ""}{c.state === "final" && you.prize_sol > 0 ? <> <Link className="rk-tl" href="/winnings">Open Winnings</Link></> : null}</p>
+      <p className="e2-small e2-muted tail">{count(you.points)} points{tail ? `. ${tail}` : ""}{c.state === "final" && you.prize_lamports > 0 ? <> <Link className="rk-tl" href="/winnings">Open Winnings</Link></> : null}</p>
     </div>
   );
 }
 
-function Prizes({ c }: { c: Contest | null }) {
+function Prizes({ c, noun }: { c: Contest | null; noun: string }) {
   const weekly = c?.kind === "blitz_week";
-  const noun = c?.kind === "blitz_matchday" ? "matchday" : "week";
+  const rolled = c?.state === "rolled";
+  const unset = c != null && unsetPot(c);
+  const estimated = c != null && c.pot_estimated && c.state !== "final" && !weekly;
   return (
     <aside className="e2-glass rk-side" aria-label="Prizes">
-      <span className="e2-eyebrow">{weekly ? "Weekly prize" : c?.state === "final" ? "Prize pot" : "What each place pays"}</span>
+      <span className="e2-eyebrow">{weekly ? "Weekly prize" : rolled ? "Pot rolled forward" : estimated ? "Estimated pot" : c?.state === "final" ? "Prize pot" : "What each place pays"}</span>
       {weekly ? (
         <p className="rk-pot">$500</p>
+      ) : rolled ? (
+        <p className="rk-pot">–</p>
+      ) : unset ? (
+        <p className="rk-pot rk-pot-set">Set at full time</p>
       ) : (
-        <p className="rk-pot">{c ? sol(c.pot_sol) : "–"}<small>SOL</small></p>
+        <p className="rk-pot">{c ? sol(c.pot_lamports) : "–"}<small>SOL</small></p>
       )}
       <p className="e2-small e2-muted" style={{ margin: 0 }}>
         {weekly ? "Fixed, paid in SOL to the top 5. Tuesday to Monday UK time: a wallet's score is its best 3 matchday totals added up."
-          : `Pot for this ${noun}. The top 5 are paid.`}
+          : rolled ? "Fewer than 3 entered, so this pot moved on to the next board. Nothing is paid here."
+          : unset ? `The pot is set when the ${noun} ends. The top 5 are paid.`
+          : `${estimated ? "It firms up as the " + noun + " goes on" : "Pot for this " + noun}. The top 5 are paid.`}
       </p>
       <div className="rk-prz">
         {ORD.map((o, i) => (
           <div className="r" key={o}>
             <span className="p">{o}</span><span className="pc">{SPLIT[i]}%</span>
-            <span className="am">{weekly ? `$${WEEKLY_USD[i]}` : c ? `${sol(c.pot_sol * SPLIT[i] / 100)} SOL` : "–"}</span>
+            <span className="am">{weekly ? `$${WEEKLY_USD[i]}` : rolled ? "–" : unset ? "" : c ? solOf(c.pot_lamports * SPLIT[i] / 100) : "–"}</span>
           </div>
         ))}
       </div>
@@ -259,12 +282,13 @@ export default function RanksView() {
 
   const title = !c ? tab.label
     : c.kind === "blitz_matchday" && c.day ? longDay(c.day)
-    : c.week_start ? `${shortDay(c.week_start)} to ${shortDay(plusDays(c.week_start, 6))}`
+    : c.week_start ? `${longDay(c.week_start)} to ${longDay(plusDays(c.week_start, 6))}`
     : tab.label;
   const sub = c?.kind === "blitz_matchday" ? "Matchday total, three squads"
     : c?.kind === "blitz_week" ? "Best 3 matchday totals added up, Tuesday to Monday UK time"
     : "Draft team points, Friday to Monday";
   const note = c ? stateNote(c) : null;
+  const needs = c != null && b != null && shortBoard(c, b.entrants);
 
   return (
     <div className="e2-page">
@@ -302,13 +326,14 @@ export default function RanksView() {
                 {c && <span className={`e2-badge ${BADGE[c.state].cls}`}>{BADGE[c.state].text}</span>}
               </div>
               {note && <p className="rk-note" role="status">{note}</p>}
+              {needs && <p className="rk-note" role="status">Needs 3 players, or the pot rolls forward.</p>}
               {b ? <BoardTable b={b} />
                 : <div className="e2-card rk-none"><p>{board.status === "down" ? "Can't load this board right now. Trying again every 30 seconds." : "Loading the board"}</p></div>}
             </div>
           )}
         </div>
         <div className="e2-col" style={{ "--n": 4 } as React.CSSProperties}>
-          <Prizes c={cid == null ? null : c} />
+          <Prizes c={cid == null ? null : c} noun={tab.noun} />
         </div>
       </div>
     </div>
