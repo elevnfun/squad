@@ -139,3 +139,9 @@ Haaland-like build and hair, first defender beaten, referee in frame. Weak: garb
 boards and on the shirt chest (reads as fake sponsors), the stadium resembles a real ground, the ball is yellow,
 the second defender is not shown yet. Fix: ask for blank boards and a plain chest, a white ball, and mask any
 leftover text when compositing.
+
+## Katana session (2026-11-21)
+Opened on request: preset `/katana/chrome-noir-style-edit`, paid tracking (free_generation false), no credits spent.
+The session expires 03:11 UTC on 2026-11-21 and is passed with every later generation. Note: this preset's own
+reference is a black-and-white fashion edit, not the Desert Eagle clip, and its form asks for 1-10 images. The
+Desert Eagle clip and the football plan stay the creative brief; the preset was the closest published chrome-on-black match.
