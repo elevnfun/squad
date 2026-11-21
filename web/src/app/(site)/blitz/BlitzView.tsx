@@ -406,6 +406,7 @@ export default function BlitzView() {
       return (
         <Card key={n} n={n} fx={fx} locked active={false} label={`Squad ${n}, ${fx ? `${fx.home.name} v ${fx.away.name}, ` : ""}${sv.state === "open" ? "locked" : sv.state.replace("_", " ")}`}
           badge={badge} right={sv.points != null ? <span><b>{sv.points}</b> pts</span> : undefined}
+          action={sv.state === "banked" && day ? <Link className="bz-rm" href={`/blitz/banked?day=${day}&slot=${n}`} aria-label={`Open banked result for squad ${n}`}>Banked result</Link> : undefined}
           sub={<>{`${lg}kick-off ${ukTime(sv.kickoff)} · `}<span className="bz-kick">Locked at kick-off</span></>}
           slots={ordered.map((p) => ({
             name: p.name, captain: p.is_captain,

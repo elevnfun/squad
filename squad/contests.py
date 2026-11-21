@@ -216,12 +216,20 @@ def current(conn, now=None):
     today = uk_date(_now(now))
     ws = week_start(today)
     cur = conn.cursor(row_factory=dict_row)
+    one = lambda sql, *a: cur.execute(sql, a).fetchone()
+    unsettled = "state IN ('live', 'review')"
     found = [
-        cur.execute("""SELECT * FROM contests WHERE kind = 'blitz_matchday' AND day >= %s
-                       ORDER BY day LIMIT 1""", (today,)).fetchone(),
-        cur.execute("SELECT * FROM contests WHERE kind = 'blitz_week' AND week_start = %s", (ws,)).fetchone(),
-        cur.execute("""SELECT * FROM contests WHERE kind = 'draft_week' AND week_start >= %s
-                       ORDER BY week_start LIMIT 1""", (ws,)).fetchone(),
+        # a matchday still being played or reviewed after midnight; else today's; else yesterday's result; else the next
+        one(f"SELECT * FROM contests WHERE kind = 'blitz_matchday' AND day < %s AND {unsettled} ORDER BY day DESC LIMIT 1", today)
+        or one("SELECT * FROM contests WHERE kind = 'blitz_matchday' AND day = %s", today)
+        or one("""SELECT * FROM contests WHERE kind = 'blitz_matchday' AND day = %s
+                  AND state IN ('final', 'rolled')""", today - timedelta(days=1))
+        or one("SELECT * FROM contests WHERE kind = 'blitz_matchday' AND day > %s ORDER BY day LIMIT 1", today),
+        # last week's board until its result is released, then this week's
+        one(f"SELECT * FROM contests WHERE kind = 'blitz_week' AND week_start < %s AND {unsettled} ORDER BY week_start DESC LIMIT 1", ws)
+        or one("SELECT * FROM contests WHERE kind = 'blitz_week' AND week_start = %s", ws),
+        one(f"SELECT * FROM contests WHERE kind = 'draft_week' AND week_start < %s AND {unsettled} ORDER BY week_start DESC LIMIT 1", ws)
+        or one("SELECT * FROM contests WHERE kind = 'draft_week' AND week_start >= %s ORDER BY week_start LIMIT 1", ws),
     ]
     out = []
     for c in filter(None, found):

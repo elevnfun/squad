@@ -235,6 +235,7 @@ min_per_position = { DEF = 1, MID = 1, FWD = 1 }
 goalkeepers = false
 max_per_club = 2
 max_per_tier = { top = 2, mid = 2 }         # budget unlimited
+tier_shares = { top = 0.20, mid = 0.30 }    # of the eligible players ranked by value; the rest are budget
 captain_multiplier = 2.0
 opens = "tuesday"
 locks = "friday_first_kickoff"

@@ -458,3 +458,9 @@ Reporting
 - How: slots and unsaved picks live in local state, saved squads from `mine` only fill empty slots, so the 30-second poll never wipes picks. The check call is advice; the save answer is final and its message is shown as it comes.
 - Changed: the Remove link crowded the card header at the 5-column width, so it moved to the sub line.
 - Rule for next time: test every header row at the narrowest column width it gets, not at the page width; a screenshot run with six scenarios and four sizes takes over two minutes, so run it in the background.
+
+## 2026-11-21 · banked agent · Blitz Banked screen
+- Did: `/blitz/banked?day=&slot=` (page, view, css) from banked.html; poster with the shared captain figure (`web/public/blitz-captain.png`); states banked, not banked yet, no squad, guest.
+- How: the mockup is a dialog over a dimmed Today; as a real page it is the same card alone under the rays. Own `bk-` css, own copy of the small crest and x2 pill.
+- Changed: dropped Share to X (not wanted), so the page has no gold button; no score in the data, so the fixture line has no result.
+- Rule for next time: the API gives squad points as raw, assumed captain x2 is shown by the page; confirm with the API owner.

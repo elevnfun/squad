@@ -91,6 +91,13 @@ async function run(step) {
       await shot(page, "admin-after", width);
       await ctx.close();
     }
+    if (step === "collect" || step === "held") {
+      const { ctx, page } = await open(browser, "me", width);
+      await visit(page, "/winnings"); await signIn(page); await visit(page, "/winnings");
+      if (step === "collect") await page.getByRole("button", { name: "Collect", exact: true }).click();
+      await page.waitForTimeout(4000); console.log((await page.locator("main").innerText()).match(/.*(Sent\.|held for).*/)?.[0]); await shot(page, "winnings-" + (step === "held" ? "sent-claim" : "collect-try"), width);
+      await ctx.close();
+    }
     if (step === "after" || step === "all") {
       const { ctx, page } = await open(browser, "me", width);
       await visit(page, "/ranks"); await signIn(page); await visit(page, "/ranks"); await shot(page, "ranks-final", width);
