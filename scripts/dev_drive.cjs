@@ -282,7 +282,7 @@ async function draftFlow(browser, width) {
     const { ctx, page } = await open(browser, null, width);
     await visit(page, "/today");
     const t = await cardState(page, "packs", "guest sees the first state");
-    check(/Open your 5 packs/.test(t) && (await dcard(page).locator("a[href='/draft']").innerText()) === "Play", "today card: guest, 'Open your 5 packs', button Play -> /draft");
+    check(/sample packs/.test(t) && (await dcard(page).locator("a[href='/draft']").innerText()) === "Try Draft", "today card: guest, sample packs, button Try Draft -> /draft");
     await shot(page, "draft-today-guest", width);
     await visit(page, "/draft");
     await openAll(page, "guest");
@@ -294,7 +294,7 @@ async function draftFlow(browser, width) {
     await page.locator(".dp-capb[aria-pressed=false]").first().click();
     const v = await (await verdict).json().catch(() => null);
     check(v?.ok === true, "guest: the server's check passed the team");
-    await page.getByText("Guest view: nothing is saved.").first().waitFor({ timeout: 8000 });
+    await page.getByText(/Sample team: connecting deals/).first().waitFor({ timeout: 8000 });
     check(await page.getByRole("button", { name: "Connect wallet to save" }).count() === 1, "guest: the save button asks to connect");
     await shot(page, "draft-guest-ready", width);
     await page.reload({ waitUntil: "networkidle" });
