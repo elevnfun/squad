@@ -211,3 +211,13 @@ Room still `docs/design/video/room/room-still-1.png`: 0.75 credits. Room clip `d
 Spent in this section so far: 35.75. Balance about 989. Sound effects not yet generated.
 Good: the student reads as an ordinary 19-year-old, same room and clothes throughout, TV clear on the right, he does not cross the TV, the celebration is energetic with a real grin at the camera.
 Weak: (1) the laptop leaves the frame, it slides to the bottom edge and only a sliver is visible from about 1.5 s on, so the push into the screen cannot start from the clip after the jump; (2) the camera is not fully locked, the frame drifts slightly, so the screens need tracking; (3) he jumps in place and turns to camera rather than standing up from the couch; (4) the TV and laptop screens show generic content that I cover with the real pictures.
+
+## Section v1 built (2026-11-21): 0-14 s preview, music only
+File: `docs/design/video/sections/section_goal_to_platform_v1.mp4` (1280x720, 24 fps, 14 s, music only, no effects yet).
+0-8 s is clips A+B trimmed so the ball is in the net at 8.0; 8.0-14.0 is the new section. Built in the Higgsfield sandbox
+(tracking, pull-back, push-in, score graphic, screens, mix). Screens: `docs/design/video/screens/` (copies in the mockup style).
+Join checks (mean pixel difference between neighbouring frames, normal footage step is about 12): lead-in to goal 10.5, slow-mo to pull-back
+0.6 (picture on the TV is the same frame), room to push 14.6 (a whip), push to full-screen screen 0.0, screen to goal effect 0.0.
+Intentional bright frames: snap flash at 9.5, glass flash at 12.0-12.2.
+Music: -5 dB overall, ducked 7 dB from 8.2 to 11.0 (back up by 11.25), 0.4 s fade-in, limited.
+Credits so far this section: 35.75 (balance about 989). Sound effects (crowd, shout, whooshes, ticks) not yet made.
