@@ -187,3 +187,8 @@ export const saveBlitzSquad = (day: string, slot: number, body: BlitzBody, token
   api<BlitzMine>(`/blitz/${day}/squads/${slot}`, { method: "PUT", body, token });
 export const deleteBlitzSquad = (day: string, slot: number, token: string) =>
   api<BlitzMine>(`/blitz/${day}/squads/${slot}`, { method: "DELETE", token });
+
+// ---- Matchday Blitz "Banked" screen (GET /api/blitz/{day}/mine, signed in) ----
+export type BlitzMineFull = BlitzMine & { place: number | null; entrants: number; prize_lamports: number; prize_sol: number };
+export const fetchBlitzDay = (day: string, token?: string | null) => api<BlitzDay>(`/blitz/${day}`, { token });
+export const fetchBlitzMineFull = (day: string, token: string) => api<BlitzMineFull>(`/blitz/${day}/mine`, { token });
