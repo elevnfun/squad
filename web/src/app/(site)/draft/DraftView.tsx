@@ -206,6 +206,8 @@ export default function DraftView({ week = "next" }: { week?: string }) {
   const isOpen = useCallback((n: number) => (own ? false : guestOpen.includes(n)) || rows.some((r) => r.pack === n && r.opened_at != null), [own, guestOpen, rows]);
   const pool = useMemo(() => toPool(rows, isOpen), [rows, isOpen]);
   const byId = useMemo(() => new Map(pool.map((p) => [p.id, p])), [pool]);
+  // every one of the 15, opened or not: the saved team carries no club, and a swap may bring in a player from a sealed pack
+  const all = useMemo(() => toPool(rows, () => true), [rows]);
   const poolKey = pool.map((p) => p.id).join(",");
 
   const [sel, setSel] = useState<number | null>(null);
@@ -312,7 +314,7 @@ export default function DraftView({ week = "next" }: { week?: string }) {
     const out = mine?.team.find((p) => p.id === outId);
     if (!out) return null;
     const used = new Set(mine?.team.map((p) => p.id));
-    return pool.filter((p) => !used.has(p.id) && p.pos === posOf(out.position)).sort((a, b) => b.value - a.value)[0] ?? null;
+    return all.filter((p) => !used.has(p.id) && p.pos === posOf(out.position)).sort((a, b) => b.value - a.value || a.id - b.id)[0] ?? null;
   };
   async function swap() {
     const out = swapOut ?? mine?.team[0]?.id ?? null;
@@ -365,7 +367,7 @@ export default function DraftView({ week = "next" }: { week?: string }) {
   // the five on the board: from the saved team when read-only, from the picks otherwise
   type Seat = { id: number; name: string; club: string; pos: Pos; captain: boolean; points: number | null };
   const seats: Seat[] = readOnly
-    ? (mine?.team ?? []).map((p) => ({ id: p.id, name: p.name, club: p.club, pos: posOf(p.position), captain: p.is_captain || p.id === mine?.captain_id, points: p.points }))
+    ? (mine?.team ?? []).map((p) => ({ id: p.id, name: p.name, club: all.find((x) => x.id === p.id)?.club ?? "", pos: posOf(p.position), captain: p.is_captain || p.id === mine?.captain_id, points: p.points }))
     : team.map((p) => ({ id: p.id, name: p.name, club: p.club, pos: p.pos, captain: local.captain === p.id, points: null }));
   const shape = (["DEF", "MID", "ATT"] as Pos[]).map((p) => seats.filter((s) => s.pos === p).length).join("-");
   const picked = seats.length;

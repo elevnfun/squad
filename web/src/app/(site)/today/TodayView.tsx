@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth";
 import {
-  api, ApiError, Board, BlitzDay, BlitzMineFull, Contest, ContestState, fetchBlitzDay, fetchBlitzMineFull, sol, Today,
+  api, ApiError, Board, BlitzDay, BlitzMineFull, Contest, ContestState, DraftMineFull, fetchBlitzDay, fetchBlitzMineFull, fetchDraftMine, sol, Today,
 } from "@/lib/api";
 
 const POLL_MS = 30_000;
@@ -260,15 +260,104 @@ function BlitzCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
   );
 }
 
-function DraftCard({ c, loading, now, access, signedIn }: { c: Contest | null; loading: boolean; now: number | null; access: Access | null; signedIn: boolean }) {
+// ---- the Draft card: one state, one button, from GET /api/draft/{week}/mine (signed in only: a guest has nothing saved) ----
+type DraftLive = { mine: DraftMineFull; fifth: number | null };
+const DRAFT_PACKS = 5;
+
+function useDraftLive(c: Contest | null, token: string | null, at: number | null): DraftLive | null {
+  const [live, setLive] = useState<{ key: string; v: DraftLive } | null>(null);
+  const week = c?.week_start ?? null, id = c?.id ?? null;
+  const key = `${week}:${token ?? ""}`;
+  useEffect(() => {
+    if (!week || id == null || !token) return;
+    let dead = false;
+    (async () => {
+      const [mine, board] = await Promise.all([
+        fetchDraftMine(week, token).catch(() => null),
+        api<Board>(`/contests/${id}/board?limit=5`, { token }).catch(() => null),
+      ]);
+      if (dead || !mine) return;
+      setLive({ key, v: { mine, fifth: board?.rows[4]?.points ?? null } });
+    })();
+    return () => { dead = true; };
+  }, [week, id, token, at, key]);
+  return live && live.key === key ? live.v : null;
+}
+
+function DraftCard({ c, loading, now, access, signedIn, live }: { c: Contest | null; loading: boolean; now: number | null; access: Access | null; signedIn: boolean; live: DraftLive | null }) {
   if (!c && !loading) return <Quiet name="Draft" line="No Draft week scheduled yet" more="Opens Tuesday, locks at Friday's first kick-off." href="/how-to-play" label="How Draft works" />;
-  const over = c != null && c.state !== "open" && c.state !== "live";
+  const closed = c != null && (c.state === "final" || c.state === "rolled");
+  const review = c?.state === "review";
+  const over = closed || review;
   const lock = c?.locks_at ? Date.parse(c.locks_at) : null;
   const open = lock != null && now != null && lock > now;
   const lockedAt = lock != null && !open
     ? `${new Date(lock).toLocaleDateString("en-GB", { weekday: "short", timeZone: "Europe/London" })} ${ukTime(c!.locks_at!)}` : null;
+  const mine = signedIn ? live?.mine ?? null : null;
+  const hasTeam = (mine?.team.length ?? 0) > 0;
+  const opened = mine?.packs.filter((p) => p.opened_at != null).length ?? 0;
+  const total = mine && mine.packs.length ? new Set(mine.packs.map((p) => p.pack)).size : DRAFT_PACKS;
+  const opens = Math.round(opened / 3);                     // three players in a pack
+  const state: "packs" | "team" | "set" | "running" | "missed" | "closed" =
+    over ? "closed" : mine && mine.state !== "open" ? (hasTeam ? "running" : "missed") : mine && hasTeam ? "set" : mine && opens >= total ? "team" : "packs";
+
+  const lockBox = (
+    <div>
+      <span className="lbl">{open ? "Locks in" : "Locked"}</span>
+      <span className="e2-clockbig">{c == null || lock == null ? "–" : open ? <Digits ms={lock - now!} /> : lockedAt}</span>
+    </div>
+  );
+  const potBox = (
+    <div><span className="lbl">{potLabel(c, "Weekly pot")}</span><span className="e2-big">{c && potUnset(c) ? <span className="e2-small">Set at full time</span> : <>{c ? potText(c) : "–"}<small>SOL</small></>}</span></div>
+  );
+  let nums: React.ReactNode, note: React.ReactNode = <span className="e2-small e2-muted">Top 5 are paid</span>;
+  let button: React.ReactNode = <Link className="e2-btn e2-btn-line" href="/draft">Play</Link>;
+
+  if (state === "packs") {
+    nums = <><div><span className="lbl">Packs</span><span className="e2-big">{`Open your ${total} packs`}</span></div>{lockBox}{potBox}</>;
+  } else if (state === "team") {
+    nums = <><div><span className="lbl">Packs</span><span className="e2-big">{total} of {total}<small>opened</small></span></div><div><span className="lbl">Team</span><span className="e2-big">Not saved</span></div>{lockBox}</>;
+  } else if (state === "set") {
+    nums = <><div><span className="lbl">Team</span><span className="e2-big">Saved</span></div>{lockBox}{potBox}</>;
+    note = <span className="e2-small e2-muted">You can change it until the lock</span>;
+  } else if (state === "missed") {
+    nums = <><div><span className="lbl">Team</span><span className="e2-big">None saved</span></div>{lockBox}{potBox}</>;
+    note = <span className="e2-small e2-muted">No team was saved before the lock</span>;
+    button = <Link className="e2-btn e2-btn-line" href="/ranks?board=draft">Open the board</Link>;
+  } else {
+    const total_ = mine?.total ?? 0, place = mine?.place ?? null;
+    let third: React.ReactNode;
+    if (closed) {
+      third = <><span className="lbl">{c?.state === "rolled" ? "Pot" : "Prize won"}</span><span className="e2-big">{c?.state === "rolled" ? <span className="e2-small">Rolled forward</span> : mine && mine.prize_lamports > 0 ? <>{sol(mine.prize_lamports)}<small>SOL</small></> : <span className="e2-small">Nothing this time</span>}</span></>;
+    } else if (review) {
+      third = <><span className="lbl">Prize if released</span><span className="e2-big">{mine && mine.prize_lamports > 0 ? <>{sol(mine.prize_lamports)}<small>SOL</small></> : <span className="e2-small">Nothing this time</span>}</span></>;
+    } else if (place == null) {
+      third = <><span className="lbl">Prizes</span><span className="e2-big"><span className="e2-small">Top 5 are paid</span></span></>;
+    } else if (mine && mine.entrants < 3) {
+      third = <><span className="lbl">Prizes</span><span className="e2-big"><span className="e2-small">Needs 3 players</span></span></>;
+    } else if (place <= 5) {
+      third = <><span className="lbl">Prizes</span><span className="e2-big"><span className="e2-small">In the prizes</span></span></>;
+    } else {
+      const gap = live?.fifth != null ? live.fifth - total_ : null;
+      third = <><span className="lbl">Prizes</span><span className="e2-big">{gap != null ? <>{pts(Math.max(0, gap))}<small>pts to 5th</small></> : <span className="e2-small">Not yet</span>}</span></>;
+    }
+    nums = <>
+      <div><span className="lbl">{over ? "Final total" : "Week total"}</span><span className="e2-big">{pts(total_)}<small>pts</small></span></div>
+      <div><span className="lbl">{over ? "Final place" : "Place"}</span><span className="e2-big">{place != null ? <>{ord(place)}<small>{mine && mine.entrants ? `of ${mine.entrants}` : ""}</small></> : "–"}</span></div>
+      <div>{third}</div>
+    </>;
+    if (over) {
+      note = <span className="e2-small e2-muted">{review ? "Result being checked" : c?.state === "rolled" ? "Fewer than 3 played" : "Collect it on Winnings"}</span>;
+      button = <Link className="e2-btn e2-btn-line" href="/ranks?board=draft">Result</Link>;
+    } else {
+      note = <span className="e2-small e2-muted">Scores Friday to Monday</span>;
+      button = <Link className="e2-btn e2-btn-line" href="/draft">Live</Link>;
+    }
+  }
+  if (!live && !over && signedIn && state === "packs") note = <span className="e2-small e2-muted">Top 5 are paid</span>;
+  if (!signedIn && over) button = <Link className="e2-btn e2-btn-line" href="/ranks?board=draft">Open the board</Link>;
   return (
-    <article className="e2-card e2-mode" aria-labelledby="t-Draft" aria-busy={loading || undefined}>
+    <article className="e2-card e2-mode" aria-labelledby="t-Draft" aria-busy={loading || undefined} data-state={state}>
       <div className="top">
         <div>
           <h2 className="name" id="t-Draft">Draft</h2>
@@ -276,20 +365,12 @@ function DraftCard({ c, loading, now, access, signedIn }: { c: Contest | null; l
         </div>
         {c && <Badge state={c.state} />}
       </div>
-      <div className="nums">
-        <div>
-          <span className="lbl">{open ? "Locks in" : "Locked"}</span>
-          <span className="e2-clockbig">{c == null || lock == null ? "–" : open ? <Digits ms={lock - now!} /> : lockedAt}</span>
-        </div>
-        <div><span className="lbl">{potLabel(c, "Weekly pot")}</span><span className="e2-big">{c && potUnset(c) ? <span className="e2-small">Set at full time</span> : <>{c ? potText(c) : "–"}<small>SOL</small></>}</span></div>
-      </div>
+      <div className="nums">{nums}</div>
       <div className="foot">
-        {signedIn && access && !access.draft && access.balance != null
+        {signedIn && access && !access.draft && access.balance != null && !over
           ? <Hold need={access.draft_requirement} name=" Draft" access={access} which="draft" />
-          : <span className="e2-small e2-muted">Top 5 are paid</span>}
-        {over
-          ? <Link className="e2-btn e2-btn-line" href="/ranks">Open the board</Link>
-          : <Link className="e2-btn e2-btn-line" href="/draft">Open Draft</Link>}
+          : note}
+        {button}
       </div>
     </article>
   );
@@ -305,6 +386,7 @@ export default function TodayView() {
   const draft = data?.contests.find((c) => c.kind === "draft_week") ?? null;
   const access = signedIn ? data?.access ?? null : null;
   const blitzLive = useBlitzLive(blitz, signedIn ? token : null, at);
+  const draftLive = useDraftLive(draft, signedIn ? token : null, at);
   const w = signedIn ? data?.winnings ?? null : null;
   const hasWinnings = w != null && (w.ready_sol > 0 || w.locked_sol > 0);
 
@@ -343,7 +425,7 @@ export default function TodayView() {
               </Link>
             )}
             <BlitzCard c={blitz} loading={loading} now={now} access={access} signedIn={signedIn} live={blitzLive} />
-            <DraftCard c={draft} loading={loading} now={now} access={access} signedIn={signedIn} />
+            <DraftCard c={draft} loading={loading} now={now} access={access} signedIn={signedIn} live={draftLive} />
             <article className="e2-card e2-side" aria-labelledby="t-Shootout">
               <div>
                 <span className="e2-eyebrow">Side game</span>

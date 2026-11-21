@@ -199,17 +199,26 @@ export type DraftTier = "top" | "mid" | "budget";
 export type DraftPackRow = {
   pack: number; tier: DraftTier; player_id: number | null; name: string | null; position: string | null; club: string | null;
   value: number | null; opened_at: string | null;
+  in_team?: boolean;   // own packs only (the sample has none)
 };
-export type DraftTeamPlayer = { id: number; name: string; position: string; club: string; tier: DraftTier; points: number | null; is_captain: boolean };
+// the saved team carries no club or tier: the page reads those from the packs
+export type DraftTeamPlayer = { id: number; name: string; position: string; points: number | null; is_captain: boolean };
 export type DraftState = "open" | "locked" | "live" | "final";
-export type DraftMine = { packs: DraftPackRow[]; team: DraftTeamPlayer[]; captain_id: number | null; state: DraftState; total: number | null };
+// points are the points counted: the captain's are already doubled by the API (never double them again)
+export type DraftMine = {
+  packs: DraftPackRow[]; team: DraftTeamPlayer[]; captain_id: number | null; state: DraftState; total: number | null; captain_points?: number;
+};
+// GET /api/draft/{week}/mine adds the place and prize if the week ended now
+export type DraftMineFull = DraftMine & { place: number | null; entrants: number; prize_lamports: number; prize_sol: number };
 // a rule is one number for everything, or one number per position / tier
 export type DraftLimit = number | Record<string, number>;
 export type DraftRules = {
   team_size: number; min_per_position: DraftLimit; max_per_club: number; max_per_tier: DraftLimit; captain_multiplier: number; requirement: number;
 };
-export type DraftFixture = { id: number; kickoff: string; status: string; home: string | { name: string }; away: string | { name: string } };
-export type DraftContest = { id?: number; week_start?: string; state?: string; pot_sol?: number | null; pot_estimated?: boolean } | null;
+export type DraftFixture = { id: number; kickoff: string; status: string; home: string; away: string };
+export type DraftContest = {
+  id?: number; week_start?: string; state?: string; pot_sol?: number | null; pot_estimated?: boolean; locks_at?: string | null;
+} | null;
 export type DraftWeek = {
   contest: DraftContest; locks_at: string | null; fixtures: DraftFixture[]; rules: DraftRules; mine?: DraftMine | null; sample?: DraftPackRow[] | null;
 };
@@ -217,6 +226,7 @@ export type DraftTeamBody = { team_ids: number[]; captain_id: number | null };
 export type DraftCheckBody = DraftTeamBody & { pool_player_ids: number[] };
 
 export const fetchDraft = (week: string, token?: string | null) => api<DraftWeek>(`/draft/${week}`, { token });
+export const fetchDraftMine = (week: string, token: string) => api<DraftMineFull>(`/draft/${week}/mine`, { token });
 export const openDraftPack = (week: string, pack: number, token: string) =>
   api<DraftMine>(`/draft/${week}/packs/${pack}/open`, { method: "POST", body: {}, token });
 export const checkDraftTeam = (week: string, body: DraftCheckBody, token?: string | null) =>
