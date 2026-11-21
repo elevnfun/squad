@@ -601,7 +601,7 @@ export default function ShootoutView() {
 
       <section className="e2-card so-board" aria-label="Shootout ranks today">
         <div className="so-bhd"><span className="e2-eyebrow">Shootout ranks · today</span><span className="e2-small e2-muted">Ranked games only</span></div>
-        <div className="so-head" aria-hidden="true"><span>#</span><span>Player</span><span className="c">W–D–L</span><span className="c">Goal diff</span><span className="c">Games</span></div>
+        <div className="so-head" aria-hidden="true"><span>#</span><span>Player</span><span className="c">W–D–L</span><span className="c">Diff</span><span className="c">Games</span></div>
         <ul className="so-rows">
           {!info && !infoDown && [0, 1, 2].map((i) => <li key={i} className="so-row sk" aria-hidden="true"><span /><span /><span /><span /><span /></li>)}
           {infoDown && <li className="so-empty">The ranks can&apos;t be loaded right now. The game still works.</li>}

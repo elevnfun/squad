@@ -52,7 +52,7 @@
 .so-third:hover:not(:disabled) .so-cue, .so-third.on .so-cue, .so-third:focus-visible .so-cue { opacity: 1; }
 .so-stage[data-mode="keep"] .so-third:not(:disabled) .so-cue { opacity: .85; }
 .so-stage[data-mode="keep"] .so-third:not(:disabled):hover .so-cue { opacity: 1; }
-.so-stage[data-busy="1"] .so-third:not(.on) .so-cue { opacity: 0; }
+.so-stage[data-busy="1"] .so-cue { opacity: 0 !important; }
 .so-hush { position: absolute; inset: 0; background: rgba(10,11,13,.18); pointer-events: none; }
 
 .so-stamp { position: absolute; left: 50%; top: 77%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 28px 10px; border-radius: 14px;
@@ -126,6 +126,9 @@
   .so-mks { gap: 5px; } .so-mk { width: 20px; height: 20px; } .so-mk svg { width: 12px; height: 12px; }
   .so-score { font-size: 36px; }
   .so-stage { border-radius: 10px; margin: 0 -4px; }
+  .so-stamp { top: 80%; padding: 4px 18px 6px; }
+  .so-word { font-size: 34px; }
+  .so-sub { font-size: 12px; }
   .so-cue { font-size: 12px; margin-top: 4px; letter-spacing: .04em; }
   .so-cue svg { width: 28px; height: 28px; }
   .so-act .e2-btn { flex: 1 1 100%; height: 52px; }

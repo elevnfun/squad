@@ -500,3 +500,9 @@ Reporting
 - How: grepped every import before deleting; checked in a private copy (/tmp/web-season) with mocked API routes at 1440 and 390; screenshots `docs/build/shots/noseason-*.png`.
 - Changed: the home page was entirely Season (league fan, prizes, steps), so it is now two slides (start, the two modes) until the real home page is built.
 - Rule for next time: `FaucetCard` (devnet test tokens) is kept but mounted nowhere now; `web/e2e` still tests Season and needs rewriting.
+
+## 2026-11-21 · Shootout builder · Penalty Shootout screen
+- Did: `/shootout` (page, view, css) with a code-drawn goal, diving keeper, ball flight, strip, end panel and board; fetch helpers added to `lib/api.ts`.
+- How: one SVG scene driven by a requestAnimationFrame timeline (ball 0.62 s, keeper dive 0.52 s, 1.4 s result hold); thirds are real radio buttons over the SVG. Playwright `page.clock` (install, pauseAt, runFor) gives exact mid-flight frames.
+- Changed: the API shape changed mid-build (score is for/against, one game view for every call, kick object); first scene had too much empty pitch, so the view box was cropped.
+- Rule for next time: keep animation maths in one place and test with the fake clock; hide the page's fixed banners before element screenshots.
