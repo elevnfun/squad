@@ -248,3 +248,14 @@ Cost 35 credits. Balance about 913.5. File: `docs/design/video/room/room-clip-E.
 Camera locked (TV moves at most 3 px). Laptop, measured against frame 0: steady only 0-1.3 s, then it shifts up to 66 px and tilts up to 20 degrees as he moves
 (he holds it with his left hand but it still moves with him). The "laptop never moves" rule is still NOT met.
 Proposed next try: laptop on a low coffee table in front of the couch, screen facing the camera (new still 0.75 + clip 35).
+
+## Section v4 (2026-11-21): 0-17 s, clip E used (owner chose option 2)
+File: `docs/design/video/sections/section_goal_to_platform_v4.mp4` (1280x720, 24 fps, 17 s; replaces v1 and v3).
+Timing: goal 8.0, pull-back snap 9.5, room 9.5-12.5 (fist pumps about 10.5 and 11.6), push 12.5-14.0 landing on the bar line, goal effect on the board 14.0-17.0 (chip 14.0, C x2, count 54 to 70, rank 8th to 6th landing 17.0).
+Laptop: in the room shots it moves with him during the fist pumps (accepted, option 2); the elevn screen is tracked onto it and left off his hand. During the push the laptop is held steady
+(the frame is stabilised on its start position); the push is one continuous smoothstep move with no flash and no sound effect.
+Sound: music ducked 7 dB 8.2-12.5 and back up by 12.75; reversed crowd build 0-8.0, crowd roar from 8.0 fading by 12.5, crowd tail 10-14, his shout at 9.5 (+12 dB), boots and ball from 3.65 (peak at 6.9, the strike),
+library effects: boom and hit 8.0, long whoosh 8.75, hit 9.5, blips 14.0 and 14.75, ticks 15.5 and 16.25, chime 16.9. Nothing on the move into the laptop.
+Mix: -14.5 LUFS, true peak -4.0 dBFS after encoding. The generated sounds were not listened to (no way to listen here); the shout and the boots clip are the least certain.
+Frame joins (mean difference between neighbours, normal about 2-12): slow-mo to pull-back 0.6, room to push 3.0, push to full screen 2.0, screen to goal effect 0.0; snap flash at 9.5 is intended.
+Credits: 948.5 before clip E, about 913.5 after; spent in total about 217.
