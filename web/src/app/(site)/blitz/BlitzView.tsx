@@ -571,7 +571,8 @@ export default function BlitzView() {
           {signedIn ? (
             <>
               <p className="e2-small" style={{ fontWeight: 600 }}>
-                {you && you.place != null && you.place <= 5
+                {!top.some((r) => r.points > 0) ? "Nobody has scored yet. Places appear once the first match kicks off."
+                  : you && you.place != null && you.place <= 5
                   ? `If the day ended now you'd be ${you.place}${["st", "nd", "rd", "th", "th"][you.place - 1]} and win ${sol(you.prize_lamports)} SOL.`
                   : `If the day ended now you'd win nothing yet. 5th place pays ${fifthText}.`}
               </p>

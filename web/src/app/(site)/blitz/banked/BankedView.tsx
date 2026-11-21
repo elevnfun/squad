@@ -81,7 +81,7 @@ export default function BankedView() {
         if (id != null) {
           try {
             const b = await api<Board>(`/contests/${id}/board?limit=5`, { token });
-            const fifth = b.rows.find((r) => r.place === 5);
+            const fifth = b.rows[4];   // by row, not by place: a tie can leave no row numbered 5
             line = fifth ? fifth.points : null;
           } catch { line = null; }
         }

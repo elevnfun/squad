@@ -175,7 +175,7 @@ async function blitzFlow(browser, width) {
     check(live.points === Math.round(live.players.reduce((t, p) => t + p.points, 0) * 100) / 100, "live: squad points equal the sum of players' points (captain already doubled)");
     await visit(page, "/blitz"); await shot(page, "blitz-live", width);
     const shown = await page.locator(".bz-card", { hasText: "Live" }).first().innerText();
-    check(shown.includes(`${cap.points} (C ×2)`) && !shown.includes(`${cap.points * 2}`), "pick page shows the captain's points once, labelled C ×2");
+    check(shown.includes(`· ${cap.points} (C ×2)`) && !shown.includes(`· ${cap.points * 2}`), "pick page shows the captain's points once, labelled C ×2");
     await visit(page, "/today"); await shot(page, "blitz-today-live", width);
     await visit(page, "/ranks"); await shot(page, "blitz-ranks-live", width);
     const you = await page.locator(".rk-you").innerText();

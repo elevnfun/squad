@@ -184,7 +184,7 @@ function YourLine({ b }: { b: Board }) {
   const you = b.you;
   if (!you || you.place == null) return null;
   const c = b.contest;
-  const fifth = b.rows.find((r) => r.place === 5);
+  const fifth = b.rows[4];   // by row, not by place: a tie can leave no row numbered 5
   const short = shortBoard(c, b.entrants);
   const my = short ? null : pays(c, you.place, tied(b.rows, you, you.place));
   let head = `You are ${ordinal(you.place)}`;

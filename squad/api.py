@@ -23,7 +23,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
 
-from . import auth, blitz, chain, chat, contests, faucet, game, holdings, jobs, payouts, pots, profiles, winnings
+from . import auth, blitz, chain, chat, contests, draft, faucet, game, holdings, jobs, payouts, pots, profiles, winnings
 from .config import CFG, launch_leagues
 from .db import DEFAULT_URL
 
@@ -945,6 +945,11 @@ def blitz_delete(day: str, slot: int = Path(ge=1, le=100), wallet=Depends(curren
 def blitz_mine(day: str, wallet=Depends(current_wallet), conn=Depends(db)):
     """The wallet's squads and, if the matchday ended now, its place and prize (same board and split as release)."""
     c = blitz_contest(conn, day)
+    return {**blitz.mine(conn, wallet, c["id"]), **place_and_prize(conn, c, wallet)}
+
+
+def place_and_prize(conn, c, wallet):
+    """The wallet's place and prize in a contest if it ended now (same board and split as release)."""
     rows = board_rows(conn, c)
     pot = shown_pot(conn, c)[0]
     prizes = {w: (p, lam) for w, p, lam in pots.split(pot, [(r["wallet"], r["points"], r["captain_points"]) for r in rows])}
@@ -952,8 +957,112 @@ def blitz_mine(day: str, wallet=Depends(current_wallet), conn=Depends(db)):
     me_row = next((r for r in rows if r["wallet"] == wallet), None)
     place = me_row["place"] if me_row else None
     lamports = (me_row["prize_lamports"] or 0) if final and me_row else prizes.get(wallet, (None, 0))[1]
-    return {**blitz.mine(conn, wallet, c["id"]), "place": place, "entrants": len(rows),
-            "prize_lamports": lamports, "prize_sol": sol(lamports)}
+    return {"place": place, "entrants": len(rows), "prize_lamports": lamports, "prize_sol": sol(lamports)}
+
+
+# ------------------------------------------------------------------ draft ---
+class DraftCheckIn(BaseModel):
+    pool_player_ids: list[int]
+    team_ids: list[int]
+    captain_id: int
+
+
+class DraftTeamIn(BaseModel):
+    team_ids: list[int]
+    captain_id: int
+
+
+class DraftSwapIn(BaseModel):
+    out_id: int
+    in_id: int
+
+
+def draft_contest(conn, week):
+    """The Draft contest for the week starting YYYY-MM-DD, or this week's if not final, else the next ('next')."""
+    cur = conn.cursor(row_factory=dict_row)
+    if week == "next":
+        row = cur.execute("""SELECT * FROM contests WHERE kind = 'draft_week' AND week_start >= %s
+                             AND state NOT IN ('final', 'rolled') ORDER BY week_start LIMIT 1""",
+                          (contests.week_start(contests.uk_date(datetime.now(timezone.utc))),)).fetchone()
+    else:
+        try:
+            d = datetime.strptime(week, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(404, "There is no Draft for that week.")
+        row = cur.execute("SELECT * FROM contests WHERE kind = 'draft_week' AND week_start = %s", (d,)).fetchone()
+    if not row:
+        raise HTTPException(404, "There is no Draft to show.")
+    return row
+
+
+def draft_call(conn, fn, *args):
+    """Run a draft.py call; a refusal becomes HTTP 400 with its message."""
+    try:
+        return fn(conn, *args)
+    except draft.DraftError as e:
+        conn.rollback()
+        raise HTTPException(400, str(e))
+
+
+@app.get("/api/draft/{week}")
+def draft_week(week: str, wallet=Depends(optional_wallet), conn=Depends(db)):
+    c = draft_contest(conn, week)
+    ids = [f["id"] for f in contests.fixtures_of(conn, c)]
+    rows = conn.execute("""SELECT f.id, f.kickoff, f.status, hc.name, ac.name FROM fixtures f
+                           JOIN clubs hc ON hc.id = f.home_club_id JOIN clubs ac ON ac.id = f.away_club_id
+                           WHERE f.id = ANY(%s) ORDER BY f.kickoff, f.id""", (ids,)).fetchall()
+    D = CFG["draft"]
+    out = {"contest": contest_json(conn, c), "locks_at": c["locks_at"],
+           "fixtures": [{"id": i, "kickoff": ko, "status": st, "home": h, "away": a} for i, ko, st, h, a in rows],
+           "rules": {"team_size": D["team_size"], "min_per_position": D["min_per_position"],
+                     "max_per_club": D["max_per_club"], "max_per_tier": D["max_per_tier"],
+                     "captain_multiplier": D["captain_multiplier"], "requirement": D["requirement"]}}
+    if wallet:
+        draft_call(conn, draft.deal, c["id"], wallet)
+        conn.commit()
+        out["mine"] = draft.mine(conn, wallet, c["id"])
+    else:
+        out["sample"] = draft_call(conn, draft.sample, c["id"])
+    return out
+
+
+@app.post("/api/draft/{week}/packs/{pack}/open")
+def draft_open_pack(week: str, pack: int = Path(ge=1, le=100), wallet=Depends(current_wallet), conn=Depends(db)):
+    c = draft_contest(conn, week)
+    draft_call(conn, draft.open_pack, c["id"], wallet, pack)
+    conn.commit()
+    return draft.mine(conn, wallet, c["id"])
+
+
+@app.post("/api/draft/{week}/check")
+def draft_check(week: str, body: DraftCheckIn, conn=Depends(db)):
+    c = draft_contest(conn, week)
+    problems = draft_call(conn, draft.check, c["id"], body.pool_player_ids, body.team_ids, body.captain_id)
+    return {"ok": not problems, "problems": problems}
+
+
+@app.put("/api/draft/{week}/team")
+def draft_save(week: str, body: DraftTeamIn, wallet=Depends(current_wallet), conn=Depends(db)):
+    c = draft_contest(conn, week)
+    bal = blitz_balance(wallet)
+    draft_call(conn, lambda cn: draft.save(cn, wallet, c["id"], body.team_ids, body.captain_id, bal))
+    conn.commit()
+    return draft.mine(conn, wallet, c["id"])
+
+
+@app.post("/api/draft/{week}/swap")
+def draft_swap(week: str, body: DraftSwapIn, wallet=Depends(current_wallet), conn=Depends(db)):
+    c = draft_contest(conn, week)
+    draft_call(conn, lambda cn: draft.swap(cn, wallet, c["id"], body.out_id, body.in_id))
+    conn.commit()
+    return draft.mine(conn, wallet, c["id"])
+
+
+@app.get("/api/draft/{week}/mine")
+def draft_mine(week: str, wallet=Depends(current_wallet), conn=Depends(db)):
+    """The wallet's packs and team and, if the week ended now, its place and prize."""
+    c = draft_contest(conn, week)
+    return {**draft.mine(conn, wallet, c["id"]), **place_and_prize(conn, c, wallet)}
 
 
 @app.get("/api/winnings")

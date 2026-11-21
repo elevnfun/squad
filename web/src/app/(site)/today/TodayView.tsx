@@ -146,7 +146,7 @@ function useBlitzLive(c: Contest | null, token: string | null, at: number | null
         asGuest((t) => api<Board>(`/contests/${id}/board?limit=5`, { token: t })),
       ]);
       if (dead || !d) return;
-      const fifth = board?.rows.find((r) => r.place === 5)?.points ?? null;
+      const fifth = board?.rows[4]?.points ?? null;
       setLive({ key, v: { day: d, mine: token ? mine : null, fifth } });
     })();
     return () => { dead = true; };
