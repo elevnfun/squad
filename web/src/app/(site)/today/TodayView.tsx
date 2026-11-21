@@ -203,7 +203,7 @@ function BlitzCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
     const place = mine?.place ?? null;
     let third: React.ReactNode;
     if (state === "closed") {
-      third = <><span className="lbl">{c?.state === "rolled" ? "Pot" : "Prize won"}</span><span className="e2-big">{c?.state === "rolled" ? <span className="e2-small">Rolled forward</span> : mine && mine.prize_lamports > 0 ? <>{sol(mine.prize_lamports)}<small>SOL</small></> : <span className="e2-small">Nothing this time</span>}</span></>;
+      third = <><span className="lbl">{c?.state === "rolled" ? "Pot" : closed ? "Prize won" : "Prize if released"}</span><span className="e2-big">{c?.state === "rolled" ? <span className="e2-small">Rolled forward</span> : mine && mine.prize_lamports > 0 ? <>{sol(mine.prize_lamports)}<small>SOL</small></> : <span className="e2-small">Nothing this time</span>}</span></>;
     } else if (place == null) {
       third = <><span className="lbl">Prizes</span><span className="e2-big"><span className="e2-small">Top 5 are paid</span></span></>;
     } else if (mine && mine.entrants < 3) {
@@ -215,8 +215,8 @@ function BlitzCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
       third = <><span className="lbl">Prizes</span><span className="e2-big">{gap != null ? <>{pts(Math.max(0, gap))}<small>pts to 5th</small></> : <span className="e2-small">Not yet</span>}</span></>;
     }
     nums = <>
-      <div><span className="lbl">{state === "closed" ? "Final total" : "Matchday total"}</span><span className="e2-big">{pts(total)}<small>pts</small></span></div>
-      <div><span className="lbl">{state === "closed" ? "Final place" : "Place"}</span><span className="e2-big">{place != null ? <>{ord(place)}<small>{mine && mine.entrants ? `of ${mine.entrants}` : ""}</small></> : "–"}</span></div>
+      <div><span className="lbl">{closed ? "Final total" : "Matchday total"}</span><span className="e2-big">{pts(total)}<small>pts</small></span></div>
+      <div><span className="lbl">{closed ? "Final place" : "Place"}</span><span className="e2-big">{place != null ? <>{ord(place)}<small>{mine && mine.entrants ? `of ${mine.entrants}` : ""}</small></> : "–"}</span></div>
       <div>{third}</div>
     </>;
     if (state === "closed") {

@@ -39,6 +39,7 @@ node scripts/dev_drive.cjs me         # sign in, Today, Ranks (3 tabs)
 node scripts/dev_drive.cjs release    # admin signs in, releases the first contest in review
 node scripts/dev_drive.cjs after      # Ranks (final) and Winnings
 node scripts/dev_drive.cjs collect    # presses Collect (needs a funded payout wallet to succeed)
+node scripts/dev_drive.cjs blitz      # a whole Blitz matchday (below); about 8 minutes per width, waits on the minute job
 ```
 Shots go to `docs/build/shots/real-*.png` at 1440 and 390 wide.
 
@@ -52,3 +53,10 @@ Env for the API:
 - `SESSION_SECRET` any long random string, so sessions survive an API restart.
 Env for the site: `API_URL`, `NEXT_PUBLIC_SOLANA_RPC` (default devnet). Open the site on `http://localhost:3000`.
 Not set automatically: `API_GATE_SECRET` (leave unset locally).
+
+## Matchday Blitz run
+Today's matchday has 3 fixtures with full squads. `PYTHONPATH=. uv run python scripts/dev_seed.py --phase pre|live|ft|banked|closed [--clean]`
+rewinds it and moves the fixtures to that phase (the API with `RUN_JOBS=1` then locks and scores within a minute);
+`--clean` also drops the `me` wallet's squads. `node scripts/dev_drive.cjs blitz` runs all of it at 1440 and 390 (guest builds and
+checks a squad; `me` saves 3, changes one, removes one, saves again; live; banked; Banked screen; Ranks; the Today card in each
+state) and prints PASS/FAIL lines. It needs `DATABASE_URL` set as in step 1. Shots: `docs/build/shots/real-blitz-*.png`.
