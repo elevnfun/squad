@@ -227,3 +227,11 @@ boom + hit at 8.0 (goal), long whoosh 8.75 into a hit on 9.5 (pull-back snap), w
 blips 13.0 and 13.25, typing ticks 13.5 and 13.75, power-on chime 13.95 (rank). Licences: listed by the library (all CC0).
 Mix: true peak -2.1 dBTP, loudness -16.5 LUFS (a little quiet against the -14 target; raise later with the final limiter).
 An earlier mix (v2) peaked above 0 dBFS after AAC encoding and was replaced. Still missing: the crowd roar and the viewer's shout (generated, about 8 credits, not yet approved).
+
+## Change request, viewer shot and push into the laptop (owner, 2026-11-21)
+Keep the football part unchanged. Redo the viewer: he stays seated, leans forward, clenches a fist and shouts (slight slow motion allowed),
+same viewer, clothes and room, and the laptop stays steady on his knees, screen facing the camera, for the whole shot.
+Redo the move into the laptop: one smooth camera move from the fist pump down to the screen, push in until the elevn interface fills the frame, landing on a beat.
+Sound: remove every effect on that move (no whoosh, riser, flash or hit); music only, back up on the beat; keep the crowd roar and the shout during the fist pump.
+Plan awaiting approval: one new room clip (35 credits, 720p, 5 s, from room-still-1.png), crowd roar and shout (about 8 credits).
+Timing proposal: room phase 9.5-12.5 (one bar longer), push 12.5-14.0 landing on the bar line, goal effect on the board 14.0-17.0, platform section from 17.0.
