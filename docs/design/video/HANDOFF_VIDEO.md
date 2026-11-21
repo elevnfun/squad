@@ -13,7 +13,7 @@ For a new session that continues the elevn X promo video. Read `docs/design/vide
 - Short, plain replies. Tell him what is weak.
 
 ## State
-- Credits: balance about 989 after 71 spent (two tests 70, plus 0.75 room still... see storyboard; room clip 35). Nothing pending.
+- Credits: balance about 989.8 (started this work at 1,130.53). Spent 140.75: street test 35, Man City test 35, clip B 35, room clip 35, room still 0.75. Nothing pending.
 - Made so far (all in `docs/design/video/`): `tests/test-shot-2-city-chelsea.mp4` (clip A), `tests/test-clipB-goal.mp4` (clip B, the goal),
   `room/room-still-1.png`, `room/room-clip-C.mp4` (student in the dorm), `screens/` (two video screens), and
   `sections/section_goal_to_platform_v3_sfx.mp4` (0-14 s, music + free effects; this is the current preview).
