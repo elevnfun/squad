@@ -242,3 +242,9 @@ Room clip D: `docs/design/video/room/room-clip-D.mp4` (720p, 5 s). He stays seat
 Laptop measured against frame 0: steady 0-0.9 s; from 1.0 to 2.5 s it shifts 20-36 px and tilts 12-16 degrees (screen turns partly away) while his arm rises;
 then steady again from about 3.75 s to the end (about 25 px left and 12 px up of its start). So the "laptop never moves" rule is NOT met during the fist pump.
 Sound clips in `docs/design/video/audio/`: crowd_build (8 s), crowd_roar (6 s), crowd_tail (4 s), shout (3 s), boots_ball (4 s). Not yet listened to or mixed; the shout is quiet (mean -24.7 dB).
+
+## Room clip E (2026-11-21, second redo)
+Cost 35 credits. Balance about 913.5. File: `docs/design/video/room/room-clip-E.mp4` (720p, 5 s). Livelier: shouting, two fist pumps, grin, laughing, fairy lights, TV flicker, a curtain edge on the right.
+Camera locked (TV moves at most 3 px). Laptop, measured against frame 0: steady only 0-1.3 s, then it shifts up to 66 px and tilts up to 20 degrees as he moves
+(he holds it with his left hand but it still moves with him). The "laptop never moves" rule is still NOT met.
+Proposed next try: laptop on a low coffee table in front of the couch, screen facing the camera (new still 0.75 + clip 35).
