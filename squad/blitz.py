@@ -261,12 +261,17 @@ def matchday(conn, contest_id, now=None):
     out = []
     for f in contests.fixtures_of(conn, contest_id):
         full = _fixture(conn, f["id"])
-        item = {"id": f["id"], "kickoff": f["kickoff"], "status": f["status"],
+        slug = conn.execute("SELECT l.slug FROM fixtures x JOIN leagues l ON l.id = x.league_id WHERE x.id = %s",
+                            (f["id"],)).fetchone()[0]
+        item = {"id": f["id"], "kickoff": f["kickoff"], "status": f["status"], "league": slug.replace("-", " ").title(),
                 "state": _state(full, False, now), "can_pick": not kicked_off(full, now)}
         for side, key in (("home", "home_club_id"), ("away", "away_club_id")):
             club = _rows(conn, "SELECT id, name FROM clubs WHERE id = %s", (full[key],))[0]
-            club["players"] = _rows(conn, """SELECT id, name, position, club_id FROM players WHERE club_id = %s
-                                             ORDER BY position, name, id""", (club["id"],))
+            club["players"] = _rows(conn, """SELECT p.id, p.name, p.position, p.club_id,
+                                                    (SELECT round(avg(s.base), 1)::float FROM player_match_scores s
+                                                     WHERE s.player_id = p.id) AS avg
+                                             FROM players p WHERE p.club_id = %s
+                                             ORDER BY p.position, p.name, p.id""", (club["id"],))
             item[side] = club
         out.append(item)
     return out

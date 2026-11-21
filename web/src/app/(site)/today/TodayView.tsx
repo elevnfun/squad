@@ -140,7 +140,7 @@ function BlitzCard({ c, loading, now, access, signedIn }: { c: Contest | null; l
             {c == null || kick == null ? "–" : now != null && kick > now ? <Digits ms={kick - now} /> : <>{ukTime(c.first_kickoff!)}</>}
           </span>
         </div>
-        <div><span className="lbl">{potLabel(c, "Matchday pot")}</span><span className="e2-big">{c ? potText(c) : "–"}<small>SOL</small></span></div>
+        <div><span className="lbl">{potLabel(c, "Matchday pot")}</span><span className="e2-big">{c && potUnset(c) ? <span className="e2-small">Set at full time</span> : <>{c ? potText(c) : "–"}<small>SOL</small></>}</span></div>
       </div>
       <div className="foot">
         {signedIn && access && !access.blitz && access.balance != null
@@ -175,7 +175,7 @@ function DraftCard({ c, loading, now, access, signedIn }: { c: Contest | null; l
           <span className="lbl">{open ? "Locks in" : "Locked"}</span>
           <span className="e2-clockbig">{c == null || lock == null ? "–" : open ? <Digits ms={lock - now!} /> : lockedAt}</span>
         </div>
-        <div><span className="lbl">{potLabel(c, "Weekly pot")}</span><span className="e2-big">{c ? potText(c) : "–"}<small>SOL</small></span></div>
+        <div><span className="lbl">{potLabel(c, "Weekly pot")}</span><span className="e2-big">{c && potUnset(c) ? <span className="e2-small">Set at full time</span> : <>{c ? potText(c) : "–"}<small>SOL</small></>}</span></div>
       </div>
       <div className="foot">
         {signedIn && access && !access.draft && access.balance != null

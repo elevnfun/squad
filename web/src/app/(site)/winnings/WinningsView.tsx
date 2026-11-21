@@ -185,6 +185,8 @@ export default function WinningsView() {
   const working = busy != null || waiting != null;
   // a claim the server is holding (for example after a cancelled signature, up to 5 minutes)
   const held = w?.history.find((h) => h.status === "pending" && h.kind !== "credit") ?? null;
+  const heldMsg = (sent: boolean, amount: string) => sent ? "Sent. Waiting for the network to confirm."
+    : `${amount} SOL is held for a claim in progress. It comes back here within 5 minutes if it is not signed.`;
   const heldSol = held ? solOf(Math.abs(held.kind === "collect" ? held.ready_sol : held.locked_sol)) : "";
   const requirement = w?.requirement ?? 150_000;
   const everything = w != null && (w.history.length > 0 || w.ready_lamports > 0 || w.locked_lamports > 0);
@@ -248,7 +250,7 @@ export default function WinningsView() {
                 <Amount text={w ? sol(w.ready_lamports) : "–"} zero={!w || w.ready_lamports === 0} />
                 <p className="wn-sub">
                   {!w ? (down ? "Not available right now." : "Loading.")
-                    : held?.kind === "collect" ? `${heldSol} SOL is held for a claim in progress. It comes back here within 5 minutes if it is not signed.`
+                    : held?.kind === "collect" ? heldMsg(Boolean(held.signature), heldSol)
                     : w.ready_lamports > 0 ? "Half of your winnings, ready now. Your wallet will ask you to sign."
                     : everything ? "Nothing waiting. New wins appear here." : "Prizes you win appear here once results are final."}
                 </p>
@@ -257,7 +259,7 @@ export default function WinningsView() {
                 <span className="wn-lbl">Locked{frozen && <Paused />}</span>
                 <Amount text={w ? sol(w.locked_lamports) : "–"} zero={!w || w.locked_lamports === 0} />
                 <p className="wn-sub">
-                  {held?.kind === "withdraw" ? `${heldSol} SOL is held for a claim in progress. It comes back here within 5 minutes if it is not signed.`
+                  {held?.kind === "withdraw" ? heldMsg(Boolean(held.signature), heldSol)
                     : frozen ? "Held safe and not unlocking while frozen."
                     : w && w.locked_lamports > 0 ? "The other half of your winnings. You can withdraw 20% of it every 24 hours."
                     : "Half of each prize waits here. You can withdraw 20% of it every 24 hours."}

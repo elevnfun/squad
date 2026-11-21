@@ -273,4 +273,4 @@ def test_matchday_lists_fixtures_and_full_squads(conn):
     assert [f["state"] for f in md] == ["live", "open", "open"] and [f["can_pick"] for f in md] == [False, True, True]
     assert md[0]["home"]["name"] == "Club1" and len(md[0]["home"]["players"]) == 4
     assert {p["id"] for p in md[0]["away"]["players"]} == {21, 22, 23, 24}
-    assert set(md[0]["away"]["players"][0]) == {"id", "name", "position", "club_id"}
+    assert set(md[0]["away"]["players"][0]) == {"id", "name", "position", "club_id", "avg"}
