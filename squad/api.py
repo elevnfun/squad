@@ -23,7 +23,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
 
-from . import auth, chain, chat, contests, faucet, game, holdings, jobs, payouts, pots, profiles, winnings
+from . import auth, blitz, chain, chat, contests, faucet, game, holdings, jobs, payouts, pots, profiles, winnings
 from .config import CFG, launch_leagues
 from .db import DEFAULT_URL
 
@@ -864,6 +864,96 @@ def contest_board(contest_id: int, limit: int = 50, wallet=Depends(optional_wall
     lines = [line(r) for r in rows]
     return {"contest": contest_json(conn, c), "rows": lines[:max(1, min(limit, 500))],
             "you": next((x for x in lines if x["you"]), None), "entrants": len(rows)}
+
+
+# ------------------------------------------------------------------ blitz ---
+class BlitzSquadIn(BaseModel):
+    fixture_id: int
+    player_ids: list[int]
+    captain_id: int
+
+
+def blitz_contest(conn, day):
+    """The matchday contest for YYYY-MM-DD, or the first one not final from today on ('next')."""
+    cur = conn.cursor(row_factory=dict_row)
+    if day == "next":
+        row = cur.execute("""SELECT * FROM contests WHERE kind = 'blitz_matchday' AND day >= %s
+                             AND state NOT IN ('final', 'rolled') ORDER BY day LIMIT 1""",
+                          (contests.uk_date(datetime.now(timezone.utc)),)).fetchone()
+    else:
+        try:
+            d = datetime.strptime(day, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(404, "There is no matchday on that date.")
+        row = cur.execute("SELECT * FROM contests WHERE kind = 'blitz_matchday' AND day = %s", (d,)).fetchone()
+    if not row:
+        raise HTTPException(404, "There is no matchday to show.")
+    return row
+
+
+def blitz_balance(wallet):
+    bal = read_balance(wallet, live=True)
+    if bal is None:
+        raise HTTPException(503, "Could not read your token balance. Try again shortly.")
+    return bal
+
+
+@app.get("/api/blitz/{day}")
+def blitz_day(day: str, wallet=Depends(optional_wallet), conn=Depends(db)):
+    c = blitz_contest(conn, day)
+    fixtures = blitz.matchday(conn, c["id"])
+    out = {"contest": contest_json(conn, c), "squads_allowed": min(CFG["blitz"]["squads_per_matchday"], len(fixtures)),
+           "fixtures": fixtures}
+    if wallet:
+        out["mine"] = blitz.mine(conn, wallet, c["id"])
+    return out
+
+
+@app.post("/api/blitz/check")
+def blitz_check(body: BlitzSquadIn, conn=Depends(db)):
+    problems = blitz.check(conn, body.fixture_id, body.player_ids, body.captain_id)
+    return {"ok": not problems, "problems": problems}
+
+
+@app.put("/api/blitz/{day}/squads/{slot}")
+def blitz_save(day: str, body: BlitzSquadIn, slot: int = Path(ge=1, le=100), wallet=Depends(current_wallet),
+               conn=Depends(db)):
+    c = blitz_contest(conn, day)
+    bal = blitz_balance(wallet)
+    try:
+        blitz.save(conn, wallet, c["id"], slot, body.fixture_id, body.player_ids, body.captain_id, bal)
+    except blitz.BlitzError as e:
+        conn.rollback()
+        raise HTTPException(400, str(e))
+    conn.commit()
+    return blitz.mine(conn, wallet, c["id"])
+
+
+@app.delete("/api/blitz/{day}/squads/{slot}")
+def blitz_delete(day: str, slot: int = Path(ge=1, le=100), wallet=Depends(current_wallet), conn=Depends(db)):
+    c = blitz_contest(conn, day)
+    try:
+        blitz.remove(conn, wallet, c["id"], slot)
+    except blitz.BlitzError as e:
+        conn.rollback()
+        raise HTTPException(400, str(e))
+    conn.commit()
+    return blitz.mine(conn, wallet, c["id"])
+
+
+@app.get("/api/blitz/{day}/mine")
+def blitz_mine(day: str, wallet=Depends(current_wallet), conn=Depends(db)):
+    """The wallet's squads and, if the matchday ended now, its place and prize (same board and split as release)."""
+    c = blitz_contest(conn, day)
+    rows = board_rows(conn, c)
+    pot = shown_pot(conn, c)[0]
+    prizes = {w: (p, lam) for w, p, lam in pots.split(pot, [(r["wallet"], r["points"], r["captain_points"]) for r in rows])}
+    final = c["state"] in ("final", "rolled")
+    me_row = next((r for r in rows if r["wallet"] == wallet), None)
+    place = me_row["place"] if me_row else None
+    lamports = (me_row["prize_lamports"] or 0) if final and me_row else prizes.get(wallet, (None, 0))[1]
+    return {**blitz.mine(conn, wallet, c["id"]), "place": place, "entrants": len(rows),
+            "prize_lamports": lamports, "prize_sol": sol(lamports)}
 
 
 @app.get("/api/winnings")

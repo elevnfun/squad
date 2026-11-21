@@ -15,7 +15,7 @@ No network calls: the caller passes the wallet's $ELEVN balance. Callers pass `c
 
 from datetime import datetime, timedelta, timezone
 
-from psycopg.json import Jsonb
+from psycopg.types.json import Jsonb
 from psycopg.rows import dict_row
 
 from . import contests
@@ -123,15 +123,15 @@ def save(conn, wallet, contest_id, slot, fixture_id, player_ids, captain_id, bal
         raise BlitzError(f"This matchday allows {allowed} squad{'s' if allowed != 1 else ''}.")
     if fixture_id not in fixtures:
         raise BlitzError("That fixture is not part of this matchday.")
+    old = _existing(conn, contest_id, wallet, slot)
+    if old:
+        _assert_editable(conn, old, now)
     f = _fixture(conn, fixture_id)
     if kicked_off(f, now):
         raise BlitzError("That match has already kicked off.")
     problems = _squad_ok(conn, f, player_ids, captain_id)
     if problems:
         raise BlitzError(" ".join(problems))
-    old = _existing(conn, contest_id, wallet, slot)
-    if old:
-        _assert_editable(conn, old, now)
     if conn.execute("SELECT 1 FROM entries WHERE contest_id = %s AND wallet = %s AND fixture_id = %s AND slot <> %s",
                     (contest_id, wallet, fixture_id, slot)).fetchone():
         raise BlitzError("You already have a squad on that fixture.")
