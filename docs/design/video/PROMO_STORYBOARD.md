@@ -1,4 +1,4 @@
-# elevn promo for X: shot-by-shot storyboard (2026-11-21)
+# elevn promo for X: shot-by-shot storyboard (v2, 2026-11-21, retimed to the supplied track)
 
 Draft for approval. Nothing generated. No credits spent (balance 1,130.53).
 Replaces the older "Katana waits" note: the owner decided to make it now.
@@ -15,46 +15,87 @@ scene follows the same rule: football first, product as payoff.
   hero moment. Only the treatment; elevn's object is the glass ball.
 - Tokyo: nothing.
 
-## Shots (36 s, 16:9, 720p draft)
-G = generated football clip. S = real elevn screen from `docs/design/mockups/shots/`, composited. M = motion graphics in code.
+## The track (measured from the owner's mp3)
+42.06 s, stereo, 44.1 kHz, loud (-8.2 LUFS). 80 BPM: a beat every 0.75 s, a bar every 3.0 s.
+Quiet intro 0-7.9 s (about -15 dB, with a near-silent gap at 7.0-7.4 s), then the **drop at 7.9-8.0 s**
+(jumps about 11 dB and stays loud). Loud to 40.4 s, then a 1.6 s tail. Bars start at 8, 11, 14, 17, 20,
+23, 26, 29, 32, 35, 38 s. Nothing is replaced; I only trim, duck and fade it. The video runs the whole
+track: **42 s**.
+
+## Shots (42 s, 16:9, 720p draft; cuts land on the beat grid above)
+G = generated football clip. S = real elevn screen from `docs/design/mockups/shots/`, composited. M = code motion graphics.
 
 | # | Sec | What is seen | Screen | Transition out | Text |
 |---|---|---|---|---|---|
-| 1 | 0-2 | G: night street pitch, dribbler beats first defender, low camera | | whip pan with motion blur | none |
-| 2 | 2-4 | G: beats second defender, strikes | | ball blur fills frame | none |
-| 3 | 4-6 | G: top corner, net ripples, slow motion | | camera pulls back through the net | none |
-| 4 | 6-9 | G: it is a TV in a small flat; the viewer jumps up, arms raised | | push into the laptop in their hands | none |
-| 5 | 9-11 | S on laptop: Today | `today.png` | screen slides up, ball glint wipe | "elevn. Redesigned." |
-| 6 | 11-14 | M+S: Today, Ranks, Chat, one second each, tab bar highlighted, callouts | `today.png`, `ranks.png`, `chat.png` | tab flips like a card | "Today. Ranks. Chat." |
-| 7 | 14-18 | G: striker cuts inside, then S: pick 3 from a fixture, captain flagged x2 | `blitz-pick.png` | gold glint passes, hard cut | "BLITZ. Pick 3. Captain scores double." |
-| 8 | 18-22 | Existing Higgsfield pack art and hover video, five packs flip, then the five-a-side | `art/pack.png`, `pack-hover.mp4`, `draft.png` | pack bursts into pitch lines | "DRAFT. Open 5 packs. Build your five." |
-| 9 | 22-27 | G: keeper dives, ball in, crowd. Then S: Blitz matchday board, rank climbs, then the weekly board | `ranks.png` | rank number counts up and rolls out | "Blitz matchday. Weekly boards." |
-| 10 | 27-32 | M+S: points rising, a win, Winnings page, Collect pressed (the only gold button) | `winnings-1.png` | glass ball swells to full frame | "Top 5 paid. Weekly $500." |
-| 11 | 32-36 | Glass ball, logo, elevn.fun | | end | "Play free." |
+| 1 | 0-2.6 | G: night street pitch, dribbler beats the first defender, low camera | | whip pan, motion blur | none |
+| 2 | 2.6-5.6 | G: beats the second defender, runs at goal | | ball blur | none |
+| 3 | 5.6-8.0 | G: the strike lands in the music's gap (7.0-7.4); ball in the top corner at **8.0** | | hard cut on the drop | none |
+| 4 | 8.0-9.5 | G: net ripples, slow motion | | camera pulls back through the net | none |
+| 5 | 9.5-11.0 | G: it is a TV in a small flat, the viewer jumps up, arms raised | | push into the laptop in their hands | none |
+| 6 | 11.0-14.0 | S on laptop: Today. Reveal on the bar line | `today.png` | glint wipe | "elevn. Redesigned." |
+| 7 | 14.0-17.0 | M+S: Today 14.0, Ranks 15.5, Chat 16.25, tab bar highlighted | `today.png`, `ranks.png`, `chat.png` | tab flips like a card | "Today. Ranks. Chat." |
+| 8 | 17.0-20.0 | G: striker cuts inside | | gold glint, hard cut | none |
+| 9 | 20.0-23.0 | S: pick 3 from a fixture, captain flagged x2 | `blitz-pick.png` | slide | "BLITZ. Pick 3. Captain scores double." |
+| 10 | 23.0-26.0 | Existing Higgsfield pack art and hover video, five packs flip | `art/pack.png`, `pack-hover.mp4` | packs burst into pitch lines | "DRAFT. Open 5 packs." |
+| 11 | 26.0-29.0 | S: the Draft five-a-side | `draft.png` | slide | "Build your five." |
+| 12 | 29.0-32.0 | G: keeper dives, ball in, crowd | | rank number rolls out | none |
+| 13 | 32.0-35.0 | S: Blitz matchday board, rank climbs, then the weekly board | `ranks.png` | count-up | "Blitz matchday. Weekly boards." |
+| 14 | 35.0-38.0 | M+S: points rise, a win, Winnings page | `winnings-1.png` | Collect press on 38.0 | "Top 5 paid." |
+| 15 | 38.0-42.0 | Glass ball swells, logo, elevn.fun | | end | "Weekly $500. Play free." |
 
-Checks against the rules: SOL only (the $500 weekly is the one exception, and shot 10 shows no dollar
-amount beside a prize); "Blitz matchday" never "daily"; no blue grade; no real players, clubs, kits,
-badges or sponsors; no promises of earnings. The $500 line says it is a weekly prize and nothing more.
+Checks against the rules: SOL only (the $500 weekly is the one exception, named as a weekly prize and
+nothing more); "Blitz matchday", never "daily"; no blue grade; no real players, clubs, kits, badges or
+sponsors; no promises of earnings; no dollar value beside any prize.
+
+## Sound plan
+M = the owner's track. Mix target: about -14 LUFS, true peak under -1.5 dBTP, checked on a phone-speaker
+simulation (band-limited to about 150 Hz-8 kHz) so the effects still read. The track is already loud, so it
+is lowered about 5 dB overall to leave room, then limited. Music is never cut dead: every dip is a duck of
+at most 0.3 s down and 0.2-0.4 s back up, on a beat.
+
+| Shot | Music | Effects |
+|---|---|---|
+| 1 0-2.6 | Intro, full (it is quiet), starts with a 0.5 s fade-in | Crowd murmur rising, boots on grass, ball touches |
+| 2 2.6-5.6 | Intro, full | Crowd swell, quick breaths, second tackle whoosh, ball touches |
+| 3 5.6-8.0 | Ducked 6 dB from 6.5 s to the natural gap, then full on the drop at 8.0 | Crowd rising to a peak, the strike at 7.2 (in the gap), a held breath, net hit and **crowd roar exactly at 8.0** |
+| 4 8.0-9.5 | Full | Roar tails off, net rustle; the roar is ducked under the music, not over it |
+| 5 9.5-11.0 | Lowered 8 dB for the room, back to full on the bar line at 11.0 | Muffled TV commentary-free crowd, couch thump, the viewer's shout and cheer |
+| 6 11.0-14.0 | Full | Clean interface hit on "Redesigned.", a soft riser into the tabs |
+| 7 14.0-17.0 | Full | Three quiet interface clicks on 14.0, 15.5, 16.25 |
+| 8 17.0-20.0 | Full | Boots, a quick whoosh, a ball strike |
+| 9 20.0-23.0 | Full | Captain "x2" blip |
+| 10 23.0-26.0 | Full | Pack foil flip and burst, light |
+| 11 26.0-29.0 | Full | Soft tick as each of the five lands |
+| 12 29.0-32.0 | Full | Dive thud, net, a smaller crowd lift |
+| 13 32.0-35.0 | Full | Soft rising tick while the rank counts up |
+| 14 35.0-38.0 | Lowered 5 dB under the Collect press, back to full on 38.0 | Count-up ticks, one clean click and a chime at Collect |
+| 15 38.0-42.0 | Full to 40.4, then the track's own tail | Low swell on the ball, nothing over the final tail |
+
+No commentary voices, no broadcast audio, no chants, no other songs, nothing from the Nike ad.
 
 ## Price
 Live quote (`estimate_video_cost`, Seedance 2.5, 16:9): 35 credits for 5 s, 70 for 10 s: **7 credits per second**.
-The quote did not state resolution, so 720p is assumed and not confirmed.
+The quote did not state the resolution, so 720p is assumed and not confirmed.
 
 | Item | Credits |
 |---|---|
 | Test shot (shot 1, 5 s) | 35 |
-| Generated football clips: shots 1-4, 7, 9 as 6 clips of 5 s | 210 |
+| Generated football clips: shots 1-5 as 3 clips of 5 s, plus shots 8 and 12 as 2 clips of 5 s | 175 plus 35 for the 6th clip = 210 |
 | Location and subject stills (about 8 at 0.25) | about 2 |
 | Retry reserve (about 40%) | about 85 |
-| **Total with reserve** | **about 330** |
+| Video total with reserve | about 330 |
+| Generated sound effects: Mirelo text-to-audio quoted at **1 credit per clip**, about 14 clips, with rerolls about 25 | about 25 |
+| **Grand total with reserve** | **about 355** |
 
-Proposed hard cap: **350 credits**. Screens, text, transitions, callouts and the end card are code and cost 0.
-Katana's own rules want a cap set before the first paid job; I will set it at whatever you approve.
+Proposed hard caps: **350 credits for video, 30 for sound effects**. Screens, text, transitions, callouts and
+the end card are code and cost 0. The Katana CC0 library has whooshes, hits, risers and interface sounds
+for free (it has no crowd, ball or boots), so only the football sounds are generated. If the generated
+sounds are weak I will say so and suggest a royalty-free source instead; I will not spend more first.
+The sound model's own catalogue line says "game pipeline only", so it may refuse a request; I will tell you if it does.
 
 ## Things to decide
-1. **Music.** Katana says to use real recorded music, not tracks made in code. You asked for original and
-   driving. Options: a royalty-free stock track I choose and name with its licence (free), or you supply one.
-2. **get_katana_config.** It only opens a session for a published preset. This is a custom remix with no preset, so
-   I did not call it and the free-run balance is unknown. Say if you want me to open one on a preset anyway.
-3. **Screens are still images.** The mockups are screenshots, so screens move by camera, slides and callouts, not live clicks.
-4. Length and format: 36 s, 16:9 as proposed?
+1. Do you approve the 35-credit test shot, the 350 video cap and the 30-credit sound cap?
+2. **get_katana_config** only opens a session for a published preset. This is a custom remix with no preset, so I did not call it
+   and your free-run balance is unknown. Say if you want me to open one on a preset anyway.
+3. **Screens are still images**, so they move by camera, slides and callouts, not live clicks.
+4. The video is now 42 s because it follows your whole track. Cut it shorter, or keep 42 s?
