@@ -22,23 +22,36 @@ Quiet intro 0-7.9 s (about -15 dB, with a near-silent gap at 7.0-7.4 s), then th
 23, 26, 29, 32, 35, 38 s. Nothing is replaced; I only trim, duck and fade it. The video runs the whole
 track: **42 s**.
 
+## Football style (owner's change, 2026-11-21: replaces the street football and the Nike look)
+A top-level night match filmed like a live TV final: wide main camera, pitch-side close-ups, behind-the-goal
+angle, slow-motion replay, crowd shots, a referee, a packed stadium under floodlights. Nike "Winner Stays" is
+now a reference for pace and energy only. The Desert Eagle clip stays the reference for motion graphics.
+- **Teams (invented).** Orange team: burnt-orange shirts, black shorts, black socks, an abstract geometric
+  badge, no text. Opponents: bone-white shirts with one thin dark-green diagonal band, white shorts. They
+  contrast clearly and sit in elevn's warm palette. Floodlights are warm white, never blue.
+- **Prompt rules.** No sponsor names, no shirt text, no competition marks, no trophies, no anthem, no
+  broadcaster logos, no real stadium. Adults only. Every frame is checked for stray text and logos.
+- **Tie to the product.** The orange number 11 who scores is the player in the viewer's Blitz squad. Each
+  action is followed by its screen effect: goal, then points climb; captain double; rank rises; prize.
+- **Score graphic.** Drawn in code in elevn's style (steel and glass, gold), invented team codes, no real names.
+
 ## Shots (42 s, 16:9, 720p draft; cuts land on the beat grid above)
 G = generated football clip. S = real elevn screen from `docs/design/mockups/shots/`, composited. M = code motion graphics.
 
 | # | Sec | What is seen | Screen | Transition out | Text |
 |---|---|---|---|---|---|
-| 1 | 0-2.6 | G: night street pitch, dribbler beats the first defender, low camera | | whip pan, motion blur | none |
-| 2 | 2.6-5.6 | G: beats the second defender, runs at goal | | ball blur | none |
-| 3 | 5.6-8.0 | G: the strike lands in the music's gap (7.0-7.4); ball in the top corner at **8.0** | | hard cut on the drop | none |
-| 4 | 8.0-9.5 | G: net ripples, slow motion | | camera pulls back through the net | none |
+| 1 | 0-2.6 | G: wide TV main camera, packed stadium at night, orange team's number 11 takes a pass and beats the first defender | | whip pan, motion blur | broadcast score bug (elevn style) |
+| 2 | 2.6-5.6 | G: pitch-side close-up, beats the second defender, referee in frame, crowd swell | | ball blur | none |
+| 3 | 5.6-8.0 | G: behind-the-goal angle, the strike lands in the music's gap (7.0-7.4); ball in the top corner at **8.0** | | hard cut on the drop | none |
+| 4 | 8.0-9.5 | G: slow-motion replay, net ripples, stadium erupts | | camera pulls back through the net | none |
 | 5 | 9.5-11.0 | G: it is a TV in a small flat, the viewer jumps up, arms raised | | push into the laptop in their hands | none |
 | 6 | 11.0-14.0 | S on laptop: Today. Reveal on the bar line | `today.png` | glint wipe | "elevn. Redesigned." |
 | 7 | 14.0-17.0 | M+S: Today 14.0, Ranks 15.5, Chat 16.25, tab bar highlighted | `today.png`, `ranks.png`, `chat.png` | tab flips like a card | "Today. Ranks. Chat." |
-| 8 | 17.0-20.0 | G: striker cuts inside | | gold glint, hard cut | none |
+| 8 | 17.0-20.0 | G: broadcast wide, a second attack, striker cuts inside | | gold glint, hard cut | none |
 | 9 | 20.0-23.0 | S: pick 3 from a fixture, captain flagged x2 | `blitz-pick.png` | slide | "BLITZ. Pick 3. Captain scores double." |
 | 10 | 23.0-26.0 | Existing Higgsfield pack art and hover video, five packs flip | `art/pack.png`, `pack-hover.mp4` | packs burst into pitch lines | "DRAFT. Open 5 packs." |
 | 11 | 26.0-29.0 | S: the Draft five-a-side | `draft.png` | slide | "Build your five." |
-| 12 | 29.0-32.0 | G: keeper dives, ball in, crowd | | rank number rolls out | none |
+| 12 | 29.0-32.0 | G: behind-the-goal, keeper dives, ball in, crowd on its feet | | rank number rolls out | none |
 | 13 | 32.0-35.0 | S: Blitz matchday board, rank climbs, then the weekly board | `ranks.png` | count-up | "Blitz matchday. Weekly boards." |
 | 14 | 35.0-38.0 | M+S: points rise, a win, Winnings page | `winnings-1.png` | Collect press on 38.0 | "Top 5 paid." |
 | 15 | 38.0-42.0 | Glass ball swells, logo, elevn.fun | | end | "Weekly $500. Play free." |
@@ -105,3 +118,9 @@ Cost 35 credits (Seedance 2.5, 5 s, 16:9, 1280x720). Balance after: about 1,095.
 Good: night street, floodlit fog, low tracking camera, first defender beaten. Weak: the player looks like a
 child (must be an adult for a prize product), the ball looks cream not white, the defender goes to the floor
 instead of being left behind, and the clip carries its own audio, which I will mute and replace.
+
+## Open issue: real names on the mockup screens (2026-11-21)
+The mockups show real clubs and players (Arsenal, Liverpool, Bayern, Saka, Kane, Mbappe and others). The video
+rules say no real players or clubs. For the video I propose a **video copy of the screens with invented clubs
+and players**, rendered from the same mockup pages in a browser (free), so the layout is the real elevn screen
+and only the sample names change. The mockups themselves are not touched.
