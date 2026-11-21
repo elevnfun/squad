@@ -410,7 +410,7 @@ export default function BlitzView() {
           sub={<>{`${lg}kick-off ${ukTime(sv.kickoff)} · `}<span className="bz-kick">Locked at kick-off</span></>}
           slots={ordered.map((p) => ({
             name: p.name, captain: p.is_captain,
-            mt: `${posOf(p.position)}${p.points != null ? ` · ${p.points}${p.is_captain ? " ×2" : ""}` : ""}`,
+            mt: `${posOf(p.position)}${p.points != null ? ` · ${p.points}${p.is_captain ? " (C ×2)" : ""}` : ""}`,   // already doubled by the API
           }))} />
       );
     }
@@ -571,7 +571,8 @@ export default function BlitzView() {
           {signedIn ? (
             <>
               <p className="e2-small" style={{ fontWeight: 600 }}>
-                {you && you.place != null && you.place <= 5
+                {!top.some((r) => r.points > 0) ? "Nobody has scored yet. Places appear once the first match kicks off."
+                  : you && you.place != null && you.place <= 5
                   ? `If the day ended now you'd be ${you.place}${["st", "nd", "rd", "th", "th"][you.place - 1]} and win ${sol(you.prize_lamports)} SOL.`
                   : `If the day ended now you'd win nothing yet. 5th place pays ${fifthText}.`}
               </p>

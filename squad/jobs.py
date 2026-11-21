@@ -8,7 +8,7 @@ Each step runs on its own: one failure is printed and the others still run.
 import time
 from datetime import datetime, timezone
 
-from . import blitz, chain, contests, winnings
+from . import blitz, chain, contests, draft, winnings
 from .db import connect
 
 EVERY = 60   # seconds
@@ -22,10 +22,20 @@ def blitz_step(conn, now):
     return {"locked": locked, "scored": sum(blitz.score(conn, i, now) for i in ids)}
 
 
+def draft_step(conn, now):
+    """Lock Draft teams at the week's first kickoff, swap out called-off players, score every week still in play."""
+    locked = draft.lock(conn, now)
+    ids = [r[0] for r in conn.execute("SELECT id FROM contests WHERE kind = 'draft_week' "
+                                      "AND state IN ('open', 'live', 'review') ORDER BY id")]
+    return {"locked": locked, "swapped": sum(draft.swap_auto(conn, i, now) for i in ids),
+            "scored": sum(draft.score(conn, i, now) for i in ids)}
+
+
 def run_once(conn, rpc, now=None):
     now = now or datetime.now(timezone.utc)
     steps = [("ensure", lambda: contests.ensure(conn, now)),
              ("blitz", lambda: blitz_step(conn, now)),
+             ("draft", lambda: draft_step(conn, now)),
              ("tick", lambda: contests.tick(conn, now)),
              ("expire", lambda: winnings.expire(conn, now=now)),
              ("reconcile", lambda: winnings.reconcile(conn, rpc, now))]

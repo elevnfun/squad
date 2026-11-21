@@ -81,7 +81,7 @@ export default function BankedView() {
         if (id != null) {
           try {
             const b = await api<Board>(`/contests/${id}/board?limit=5`, { token });
-            const fifth = b.rows.find((r) => r.place === 5);
+            const fifth = b.rows[4];   // by row, not by place: a tie can leave no row numbered 5
             line = fifth ? fifth.points : null;
           } catch { line = null; }
         }
@@ -122,6 +122,7 @@ export default function BankedView() {
   const away = fx?.away.name ?? "Away";
   const banked = sq.state === "banked";
   const cap = sq.players.find((p) => p.is_captain) ?? null;
+  // the API's captain points are already doubled: show them as they are, never multiply again
   const ordered = [...sq.players].sort((a, b) => Number(b.is_captain) - Number(a.is_captain));
   const left = mine.squads.filter((s) => s.state !== "banked").length;
 
@@ -145,9 +146,9 @@ export default function BankedView() {
               {p.is_captain ? <span className="bk-cap" aria-label="Captain, double points">×2</span> : <span className="bk-cap ghost" aria-hidden="true" />}
               <span className="nm">{p.name}</span>
               <span className="bk-pos">{posOf(p.position)}</span>
-              {hasPts && p.is_captain && <span className="bk-x">{p.points} × 2</span>}
+              {hasPts && p.is_captain && <span className="bk-x">{`C ×2 · ${Math.round((p.points! / 2) * 100) / 100} × 2`}</span>}
             </span>
-            <span className="v">{hasPts ? (p.is_captain ? p.points! * 2 : p.points) : "-"}</span>
+            <span className="v">{hasPts ? p.points : "-"}</span>
           </div>
         );
       })}

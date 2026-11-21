@@ -8,7 +8,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth";
-import { api, ApiError, Contest, ContestState, sol, Today } from "@/lib/api";
+import {
+  api, ApiError, Board, BlitzDay, BlitzMineFull, Contest, ContestState, fetchBlitzDay, fetchBlitzMineFull, sol, Today,
+} from "@/lib/api";
 
 const POLL_MS = 30_000;
 const GIVE_UP_MS = 6_000;
@@ -119,12 +121,127 @@ function Quiet({ name, line, more, href, label }: { name: string; line: string; 
   );
 }
 
-function BlitzCard({ c, loading, now, access, signedIn }: { c: Contest | null; loading: boolean; now: number | null; access: Access | null; signedIn: boolean }) {
+// ---- the Blitz card: one state, one button, from GET /api/blitz/{day} (+ /mine and the board when signed in) ----
+type Live = { day: BlitzDay; mine: BlitzMineFull | null; fifth: number | null };
+
+// refetched whenever /today is (every 30 seconds); null while loading or when the answer cannot be had, so the card
+// falls back to the plain one rather than showing a wrong state
+function useBlitzLive(c: Contest | null, token: string | null, at: number | null): Live | null {
+  const [live, setLive] = useState<{ key: string; v: Live } | null>(null);
+  const day = c?.day ?? null, id = c?.id ?? null;
+  const key = `${day}:${token ?? ""}`;
+  useEffect(() => {
+    if (!day || id == null) return;
+    let dead = false;
+    (async () => {
+      const asGuest = async <T,>(fn: (t: string | null) => Promise<T>): Promise<T | null> => {
+        try { return await fn(token); } catch (e) {
+          if (token && (e as ApiError).status === 401) { try { return await fn(null); } catch { return null; } }
+          return null;
+        }
+      };
+      const [d, mine, board] = await Promise.all([
+        asGuest((t) => fetchBlitzDay(day, t)),
+        token ? asGuest((t) => (t ? fetchBlitzMineFull(day, t) : Promise.reject(new ApiError(401, "")))) : Promise.resolve(null),
+        asGuest((t) => api<Board>(`/contests/${id}/board?limit=5`, { token: t })),
+      ]);
+      if (dead || !d) return;
+      const fifth = board?.rows[4]?.points ?? null;
+      setLive({ key, v: { day: d, mine: token ? mine : null, fifth } });
+    })();
+    return () => { dead = true; };
+  }, [day, id, token, at, key]);
+  return live && live.key === key ? live.v : null;
+}
+
+const pts = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+const ord = (n: number) => { const v = n % 100; return `${n}${v >= 11 && v <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10 > 3 ? 0 : n % 10]}`; };
+
+function BlitzCard({ c, loading, now, access, signedIn, live }: { c: Contest | null; loading: boolean; now: number | null; access: Access | null; signedIn: boolean; live: Live | null }) {
   if (!c && !loading) return <Quiet name="Blitz" line="No matchday scheduled yet" more="Fixtures appear here as soon as a matchday is set." href="/how-to-play" label="How Blitz works" />;
-  const over = c != null && c.state !== "open" && c.state !== "live";
+  const closed = c != null && (c.state === "final" || c.state === "rolled");
+  const review = c?.state === "review";
+  const over = closed || review;
   const kick = c?.first_kickoff ? Date.parse(c.first_kickoff) : null;
+
+  // squads, from the answer for a signed-in wallet (a guest has none: nothing is saved for a guest)
+  const squads = signedIn ? live?.mine?.squads ?? live?.day.mine?.squads ?? [] : [];
+  const allowed = live?.day.squads_allowed ?? 3;
+  const started = squads.filter((q) => q.state !== "open");
+  const banked = squads.filter((q) => q.state === "banked");
+  const fixtures = live?.day.fixtures ?? [];
+  const nextKick = fixtures.map((f) => Date.parse(f.kickoff)).filter((t) => now != null && t > now).sort((a, b) => a - b)[0] ?? null;
+  const anyPickable = fixtures.some((f) => f.can_pick && (now == null || Date.parse(f.kickoff) > now));
+  const mine = live?.mine ?? null;
+  const running = !over && started.length > 0;
+  const state: "pick" | "set" | "running" | "closed" | "plain" =
+    !live ? "plain" : over ? "closed" : running ? "running" : squads.length > 0 ? "set" : "pick";
+
+  const pot = (
+    <div><span className="lbl">{potLabel(c, "Matchday pot")}</span><span className="e2-big">{c && potUnset(c) ? <span className="e2-small">Set at full time</span> : <>{c ? potText(c) : "–"}<small>SOL</small></>}</span></div>
+  );
+  const nextBox = (
+    <div>
+      <span className="lbl">{nextKick != null ? "Next kick-off in" : "Next kick-off"}</span>
+      <span className="e2-clockbig">{nextKick != null && now != null ? <Digits ms={nextKick - now} /> : "–"}</span>
+    </div>
+  );
+
+  let nums: React.ReactNode, note: React.ReactNode = <span className="e2-small e2-muted">Top 5 are paid</span>;
+  let button: React.ReactNode = <Link className={`e2-btn ${signedIn && access?.blitz !== false ? "e2-btn-gold" : "e2-btn-line"}`} href="/blitz">Play</Link>;
+
+  if (state === "pick") {
+    nums = <><div><span className="lbl">Squads</span><span className="e2-big">{`Pick ${allowed} fixtures`}</span></div>{nextBox}{pot}</>;
+    if (!anyPickable) {
+      nums = <><div><span className="lbl">Squads</span><span className="e2-big">None</span></div><div><span className="lbl">Fixtures</span><span className="e2-big">All kicked off</span></div>{pot}</>;
+      button = <Link className="e2-btn e2-btn-line" href="/ranks">Open the board</Link>;
+    }
+  } else if (state === "set") {
+    nums = <><div><span className="lbl">Squads</span><span className="e2-big">{squads.length} of {allowed}<small>set</small></span></div>{nextBox}{pot}</>;
+  } else if (state === "running" || state === "closed") {
+    const total = mine?.total ?? live?.day.mine?.total ?? 0;
+    const place = mine?.place ?? null;
+    let third: React.ReactNode;
+    if (state === "closed") {
+      third = <><span className="lbl">{c?.state === "rolled" ? "Pot" : closed ? "Prize won" : "Prize if released"}</span><span className="e2-big">{c?.state === "rolled" ? <span className="e2-small">Rolled forward</span> : mine && mine.prize_lamports > 0 ? <>{sol(mine.prize_lamports)}<small>SOL</small></> : <span className="e2-small">Nothing this time</span>}</span></>;
+    } else if (place == null) {
+      third = <><span className="lbl">Prizes</span><span className="e2-big"><span className="e2-small">Top 5 are paid</span></span></>;
+    } else if (mine && mine.entrants < 3) {
+      third = <><span className="lbl">Prizes</span><span className="e2-big"><span className="e2-small">Needs 3 players</span></span></>;
+    } else if (place <= 5) {
+      third = <><span className="lbl">Prizes</span><span className="e2-big"><span className="e2-small">In the prizes</span></span></>;
+    } else {
+      const gap = live?.fifth != null ? live.fifth - total : null;
+      third = <><span className="lbl">Prizes</span><span className="e2-big">{gap != null ? <>{pts(Math.max(0, gap))}<small>pts to 5th</small></> : <span className="e2-small">Not yet</span>}</span></>;
+    }
+    nums = <>
+      <div><span className="lbl">{closed ? "Final total" : "Matchday total"}</span><span className="e2-big">{pts(total)}<small>pts</small></span></div>
+      <div><span className="lbl">{closed ? "Final place" : "Place"}</span><span className="e2-big">{place != null ? <>{ord(place)}<small>{mine && mine.entrants ? `of ${mine.entrants}` : ""}</small></> : "–"}</span></div>
+      <div>{third}</div>
+    </>;
+    if (state === "closed") {
+      note = <span className="e2-small e2-muted">{review ? "Result being checked" : c?.state === "rolled" ? "Fewer than 3 played" : "Collect it on Winnings"}</span>;
+      button = <Link className="e2-btn e2-btn-line" href="/ranks">Result</Link>;
+    } else {
+      const last = banked[banked.length - 1];
+      if (last && live) note = <Link style={{ color: "var(--text)", fontSize: 14, textDecoration: "underline", textUnderlineOffset: 3 }} href={`/blitz/banked?day=${live.day.contest?.day ?? c?.day}&slot=${last.slot}`}>{`Squad ${last.slot} banked: open it`}</Link>;
+      else note = <span className="e2-small e2-muted">{`${started.length} of ${squads.length} squads under way`}</span>;
+      button = <Link className="e2-btn e2-btn-line" href="/blitz">Live</Link>;
+    }
+  } else {
+    nums = <>
+      <div><span className="lbl">Fixtures</span><span className="e2-big">{c ? c.fixtures : "–"}</span></div>
+      <div>
+        <span className="lbl">{kick != null && now != null && kick > now ? "First kick-off in" : "First kick-off"}</span>
+        <span className="e2-clockbig">{c == null || kick == null ? "–" : now != null && kick > now ? <Digits ms={kick - now} /> : <>{ukTime(c.first_kickoff!)}</>}</span>
+      </div>
+      {pot}
+    </>;
+    if (over) button = <Link className="e2-btn e2-btn-line" href="/ranks">Open the board</Link>;
+    else button = <Link className={`e2-btn ${signedIn && access?.blitz !== false ? "e2-btn-gold" : "e2-btn-line"}`} href="/blitz">Play</Link>;
+  }
   return (
-    <article className="e2-card e2-mode" aria-labelledby="t-Blitz" aria-busy={loading || undefined}>
+    <article className="e2-card e2-mode" aria-labelledby="t-Blitz" aria-busy={loading || undefined} data-state={state}>
       <div className="top">
         <div>
           <h2 className="name" id="t-Blitz">Blitz</h2>
@@ -132,23 +249,12 @@ function BlitzCard({ c, loading, now, access, signedIn }: { c: Contest | null; l
         </div>
         {c && <Badge state={c.state} />}
       </div>
-      <div className="nums">
-        <div><span className="lbl">Fixtures</span><span className="e2-big">{c ? c.fixtures : "–"}</span></div>
-        <div>
-          <span className="lbl">{kick != null && now != null && kick > now ? "First kick-off in" : "First kick-off"}</span>
-          <span className="e2-clockbig">
-            {c == null || kick == null ? "–" : now != null && kick > now ? <Digits ms={kick - now} /> : <>{ukTime(c.first_kickoff!)}</>}
-          </span>
-        </div>
-        <div><span className="lbl">{potLabel(c, "Matchday pot")}</span><span className="e2-big">{c && potUnset(c) ? <span className="e2-small">Set at full time</span> : <>{c ? potText(c) : "–"}<small>SOL</small></>}</span></div>
-      </div>
+      <div className="nums">{nums}</div>
       <div className="foot">
-        {signedIn && access && !access.blitz && access.balance != null
+        {signedIn && access && !access.blitz && access.balance != null && !over
           ? <Hold need={access.blitz_requirement} name="" access={access} which="blitz" />
-          : <span className="e2-small e2-muted">Top 5 are paid</span>}
-        {over
-          ? <Link className="e2-btn e2-btn-line" href="/ranks">Open the board</Link>
-          : <Link className={`e2-btn ${signedIn && access?.blitz !== false ? "e2-btn-gold" : "e2-btn-line"}`} href="/blitz">Pick squads</Link>}
+          : note}
+        {button}
       </div>
     </article>
   );
@@ -198,6 +304,7 @@ export default function TodayView() {
   const blitz = data?.contests.find((c) => c.kind === "blitz_matchday") ?? null;
   const draft = data?.contests.find((c) => c.kind === "draft_week") ?? null;
   const access = signedIn ? data?.access ?? null : null;
+  const blitzLive = useBlitzLive(blitz, signedIn ? token : null, at);
   const w = signedIn ? data?.winnings ?? null : null;
   const hasWinnings = w != null && (w.ready_sol > 0 || w.locked_sol > 0);
 
@@ -235,7 +342,7 @@ export default function TodayView() {
                 <span className="go">Open Winnings</span>
               </Link>
             )}
-            <BlitzCard c={blitz} loading={loading} now={now} access={access} signedIn={signedIn} />
+            <BlitzCard c={blitz} loading={loading} now={now} access={access} signedIn={signedIn} live={blitzLive} />
             <DraftCard c={draft} loading={loading} now={now} access={access} signedIn={signedIn} />
             <article className="e2-card e2-side" aria-labelledby="t-Shootout">
               <div>

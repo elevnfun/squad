@@ -464,3 +464,16 @@ Reporting
 - How: the mockup is a dialog over a dimmed Today; as a real page it is the same card alone under the rays. Own `bk-` css, own copy of the small crest and x2 pill.
 - Changed: dropped Share to X (not wanted), so the page has no gold button; no score in the data, so the fixture line has no result.
 - Rule for next time: the API gives squad points as raw, assumed captain x2 is shown by the page; confirm with the API owner.
+
+## 2026-11-21 · blitz wiring agent · Today card, Ranks link, real-API run
+- Did: Today's Blitz card is live (pick / set / running / closed from /api/blitz/{day}, /mine and the board); Ranks line links to /blitz; seed `--phase`; `dev_drive.cjs blitz`.
+- Found: Banked screen doubled the captain's points again (API points are already doubled); fixed. A tie leaves no row numbered 5, so "5th place points" is the 5th row, not `place === 5`.
+- Changed: my first check for "captain not doubled" matched "12" inside "12:31"; test the exact "· 6 (C ×2)" text.
+- Rule for next time: seed the stored `players` points as well as `points`, and drive state changes through the real minute job, not by writing scores.
+
+## 2026-11-21 · Draft page builder · /draft from the mockup
+- Did: `web/src/app/(site)/draft/` (page, DraftPage for `?week=`, DraftView, draft.css); pack art copied to `web/public/`; Draft types and fetch helpers added to `lib/api.ts`.
+- How: Blitz patterns (useAuth, polling hook, check by signature, server `detail` shown as is); the seven checks are computed locally so they update per pick, the server check is advice. Every number comes from `rules`.
+- Changed: at 1440 and up the content is 1280 wide, the same as the mockup's 1439 case, so the "In five" tick-only chip had to apply from 1101 up once the captain button took 40px.
+- Rule for next time: mockup breakpoints are in window width, the page's content width stops growing at 1440; test chips at 1440 and 1920, not only below.
+- Weak: guest sample is fetched once and never polled (it must not reshuffle); API shape for `contest`, `fixtures` and limits is guessed (numbers or per-key objects both handled).
