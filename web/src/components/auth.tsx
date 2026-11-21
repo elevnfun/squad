@@ -107,10 +107,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         if (!connected) await connect();
         const pk = selected.adapter.publicKey;
-        if (!pk || !signMessage) throw new Error("This wallet can't sign in. Try Phantom or Solflare.");
+        // read the signer after connecting: the hook's signMessage was captured before the wallet connected
+        const ad = selected.adapter as { signMessage?: (m: Uint8Array) => Promise<Uint8Array> };
+        const sign = signMessage ?? (ad.signMessage ? ad.signMessage.bind(ad) : undefined);
+        if (!pk || !sign) throw new Error("This wallet can't sign in. Try Phantom or Solflare.");
         addr = pk.toBase58();
         ({ message } = await api<{ message: string }>("/auth/message", { body: { wallet: addr, origin } }));
-        signature = await signMessage(new TextEncoder().encode(message));
+        signature = await sign(new TextEncoder().encode(message));
       }
       const { token } = await api<{ token: string }>("/auth/verify",
         { body: { wallet: addr, message, signature: bs58.encode(signature) } });
