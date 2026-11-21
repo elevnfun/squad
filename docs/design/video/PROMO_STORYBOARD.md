@@ -26,12 +26,18 @@ track: **42 s**.
 A top-level night match filmed like a live TV final: wide main camera, pitch-side close-ups, behind-the-goal
 angle, slow-motion replay, crowd shots, a referee, a packed stadium under floodlights. Nike "Winner Stays" is
 now a reference for pace and energy only. The Desert Eagle clip stays the reference for motion graphics.
-- **Teams (invented).** Orange team: burnt-orange shirts, black shorts, black socks, an abstract geometric
-  badge, no text. Opponents: bone-white shirts with one thin dark-green diagonal band, white shorts. They
-  contrast clearly and sit in elevn's warm palette. Floodlights are warm white, never blue.
-- **Prompt rules.** No sponsor names, no shirt text, no competition marks, no trophies, no anthem, no
-  broadcaster logos, no real stadium. Adults only. Every frame is checked for stray text and logos.
-- **Tie to the product.** The orange number 11 who scores is the player in the viewer's Blitz squad. Each
+- **Teams (owner's change, 2026-11-21, replaces the invented teams).** Real teams and real players, for
+  example Manchester City v Chelsea, in their real kits and colours. Same realistic top-level match, full
+  stadium, live-TV look. The spine is unchanged. The scorer is the player in the viewer's Blitz squad on the
+  laptop, with his real name on the elevn screen.
+- **Prompt rules kept as defaults** (the owner did not lift them): no broadcaster logos, no competition
+  logos or trophies, no sponsor names on shirts, no anthem. Every frame is checked for stray text.
+- **Swappable.** Camera angles, timing and transitions do not depend on the kits, so the same storyboard can
+  be remade with other or invented teams.
+- **If Higgsfield refuses** a real face or badge, I do not work around it. I report which shot was blocked and
+  offer it with the real kit colours and no recognisable face (from behind or wide).
+- **Files** are named `DRAFT_not-for-posting_...` and nothing is published, until the owner says otherwise.
+- **Tie to the product.** The scorer is the player in the viewer's Blitz squad. Each
   action is followed by its screen effect: goal, then points climb; captain double; rank rises; prize.
 - **Score graphic.** Drawn in code in elevn's style (steel and glass, gold), invented team codes, no real names.
 
@@ -40,7 +46,7 @@ G = generated football clip. S = real elevn screen from `docs/design/mockups/sho
 
 | # | Sec | What is seen | Screen | Transition out | Text |
 |---|---|---|---|---|---|
-| 1 | 0-2.6 | G: wide TV main camera, packed stadium at night, orange team's number 11 takes a pass and beats the first defender | | whip pan, motion blur | broadcast score bug (elevn style) |
+| 1 | 0-2.6 | G: wide TV main camera, packed stadium at night, the scorer takes a pass and beats the first defender | | whip pan, motion blur | broadcast score bug (elevn style) |
 | 2 | 2.6-5.6 | G: pitch-side close-up, beats the second defender, referee in frame, crowd swell | | ball blur | none |
 | 3 | 5.6-8.0 | G: behind-the-goal angle, the strike lands in the music's gap (7.0-7.4); ball in the top corner at **8.0** | | hard cut on the drop | none |
 | 4 | 8.0-9.5 | G: slow-motion replay, net ripples, stadium erupts | | camera pulls back through the net | none |
@@ -119,8 +125,9 @@ Good: night street, floodlit fog, low tracking camera, first defender beaten. We
 child (must be an adult for a prize product), the ball looks cream not white, the defender goes to the floor
 instead of being left behind, and the clip carries its own audio, which I will mute and replace.
 
-## Open issue: real names on the mockup screens (2026-11-21)
-The mockups show real clubs and players (Arsenal, Liverpool, Bayern, Saka, Kane, Mbappe and others). The video
-rules say no real players or clubs. For the video I propose a **video copy of the screens with invented clubs
-and players**, rendered from the same mockup pages in a browser (free), so the layout is the real elevn screen
-and only the sample names change. The mockups themselves are not touched.
+## Screens with real names (2026-11-21)
+The mockups already show real clubs and players, which now fits. They do not contain a Man City v Chelsea
+fixture (they show Liverpool v Man City and Chelsea v Newcastle) or the scorer in a Blitz squad. For the video
+I render a copy of the pick, Today and Ranks pages in a browser with that fixture and scorer filled in (free).
+Only sample text changes; the mockups themselves are not touched. Club crests on the screens stay as the
+mockups draw them (three-letter codes), not real badges.
