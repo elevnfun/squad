@@ -31,9 +31,9 @@ const BOARD_ROWS = 10;
 // ---------------------------------------------------------------- the scene (one SVG, 800 x 480, seen from the penalty spot)
 const GOAL = { l: 100, r: 700, t: 56, b: 262 };
 const BACK = { l: 146, r: 654, t: 82, b: 246 };
-const VB_Y = 24, VB_H = 420;     // the visible slice of the scene
+const VB_Y = 24, VB_H = 392;     // the visible slice of the scene
 const KS = 1.12;                  // the keeper's scale
-const SPOT = { x: 400, y: 408, r: 17 };
+const SPOT = { x: 400, y: 386, r: 17 };
 const TX: Record<ShootoutSide, number> = { left: 200, centre: 400, right: 600 };
 const TY: Record<ShootoutPower, number> = { low: 232, medium: 170, high: 102 };
 const KEEPER_HOME = { x: 400, y: GOAL.b };
@@ -145,8 +145,9 @@ function KeeperFigure({ k, moving }: { k: Keeper; moving: boolean }) {
         {/* legs, socks, boots */}
         {[-1, 1].map((s) => (
           <g key={s}>
-            <line x1={s * 8} y1={-48} x2={s * 11} y2={-8} stroke="#1b1e23" strokeWidth="13" strokeLinecap="round" />
-            <line x1={s * 11} y1={-30} x2={s * 11.5} y2={-6} stroke="#e9e8e3" strokeWidth="9" strokeLinecap="round" />
+            <line x1={s * 8} y1={-44} x2={s * 11} y2={-8} stroke="#0a0b0d" strokeWidth="14" strokeLinecap="round" />
+            <line x1={s * 8} y1={-44} x2={s * 11} y2={-8} stroke="#d7d9dd" strokeWidth="11" strokeLinecap="round" />
+            <line x1={s * 10.4} y1={-24} x2={s * 11} y2={-8} stroke="#858b95" strokeWidth="11" strokeLinecap="round" />
             <ellipse cx={s * 12.5} cy={-2} rx="9" ry="4.2" fill="#0a0b0d" stroke="#858b95" strokeWidth="1" />
           </g>
         ))}

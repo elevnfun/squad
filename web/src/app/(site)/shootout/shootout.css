@@ -33,7 +33,7 @@
 
 /* play area */
 .so-play { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(280px, 1fr); gap: 32px; align-items: stretch; }
-.so-stage { position: relative; aspect-ratio: 800 / 420; border-radius: 14px; overflow: hidden; border: 1px solid var(--steel-edge); background: #0c0e11; }
+.so-stage { position: relative; aspect-ratio: 800 / 392; border-radius: 14px; overflow: hidden; border: 1px solid var(--steel-edge); background: #0c0e11; }
 .so-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .so-sway { animation: so-sway 2.6s ease-in-out infinite alternate; }
 @keyframes so-sway { from { transform: translateX(-7px); } to { transform: translateX(7px); } }
@@ -41,7 +41,7 @@
 @keyframes so-rip { 0% { transform: scale(1); } 35% { transform: scale(1.035, 1.05); } 100% { transform: scale(1); } }
 .so-aim { transition: none; }
 
-.so-thirds { position: absolute; left: 12.5%; top: 7.6%; width: 75%; height: 49.1%; display: grid; grid-template-columns: repeat(3, 1fr); }
+.so-thirds { position: absolute; left: 12.5%; top: 8.16%; width: 75%; height: 52.55%; display: grid; grid-template-columns: repeat(3, 1fr); }
 .so-third { position: relative; border: 0; border-left: 1px dashed rgba(244,244,241,.0); background: transparent; cursor: pointer; padding: 0; display: flex; align-items: flex-start; justify-content: center;
   transition: background var(--dur-hover) var(--ease), box-shadow var(--dur-hover) var(--ease); }
 .so-third:disabled { cursor: default; }

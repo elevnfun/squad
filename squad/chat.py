@@ -16,7 +16,7 @@ import re
 import unicodedata
 from datetime import datetime, timedelta, timezone
 
-from . import auth, chain, faucet, moderation, profiles
+from . import auth, chain, faucet, holdings, moderation, profiles
 from .config import CFG
 
 C = CFG["chat"]
@@ -39,8 +39,16 @@ def ip_key(ip):
     return hmac.new(_IP_KEY, faucet.network(ip or "unknown").encode(), hashlib.sha256).hexdigest()
 
 
+def _held(conn, wallet):
+    """The wallet's $ELEVN: the dev balance if set, else the balance the watcher last stored (0 if never seen)."""
+    import os
+    if os.environ.get("HOLDINGS_DEV_BALANCE"):
+        return holdings.balance(wallet)
+    return holdings.stored_balance(conn, wallet) or 0
+
+
 def can_post(conn, wallet, now=None):
-    """(allowed, reason): reason is username, banned or muted."""
+    """(allowed, reason): reason is username, banned, muted or holding (under the Blitz requirement of $ELEVN)."""
     now = now or datetime.now(timezone.utc)
     row = conn.execute("SELECT chat_banned, chat_muted_until FROM profiles WHERE wallet = %s", (wallet,)).fetchone()
     if row is None:
@@ -49,6 +57,8 @@ def can_post(conn, wallet, now=None):
         return False, "banned"
     if row[1] and row[1] > now:
         return False, "muted"
+    if holdings.enabled() and _held(conn, wallet) < CFG["blitz"]["requirement"]:
+        return False, "holding"
     return True, None
 
 
@@ -60,7 +70,8 @@ def _require(conn, wallet, now):
         (until,) = conn.execute("SELECT chat_muted_until FROM profiles WHERE wallet = %s", (wallet,)).fetchone()
         raise ChatError(f"You're muted until {until:%d %b, %H:%M} UTC", 403)
     raise ChatError({"username": "Pick a username to chat",
-                     "banned": "You're banned from the chat"}[why], 403)
+                     "banned": "You're banned from the chat",
+                     "holding": f"Hold {CFG['blitz']['requirement']:,} $ELEVN to post in the chat"}[why], 403)
 
 
 def _visible(ch):

@@ -6,6 +6,5 @@ cd "$(dirname "$0")/.."
 while true; do
   echo "$(date '+%F %T') refreshing fixtures and team news"
   uv run python -m squad.ingest fixtures || echo "fixtures refresh failed"
-  uv run python -m squad.ingest injuries || echo "injuries refresh failed"
   sleep 21600
 done
