@@ -452,3 +452,9 @@ Reporting
 - How: private copy in /tmp with `node_modules` symlinked, mocked `/api` routes, and a test-only `window.__fakeSign` patch in the copy (not in `web/`) to drive claim errors.
 - Changed: a tie's pay is the mean of the places it covers, so it must be worked out from the rows (the "you" row included).
 - Rule for next time: money text comes from lamports through `sol()`, never `pot_sol` or `toFixed`; the "pot not set" fallback only shows while `pot_lamports` is 0 and the board is open, live or in review.
+
+## 2026-11-21 · blitz-pick builder · Blitz pick page (`web/src/app/(site)/blitz/`)
+- Did: real `/blitz` page from blitz-pick.html and the guest mockup: fixture list, three squad cards (open, locked, live, full time, banked), two-club picker with captain, live board, guest and empty states. Own `blitz.css` (`bz-` classes); types and fetch helpers added to `lib/api.ts`.
+- How: slots and unsaved picks live in local state, saved squads from `mine` only fill empty slots, so the 30-second poll never wipes picks. The check call is advice; the save answer is final and its message is shown as it comes.
+- Changed: the Remove link crowded the card header at the 5-column width, so it moved to the sub line.
+- Rule for next time: test every header row at the narrowest column width it gets, not at the page width; a screenshot run with six scenarios and four sizes takes over two minutes, so run it in the background.
