@@ -495,3 +495,28 @@ CREATE TABLE IF NOT EXISTS winnings_events (
 CREATE INDEX IF NOT EXISTS winnings_events_wallet ON winnings_events (wallet, created_at);
 -- a prize is credited once
 CREATE UNIQUE INDEX IF NOT EXISTS winnings_events_credit ON winnings_events (contest_id, wallet) WHERE kind = 'credit';
+
+-- Penalty Shootout: one row per game; opp holds the opponent's picks and is never sent to a browser
+CREATE TABLE IF NOT EXISTS shootout_games (
+    id           bigserial PRIMARY KEY,
+    token        text NOT NULL UNIQUE,
+    wallet       text,                                  -- NULL for a guest
+    mode         text NOT NULL CHECK (mode IN ('ranked', 'practice')),
+    opp          jsonb NOT NULL,                        -- {"shots": [{side, power} x rounds], "dives": [side x rounds]}
+    picks        jsonb NOT NULL DEFAULT '{"shots": [], "dives": []}',   -- the player's own picks so far
+    kicks        jsonb NOT NULL DEFAULT '[]',           -- each kick's outcome, in order
+    goals_for    integer NOT NULL DEFAULT 0,
+    goals_against integer NOT NULL DEFAULT 0,
+    state        text NOT NULL DEFAULT 'playing' CHECK (state IN ('playing', 'done')),
+    created_at   timestamptz NOT NULL DEFAULT now(),
+    finished_at  timestamptz
+);
+CREATE INDEX IF NOT EXISTS shootout_games_wallet ON shootout_games (wallet, created_at);
+
+-- a finished player's picks, kept to be someone else's opponent
+CREATE TABLE IF NOT EXISTS shootout_sets (
+    id          bigserial PRIMARY KEY,
+    wallet      text NOT NULL,
+    picks       jsonb NOT NULL,
+    created_at  timestamptz NOT NULL DEFAULT now()
+);

@@ -23,7 +23,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel, Field
 
-from . import auth, blitz, chain, chat, contests, draft, faucet, game, holdings, jobs, payouts, pots, profiles, winnings
+from . import auth, blitz, chain, chat, contests, draft, faucet, game, holdings, jobs, payouts, pots, profiles, shootout, winnings
 from .config import CFG, launch_leagues
 from .db import DEFAULT_URL
 
@@ -1164,6 +1164,60 @@ def admin_release(contest_id: int, body: ReleaseIn, admin=Depends(admin_wallet),
         raise HTTPException(400, str(e))
     conn.commit()
     return {"prizes": prizes_json(prizes), "contest": contest_json(conn, contest_row(conn, contest_id))}
+
+
+# --------------------------------------------------------------- shootout ---
+class ShootoutStartIn(BaseModel):
+    mode: str
+
+
+class ShootoutShootIn(BaseModel):
+    side: str
+    power: str
+
+
+class ShootoutKeepIn(BaseModel):
+    side: str
+
+
+def shootout_call(conn, fn, *args, **kw):
+    try:
+        out = fn(conn, *args, **kw)
+    except shootout.ShootoutError as e:
+        conn.rollback()
+        raise HTTPException(400, str(e))
+    conn.commit()
+    return out
+
+
+@app.post("/api/shootout/start")
+def shootout_start(body: ShootoutStartIn, wallet=Depends(optional_wallet), conn=Depends(db)):
+    return shootout_call(conn, shootout.start, wallet, body.mode)
+
+
+@app.post("/api/shootout/{token}/shoot")
+def shootout_shoot(token: str, body: ShootoutShootIn, wallet=Depends(optional_wallet), conn=Depends(db)):
+    return shootout_call(conn, shootout.shoot, token, body.side, body.power, wallet=wallet)
+
+
+@app.post("/api/shootout/{token}/keep")
+def shootout_keep(token: str, body: ShootoutKeepIn, wallet=Depends(optional_wallet), conn=Depends(db)):
+    return shootout_call(conn, shootout.keep, token, body.side, wallet=wallet)
+
+
+@app.get("/api/shootout/{token}")
+def shootout_status(token: str, wallet=Depends(optional_wallet), conn=Depends(db)):
+    return shootout_call(conn, shootout.status, token, wallet)
+
+
+@app.get("/api/shootout")
+def shootout_home(wallet=Depends(optional_wallet), conn=Depends(db)):
+    so = CFG["shootout"]
+    out = {"rules": {k: so[k] for k in ("rounds", "ranked_games_per_day", "sides", "powers", "miss", "save")},
+           "board": shootout.board(conn)}
+    if wallet:
+        out["ranked_left"] = shootout.left_today(conn, wallet)
+    return out
 
 
 @app.get("/api/health")

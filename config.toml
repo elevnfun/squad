@@ -243,6 +243,13 @@ scores = ["friday", "saturday", "sunday", "monday"]
 
 [shootout]                                  # [Confirmed 2026-11-19] side mini-game: no prize, no holding requirement
 ranked_games_per_day = 10
+rounds = 5                                  # penalties each way
+sides = ["left", "centre", "right"]
+powers = ["low", "medium", "high"]
+miss = { low = 0.0, medium = 0.1, high = 0.25 }     # chance a shot misses the goal
+save = { low = 1.0, medium = 0.6, high = 0.3 }      # chance the keeper saves a shot he guessed the side of
+stored_sets_pool = 200                      # latest finished pick sets an opponent is drawn from
+board_limit = 50
 
 [boards]                                    # [Confirmed 2026-11-19] every prize board: Blitz matchday, Blitz weekly, Draft weekly
 mode_split = { blitz = 0.60, draft = 0.40 }

@@ -235,3 +235,32 @@ export const saveDraftTeam = (week: string, body: DraftTeamBody, token: string) 
   api<DraftMine>(`/draft/${week}/team`, { method: "PUT", body, token });
 export const swapDraftPlayer = (week: string, body: { out_id: number; in_id: number }, token: string) =>
   api<DraftMine>(`/draft/${week}/swap`, { method: "POST", body, token });
+
+// ---- Penalty Shootout side game (GET /api/shootout, POST /api/shootout/start, /{token}/shoot, /{token}/keep) ----
+// No prize. Ranked games need a signed-in wallet and are limited per day; practice is open to guests.
+// Errors are HTTP 400 with a plain message in `detail` (ApiError.message carries it as is).
+export type ShootoutSide = "left" | "centre" | "right";
+export type ShootoutPower = "low" | "medium" | "high";
+export type ShootoutMode = "ranked" | "practice";
+export type ShootoutRow = {
+  wallet: string; name?: string | null; wins: number; draws: number; losses: number; goals_for: number; goals_against: number; games: number;
+};
+export type ShootoutInfo = {
+  rules: { rounds: number; ranked_games_per_day: number; powers: unknown[] }; ranked_left?: number; board: ShootoutRow[];
+};
+export type ShootoutScore = { me: number; them: number };
+export type ShootoutStart = {
+  token: string; mode: ShootoutMode; round: number; turn: "shoot" | "keep"; score: ShootoutScore; state: "playing" | "done";
+};
+export type ShootoutKick = {
+  shot_side: ShootoutSide; keeper_side: ShootoutSide; result: "goal" | "saved" | "missed";
+  round: number; turn: "shoot" | "keep"; score: ShootoutScore; state: "playing" | "done";
+};
+
+export const fetchShootout = (token?: string | null) => api<ShootoutInfo>("/shootout", { token });
+export const startShootout = (mode: ShootoutMode, token?: string | null) =>
+  api<ShootoutStart>("/shootout/start", { method: "POST", body: { mode }, token });
+export const shootoutShoot = (game: string, side: ShootoutSide, power: ShootoutPower) =>
+  api<ShootoutKick>(`/shootout/${encodeURIComponent(game)}/shoot`, { method: "POST", body: { side, power } });
+export const shootoutKeep = (game: string, side: ShootoutSide) =>
+  api<ShootoutKick>(`/shootout/${encodeURIComponent(game)}/keep`, { method: "POST", body: { side } });
