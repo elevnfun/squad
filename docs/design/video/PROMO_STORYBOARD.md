@@ -267,3 +267,12 @@ the music duck began 0.2 s after the drop and cut it off.
 Changes: shout trimmed to its loud part, much quieter (+6 dB instead of +12) and placed so its peak is on the first fist pump (10.7 s); crowd build, roar, tail and library effects lowered; boots clip faded out before the roar;
 music duck now gentler (4.4 dB, starting 8.45 over 0.5 s); no limiter squeeze, the whole mix is scaled down in one linear step. Result -13.7 LUFS, true peak -1.8 dBFS.
 Not verified by ear.
+
+## Full video v1 (2026-11-21): 42 s, 1280x720
+File: `docs/design/video/final/elevn_promo_v1_full.mp4` (replaces the 17 s section preview). 0-17 s as section v5. 17-42 s is the platform section, all built in code (no new paid footage), 24 fps, from the real mockup screens
+(`docs/design/video/platform/`: `platform.html`, `render.js`, assets).
+Desert Eagle treatment used: black stage with vignette and floor reflection, one-word title cards that blur in and out behind the screens (Today. Ranks. Chat. Blitz. Pick 3. Draft. Your five. Boards. Collect.),
+blueprint callouts (square markers, thin leader lines, labels typed on, tiny coordinate tags), fast whip cuts with motion blur, a punch-in, a rotate-whip, a black-and-orange thermal pass into Draft (no navy), a flash on the Collect press, and the end card.
+Timeline: Today 17.0, Ranks 18.5, Chat 19.25, Blitz 20.0 (3 squads, captain scores double), Pick 3 23.0, Draft 26.0 (thermal), Your five 29.0, Boards 32.0 (matchday and weekly, top 5 paid, your place), Collect 35.0 (half now, half locked; Collect pulses and flashes on 38.0), end card 38.0 (elevn., elevn.fun, Play free).
+Sound: music throughout; library whooshes on the cuts, quiet blips as each callout appears, hit and chime on Collect. Mix -14.0 LUFS, true peak -2.3 dBFS.
+Open points: the mockup screens show other fixtures and real names (Leverkusen v Leipzig on the pick screen, Kane, Mbappe and others on Draft); the Today and Ranks screens show the sample numbers from the mockups; screens are stills so they move by camera only.
