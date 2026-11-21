@@ -192,3 +192,36 @@ export const deleteBlitzSquad = (day: string, slot: number, token: string) =>
 export type BlitzMineFull = BlitzMine & { place: number | null; entrants: number; prize_lamports: number; prize_sol: number };
 export const fetchBlitzDay = (day: string, token?: string | null) => api<BlitzDay>(`/blitz/${day}`, { token });
 export const fetchBlitzMineFull = (day: string, token: string) => api<BlitzMineFull>(`/blitz/${day}/mine`, { token });
+
+// ---- Weekly Draft page (GET /api/draft/{week}, POST .../packs/{pack}/open, POST .../check, PUT .../team, POST .../swap) ----
+// {week} is "next" or the YYYY-MM-DD Tuesday the week starts on.
+export type DraftTier = "top" | "mid" | "budget";
+export type DraftPackRow = {
+  pack: number; tier: DraftTier; player_id: number | null; name: string | null; position: string | null; club: string | null;
+  value: number | null; opened_at: string | null;
+};
+export type DraftTeamPlayer = { id: number; name: string; position: string; club: string; tier: DraftTier; points: number | null; is_captain: boolean };
+export type DraftState = "open" | "locked" | "live" | "final";
+export type DraftMine = { packs: DraftPackRow[]; team: DraftTeamPlayer[]; captain_id: number | null; state: DraftState; total: number | null };
+// a rule is one number for everything, or one number per position / tier
+export type DraftLimit = number | Record<string, number>;
+export type DraftRules = {
+  team_size: number; min_per_position: DraftLimit; max_per_club: number; max_per_tier: DraftLimit; captain_multiplier: number; requirement: number;
+};
+export type DraftFixture = { id: number; kickoff: string; status: string; home: string | { name: string }; away: string | { name: string } };
+export type DraftContest = { id?: number; week_start?: string; state?: string; pot_sol?: number | null; pot_estimated?: boolean } | null;
+export type DraftWeek = {
+  contest: DraftContest; locks_at: string | null; fixtures: DraftFixture[]; rules: DraftRules; mine?: DraftMine | null; sample?: DraftPackRow[] | null;
+};
+export type DraftTeamBody = { team_ids: number[]; captain_id: number | null };
+export type DraftCheckBody = DraftTeamBody & { pool_player_ids: number[] };
+
+export const fetchDraft = (week: string, token?: string | null) => api<DraftWeek>(`/draft/${week}`, { token });
+export const openDraftPack = (week: string, pack: number, token: string) =>
+  api<DraftMine>(`/draft/${week}/packs/${pack}/open`, { method: "POST", body: {}, token });
+export const checkDraftTeam = (week: string, body: DraftCheckBody, token?: string | null) =>
+  api<BlitzCheck>(`/draft/${week}/check`, { method: "POST", body, token });
+export const saveDraftTeam = (week: string, body: DraftTeamBody, token: string) =>
+  api<DraftMine>(`/draft/${week}/team`, { method: "PUT", body, token });
+export const swapDraftPlayer = (week: string, body: { out_id: number; in_id: number }, token: string) =>
+  api<DraftMine>(`/draft/${week}/swap`, { method: "POST", body, token });
