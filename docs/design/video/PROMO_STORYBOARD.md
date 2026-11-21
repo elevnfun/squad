@@ -205,3 +205,9 @@ Without the retry about 45. Balance now about 1,025, so about 945 after the sect
 - The room is one generated clip, so the same viewer, clothes and room hold in every shot by construction.
 - The Katana session expires at 03:11 UTC; I will open a new one if it has lapsed.
 - Music is ducked at the goal as you asked, so the drop is quieter than the track's own peak; the drop is still audible under the roar.
+
+## Room still and room clip C (2026-11-21)
+Room still `docs/design/video/room/room-still-1.png`: 0.75 credits. Room clip `docs/design/video/room/room-clip-C.mp4`: 35 credits (720p, 5 s).
+Spent in this section so far: 35.75. Balance about 989. Sound effects not yet generated.
+Good: the student reads as an ordinary 19-year-old, same room and clothes throughout, TV clear on the right, he does not cross the TV, the celebration is energetic with a real grin at the camera.
+Weak: (1) the laptop leaves the frame, it slides to the bottom edge and only a sliver is visible from about 1.5 s on, so the push into the screen cannot start from the clip after the jump; (2) the camera is not fully locked, the frame drifts slightly, so the screens need tracking; (3) he jumps in place and turns to camera rather than standing up from the couch; (4) the TV and laptop screens show generic content that I cover with the real pictures.
