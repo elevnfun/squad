@@ -159,3 +159,31 @@ export type Winnings = { ready: number; locked: number; withdrawable: number;
   withdrawable_lamports: number; withdrawable_sol: number; frozen: boolean; first_collect_at: string | null;
   next_withdraw_at: string | null; seconds_to_withdraw: number | null; can_collect: boolean; collect_reason: string | null;
   can_withdraw: boolean; withdraw_reason: string | null; requirement: number; history: WinningsEvent[] };
+
+// ---- Matchday Blitz pick page (GET /api/blitz/next, POST /api/blitz/check, PUT/DELETE /api/blitz/{day}/squads/{slot}) ----
+export type BlitzPlayer = { id: number; name: string; position: string; club_id: number; avg?: number | null };
+export type BlitzTeam = { id: number; name: string; players: BlitzPlayer[] };
+export type BlitzFixture = {
+  id: number; kickoff: string; status: string; state: string; can_pick: boolean;
+  league?: string | null;   // "Premier League" etc. when the API sends it; the page groups by it
+  home: BlitzTeam; away: BlitzTeam;
+};
+export type BlitzSquadState = "open" | "live" | "full_time" | "banked";
+export type BlitzSquad = {
+  slot: number; fixture_id: number; kickoff: string; captain_id: number | null; locked: boolean; state: BlitzSquadState;
+  points: number | null; captain_points: number | null;
+  players: { id: number; name: string; position: string; points: number | null; is_captain: boolean; club_id?: number }[];
+};
+export type BlitzMine = { squads: BlitzSquad[]; total: number | null; captain_points: number | null };
+export type BlitzContest = { id?: number; day: string; state: ContestState; pot_sol: number; pot_estimated: boolean };
+export type BlitzDay = { contest: BlitzContest | null; squads_allowed: number; fixtures: BlitzFixture[]; mine?: BlitzMine | null };
+export type BlitzBody = { fixture_id: number; player_ids: number[]; captain_id: number | null };
+export type BlitzCheck = { ok: boolean; problems: string[] };
+
+export const fetchBlitzNext = (token?: string | null) => api<BlitzDay>("/blitz/next", { token });
+export const checkBlitzSquad = (body: BlitzBody, token?: string | null) =>
+  api<BlitzCheck>("/blitz/check", { method: "POST", body, token });
+export const saveBlitzSquad = (day: string, slot: number, body: BlitzBody, token: string) =>
+  api<BlitzMine>(`/blitz/${day}/squads/${slot}`, { method: "PUT", body, token });
+export const deleteBlitzSquad = (day: string, slot: number, token: string) =>
+  api<BlitzMine>(`/blitz/${day}/squads/${slot}`, { method: "DELETE", token });
