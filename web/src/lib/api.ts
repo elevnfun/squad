@@ -128,13 +128,22 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
 export const fmtM = (n: number | null | undefined) => (n == null ? "-" : `${n.toFixed(1)}M`);
 export const fmtPts = (n: number | null | undefined) => (n == null ? "-" : Number.isInteger(n) ? `${n}` : n.toFixed(1));
 export const fmtSol = (n: number) => `${n.toFixed(n >= 1 ? 2 : 4)} SOL`;
+// whole lamports, floored to 4 decimals, shown with at least 2 ("1.00", "0.4032"). Flooring means shares never add up to more than the pot.
+export function sol(lamports: number): string {
+  const units = Math.floor(Math.max(0, lamports) / 100_000);       // 1e-4 SOL
+  if (lamports > 0 && units === 0) return "<0.0001";
+  const s = (units / 10_000).toFixed(4).replace(/0{1,2}$/, "");
+  return s.endsWith(".") ? `${s}00` : s;
+}
 export const shortWallet = (w: string) => `${w.slice(0, 4)}…${w.slice(-4)}`;
 
 // ---- elevn 2.0: contests, Today, boards and winnings (squad/api.py: /api/today, /api/contests, /api/winnings) ----
 export type ContestKind = "blitz_matchday" | "blitz_week" | "draft_week";
 export type ContestState = "open" | "live" | "review" | "final" | "rolled";
 export type Contest = { id: number; kind: ContestKind; day: string | null; week_start: string; state: ContestState;
-  locks_at: string | null; pot_lamports: number; pot_sol: number; first_kickoff: string | null; fixtures: number };
+  locks_at: string | null; pot_lamports: number; pot_sol: number;
+  pot_estimated: boolean;   // true: pot_lamports / pot_sol hold an estimate until the pot is funded at release
+  first_kickoff: string | null; fixtures: number };
 export type Today = { now: string; contests: Contest[];
   access: { balance: number | null; blitz: boolean; draft: boolean; blitz_requirement: number; draft_requirement: number } | null;
   winnings: { ready_lamports: number; ready_sol: number; locked_lamports: number; locked_sol: number; frozen: boolean } | null };

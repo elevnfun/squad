@@ -8,24 +8,18 @@ import Link from "next/link";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth";
-import { api, ApiError, Winnings, WinningsEvent } from "@/lib/api";
+import { api, ApiError, sol, Winnings, WinningsEvent } from "@/lib/api";
 import { Cancelled, claim } from "./claim";
 import "./winnings.css";
 
 const SLOW_MS = 30_000;
 const FAST_MS = 5_000;
 const LAMPORTS = 1_000_000_000;
-const EXPLORER = "https://explorer.solana.com/tx";   // devnet while the site is on devnet
+// the cluster follows the RPC the site is built with, as TestSeason.tsx does; mainnet links carry no cluster
+const EXPLORER = `https://explorer.solana.com/tx/%s${(process.env.NEXT_PUBLIC_SOLANA_RPC ?? "").includes("mainnet") ? "" : "?cluster=devnet"}`;
 const BUY_URL = process.env.NEXT_PUBLIC_ELEVN_BUY_URL ?? "https://jup.ag";
 
 // ---- formatting: SOL only, never a dollar value ----
-// whole lamports, floored to 4 decimals, shown with at least 2 ("1.00", "0.4032")
-function sol(lamports: number): string {
-  const units = Math.floor(Math.max(0, lamports) / 100_000);       // 1e-4 SOL
-  if (lamports > 0 && units === 0) return "<0.0001";
-  const s = (units / 10_000).toFixed(4).replace(/0{1,2}$/, "");
-  return s.endsWith(".") ? `${s}00` : s;
-}
 const solOf = (n: number) => sol(Math.round(n * LAMPORTS));
 const two = (n: number) => String(n).padStart(2, "0");
 const dayOf = (iso: string) =>
@@ -106,7 +100,8 @@ const STATUS_BADGE = { pending: "Pending", failed: "Cancelled" } as const;
 
 function Row({ e }: { e: WinningsEvent }) {
   const source = e.contest ? SOURCE[e.contest.kind] : null;
-  const label = e.kind === "credit" ? "Won" : e.kind === "collect" ? "Collected" : "Withdrawn";
+  const done = e.status === "confirmed";
+  const label = e.kind === "credit" ? "Won" : e.kind === "collect" ? (done ? "Collected" : "Collect") : (done ? "Withdrawn" : "Withdraw");
   const amount = e.kind === "credit" ? e.ready_sol + e.locked_sol : e.kind === "collect" ? -e.ready_sol : -e.locked_sol;
   const title = e.kind === "credit" ? `${source ?? "Prize"} win` : e.kind === "collect" ? "Ready winnings to your wallet" : "20% of Locked to your wallet";
   const note = e.status === "failed" ? "Nothing was sent. The amount is back where it was."
@@ -123,7 +118,7 @@ function Row({ e }: { e: WinningsEvent }) {
         {title}
         {note && <small>{note}</small>}
         {e.signature && e.status === "confirmed" && e.kind !== "credit" && (
-          <small><a className="wn-tx" href={`${EXPLORER}/${e.signature}?cluster=devnet`} target="_blank" rel="noopener noreferrer">View on Solana Explorer</a></small>
+          <small><a className="wn-tx" href={EXPLORER.replace("%s", e.signature)} target="_blank" rel="noopener noreferrer">View on Solana Explorer</a></small>
         )}
       </span>
       <span className="am">{solOf(amount)} SOL</span>
@@ -175,8 +170,7 @@ export default function WinningsView() {
       if (out.status === "confirmed") setNote({ tone: "ok", text: `Confirmed. ${paid} SOL is in your wallet.` });
       else {
         setNote({ tone: "wait", text: "Sent. Waiting for the network to confirm." });
-        const id = (await api<Winnings>("/winnings", { token })).history.find((h) => h.kind === kind && h.status === "pending")?.id;
-        if (id != null) setWaiting(id);
+        setWaiting(out.event_id);
       }
     } catch (e) {
       if (e instanceof Cancelled) setNote({ tone: "bad", text: "Cancelled. Nothing was sent. The claim frees itself within 5 minutes, then you can try again." });
@@ -189,6 +183,9 @@ export default function WinningsView() {
   const down = status === "down";
   const loading = signedIn && status === "loading";
   const working = busy != null || waiting != null;
+  // a claim the server is holding (for example after a cancelled signature, up to 5 minutes)
+  const held = w?.history.find((h) => h.status === "pending" && h.kind !== "credit") ?? null;
+  const heldSol = held ? solOf(Math.abs(held.kind === "collect" ? held.ready_sol : held.locked_sol)) : "";
   const requirement = w?.requirement ?? 150_000;
   const everything = w != null && (w.history.length > 0 || w.ready_lamports > 0 || w.locked_lamports > 0);
 
@@ -199,14 +196,15 @@ export default function WinningsView() {
   const withdrawOff = !w?.can_withdraw || working;
   const opensIn = seconds != null && seconds > 0 && !frozen ? `Withdraw 20% opens in ${Math.floor(seconds / 3600)}h ${two(Math.floor(seconds / 60) % 60)}m.` : null;
   const hint = busy ? "Waiting for your wallet. Check its pop-up." : waiting != null ? "Waiting for the network to confirm."
-    : down && !w ? "Can't reach elevn right now. Trying again in a few seconds."
-    : !w ? "" : frozen ? `Withdraw is off while the wallet is below ${count(requirement)} $ELEVN.`
-    : w.can_collect ? (w.can_withdraw ? "Your wallet asks you to sign each claim. You pay the small network fee." : "Your wallet will ask you to sign. You pay the small network fee.")
+    : down && !w ? ""
+    : !w ? "" : held ? "A claim is in progress. This page updates when it settles."
+    : frozen ? `Withdraw is off while the wallet is below ${count(requirement)} $ELEVN.${w.can_collect ? " Collect still works." : ""}`
+    : w.can_collect ? (w.can_withdraw ? "Your wallet asks you to sign each claim. You pay the small network fee." : `Your wallet will ask you to sign. You pay the small network fee.${w.withdraw_reason ? ` ${w.withdraw_reason}` : ""}`)
     : w.can_withdraw ? "One withdrawal every 24 hours. Your wallet will ask you to sign."
     : !everything ? "Nothing to collect or withdraw yet."
     : opensIn ?? w.withdraw_reason ?? w.collect_reason ?? "";
 
-  const updated = !signedIn ? "" : loading ? "Loading your winnings" : down ? "Can't reach elevn right now. Trying again every few seconds."
+  const updated = !signedIn ? "" : loading ? "Loading your winnings" : down ? "Can't reach elevn right now. Trying again every 30 seconds."
     : stale ? "Can't refresh right now. Showing the last update." : "";
 
   return (
@@ -249,7 +247,9 @@ export default function WinningsView() {
                 <span className="wn-lbl">Ready to collect</span>
                 <Amount text={w ? sol(w.ready_lamports) : "–"} zero={!w || w.ready_lamports === 0} />
                 <p className="wn-sub">
-                  {!w ? "Loading." : w.ready_lamports > 0 ? "Half of your winnings, ready now. Your wallet will ask you to sign."
+                  {!w ? (down ? "Not available right now." : "Loading.")
+                    : held?.kind === "collect" ? `${heldSol} SOL is held for a claim in progress. It comes back here within 5 minutes if it is not signed.`
+                    : w.ready_lamports > 0 ? "Half of your winnings, ready now. Your wallet will ask you to sign."
                     : everything ? "Nothing waiting. New wins appear here." : "Prizes you win appear here once results are final."}
                 </p>
               </div>
@@ -257,7 +257,8 @@ export default function WinningsView() {
                 <span className="wn-lbl">Locked{frozen && <Paused />}</span>
                 <Amount text={w ? sol(w.locked_lamports) : "–"} zero={!w || w.locked_lamports === 0} />
                 <p className="wn-sub">
-                  {frozen ? "Held safe and not unlocking while frozen."
+                  {held?.kind === "withdraw" ? `${heldSol} SOL is held for a claim in progress. It comes back here within 5 minutes if it is not signed.`
+                    : frozen ? "Held safe and not unlocking while frozen."
                     : w && w.locked_lamports > 0 ? "The other half of your winnings. You can withdraw 20% of it every 24 hours."
                     : "Half of each prize waits here. You can withdraw 20% of it every 24 hours."}
                 </p>
@@ -277,13 +278,13 @@ export default function WinningsView() {
                     </>
                   ) : seconds > 0 ? (
                     <>
-                      <Amount text={sol(Math.floor(w.locked_lamports * 0.2))} zero={w.locked_lamports === 0} />
+                      <Amount text={sol(Math.floor(w.locked_lamports / 5))} zero={w.locked_lamports === 0} />
                       <Clock seconds={seconds} />
                       <p className="wn-sub">20% of {sol(w.locked_lamports)} SOL. A new win adds to Locked and raises it.</p>
                     </>
                   ) : (
                     <>
-                      <Amount text={sol(Math.floor(w.locked_lamports * 0.2))} zero={w.locked_lamports === 0} />
+                      <Amount text={sol(Math.floor(w.locked_lamports / 5))} zero={w.locked_lamports === 0} />
                       <p className="wn-state sm">{w.can_withdraw ? "Available now" : "Timer finished"}</p>
                       <p className="wn-sub">{w.can_withdraw ? "20% of what is locked right now. Days you skip do not add up." : w.withdraw_reason ?? ""}</p>
                     </>
@@ -314,7 +315,7 @@ export default function WinningsView() {
               <ul className="wn-hist">{w.history.map((e) => <Row key={e.id} e={e} />)}</ul>
             ) : (
               <>
-                <p className="wn-empty">{!signedIn ? "Nothing here yet. Prizes from Blitz and Draft will be listed here." : loading ? "Loading." : down ? "History will show when elevn can be reached." : "Nothing won yet. Prizes from Blitz and Draft will be listed here."}</p>
+                <p className="wn-empty">{!signedIn || status === "signedout" ? "Nothing here yet. Prizes from Blitz and Draft will be listed here." : loading ? "Loading." : down ? "History will show when elevn can be reached." : "Nothing won yet. Prizes from Blitz and Draft will be listed here."}</p>
                 <div style={{ marginTop: 12 }}><Link className="e2-btn e2-btn-line e2-btn-sm" href="/blitz">Pick your squads</Link></div>
               </>
             )}
