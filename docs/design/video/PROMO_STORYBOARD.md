@@ -235,3 +235,10 @@ Redo the move into the laptop: one smooth camera move from the fist pump down to
 Sound: remove every effect on that move (no whoosh, riser, flash or hit); music only, back up on the beat; keep the crowd roar and the shout during the fist pump.
 Plan awaiting approval: one new room clip (35 credits, 720p, 5 s, from room-still-1.png), crowd roar and shout (about 8 credits).
 Timing proposal: room phase 9.5-12.5 (one bar longer), push 12.5-14.0 landing on the bar line, goal effect on the board 14.0-17.0, platform section from 17.0.
+
+## Room clip D and sound clips (2026-11-21)
+Approved 43 credits; spent 41.25 (room clip D 35, five sound clips 6.25). Balance 948.53.
+Room clip D: `docs/design/video/room/room-clip-D.mp4` (720p, 5 s). He stays seated and does a fist pump; camera locked (TV moves at most 4 px).
+Laptop measured against frame 0: steady 0-0.9 s; from 1.0 to 2.5 s it shifts 20-36 px and tilts 12-16 degrees (screen turns partly away) while his arm rises;
+then steady again from about 3.75 s to the end (about 25 px left and 12 px up of its start). So the "laptop never moves" rule is NOT met during the fist pump.
+Sound clips in `docs/design/video/audio/`: crowd_build (8 s), crowd_roar (6 s), crowd_tail (4 s), shout (3 s), boots_ball (4 s). Not yet listened to or mixed; the shout is quiet (mean -24.7 dB).
