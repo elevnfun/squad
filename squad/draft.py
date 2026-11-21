@@ -144,21 +144,24 @@ def _problems(info, team_ids, captain_id):
         ids = [p for p in ids if p in info]
     for pos, need in D["min_per_position"].items():
         if sum(info[p]["position"] == pos for p in set(ids)) < need:
-            problems.append(f"Pick at least {need} {pos}.")
+            problems.append(f"Pick at least {need} {dict(DEF='defender', MID='midfielder', FWD='attacker').get(pos, pos)}.")
     for club in sorted({info[p]["club"] for p in ids}):
         if sum(info[p]["club"] == club for p in set(ids)) > D["max_per_club"]:
             problems.append(f"Pick at most {D['max_per_club']} players from {club}.")
     for tier, most in D["max_per_tier"].items():
         if sum(info[p]["tier"] == tier for p in set(ids)) > most:
-            problems.append(f"Pick at most {most} {tier} players.")
+            problems.append(f"Pick at most {most} {tier.capitalize()} players.")
     if captain_id not in team_ids:
         problems.append("The captain must be one of the team's players.")
     return problems
 
 
-def check(conn, contest_id, pool_player_ids, team_ids, captain_id):
-    """Plain-English problems with a team picked from a pool of 15 (empty list = valid). Saves nothing."""
+def check(conn, contest_id, pool_player_ids, team_ids, captain_id, wallet=None):
+    """Plain-English problems with a team picked from a pool of 15 (empty list = valid). Saves nothing.
+    A signed-in wallet with dealt packs is checked against its stored tiers, exactly as `save` does."""
     contest = _contest(conn, contest_id)
+    if wallet and (info := _info(conn, contest_id, wallet)):
+        return _problems(info, team_ids, captain_id)
     tiers = {r["id"]: r for r in _eligible(conn, contest)}
     info = {p: {"position": tiers[p]["position"], "club": tiers[p]["club"], "tier": tiers[p]["tier"]}
             for p in pool_player_ids if p in tiers}

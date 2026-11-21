@@ -140,6 +140,20 @@ def test_check_works_for_a_guest(client, conn):
     assert conn.execute("SELECT count(*) FROM entries").fetchone()[0] == 0
 
 
+def test_signed_in_check_matches_save_when_prices_move(client, conn):
+    give_pool(conn)
+    gw = conn.execute("SELECT id FROM gameweeks").fetchone()[0]
+    for pid in (12, 34, 45):
+        conn.execute("UPDATE player_prices SET price = 99 WHERE player_id = %s AND gameweek_id = %s", (pid, gw))
+    conn.commit()
+    pool = [p for _, p, _ in POOL]
+    body = {"team_ids": [12, 34, 45, 22, 33], "captain_id": 33}
+    guest = client.post(f"/api/draft/{WEEK}/check", json={"pool_player_ids": pool, **body}).json()
+    mine = client.post(f"/api/draft/{WEEK}/check", json={"pool_player_ids": pool, **body}, headers=H).json()
+    assert guest["ok"] is False and mine == {"ok": True, "problems": []}
+    assert client.put(f"/api/draft/{WEEK}/team", json=body, headers=H).status_code == 200
+
+
 def test_signed_in_deal_open_save_swap_mine(client, conn):
     b = client.get(f"/api/draft/{WEEK}", headers=H).json()
     assert "sample" not in b and len(b["mine"]["packs"]) == 15 and b["mine"]["state"] == "open"

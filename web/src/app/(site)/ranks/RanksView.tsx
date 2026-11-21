@@ -105,7 +105,7 @@ function pays(c: Contest, place: number, n = 1): { text: string; usd: boolean } 
   const pct = idx.reduce((t, i) => t + SPLIT[i], 0);
   if (c.kind === "blitz_week" && c.state !== "final") return { text: `$${idx.reduce((t, i) => t + WEEKLY_USD[i], 0) / n}`, usd: true };
   if (unsetPot(c)) return { text: `${pct / n}%`, usd: false };
-  return { text: solOf(c.pot_lamports * pct / 100 / n), usd: false };
+  return { text: `${c.pot_estimated && c.state !== "final" ? "about " : ""}${solOf(c.pot_lamports * pct / 100 / n)}`, usd: false };
 }
 // how many rows share this place (a tie)
 const tied = (rows: BoardRow[], you: BoardRow | null, place: number) => {

@@ -34,7 +34,7 @@
 /* header and the lock / pot / holding bar */
 .dp .e2-ph { padding: 32px 0 16px; }
 .dp-head .e2-eyebrow { display: block; margin-bottom: var(--s2); }
-.dp-lead { margin: 0; font-size: 17px; line-height: 1.6; max-width: 90ch; color: var(--muted); }
+.dp-lead { margin: 0; font-size: 17px; line-height: 1.6; max-width: 62ch; color: var(--muted); }
 .dp h1.e2-word { font-size: clamp(72px, 6.6vw, 104px); }
 .dp-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--s6); padding: var(--s3) var(--s5); border-radius: 16px; }
 .dp-lockbar { display: flex; align-items: center; gap: var(--s4); }
@@ -160,8 +160,8 @@
 .dp-ln::after { content: ""; position: absolute; left: 50%; top: 50%; width: 90px; height: 90px; margin: -45px; border: 1px solid rgba(98,190,132,.62); border-radius: 50%; }
 .dp-brows { position: absolute; inset: 16px 24px; display: grid; grid-template-rows: repeat(3, minmax(0, 1fr)); }
 .dp-brows > .dp-brow:nth-child(4) { grid-row: 4; }
-.dp-brow { display: flex; align-items: center; justify-content: center; gap: 72px; }
-.dp-pl { width: 120px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text); }
+.dp-brow { display: flex; align-items: center; justify-content: space-evenly; gap: 8px; }
+.dp-pl { flex: 0 1 120px; min-width: 0; text-align: center; font-size: 13px; font-weight: 600; color: var(--text); }
 .dp-pl .dp-tok { --t: 52px; margin: 0 auto 6px; }
 .dp-pl .nm { display: block; line-height: 1.25; overflow-wrap: anywhere; }
 .dp-pl small { display: block; font-weight: 500; font-size: 12px; color: #dfe4e0; line-height: 1.3; }
@@ -260,8 +260,7 @@
   .dp-checks { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; padding: 0; }
   .dp-checks li { white-space: normal; padding: 8px 0; }
   .dp-checks li:nth-child(5) { border-top: 1px solid var(--line); }
-  .dp-brow { gap: 24px; }
-  .dp-pl { width: 76px; }
+  .dp-pl { flex-basis: 76px; }
   .dp-ln::after { width: 44px; height: 44px; margin: -22px; }
   .dp-alone p { font-size: 17px; }
   .dp-swap .row { padding-bottom: var(--s3); }

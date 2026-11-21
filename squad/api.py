@@ -1039,9 +1039,9 @@ def draft_open_pack(week: str, pack: int = Path(ge=1, le=100), wallet=Depends(cu
 
 
 @app.post("/api/draft/{week}/check")
-def draft_check(week: str, body: DraftCheckIn, conn=Depends(db)):
+def draft_check(week: str, body: DraftCheckIn, wallet=Depends(optional_wallet), conn=Depends(db)):
     c = draft_contest(conn, week)
-    problems = draft_call(conn, draft.check, c["id"], body.pool_player_ids, body.team_ids, body.captain_id)
+    problems = draft_call(conn, draft.check, c["id"], body.pool_player_ids, body.team_ids, body.captain_id, wallet)
     return {"ok": not problems, "problems": problems}
 
 

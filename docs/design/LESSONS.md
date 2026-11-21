@@ -488,3 +488,9 @@ Reporting
 - How: one server rule per risk, each with a test; checked in a browser with `/api/auth/dev` (DEV_LOGIN) because :3000 was in use.
 - Changed: `tick` now walks contests in date order, so an automatic release respects the same rule.
 - Rule for next time: any POST that credits money carries the figure the owner saw, and the server compares it.
+
+## 2026-11-21 · fix agent · head review of Draft, Today and Ranks
+- Did: all numbered items of `docs/build/REVIEW_DRAFT_TODAY.md`; 3 server tests (stored-tier check, wording, API) added.
+- How: `draft.check` now takes the wallet and uses its stored 15, so a team the check accepts is never refused on save.
+- Changed: `dev_drive.cjs draft` asserts old copy (guest card "Open your 5 packs"/"Play", "Guest view: nothing is saved."); it needs the new strings ("Try Draft", "Sample team: connecting deals").
+- Rule for next time: release yesterday's review (`dev_drive.cjs release`) before `blitz`, or Today and Ranks show that board and 3 checks fail; ports 3000/8000 may hold a stale server, check `ps` first.

@@ -310,14 +310,26 @@ export default function DraftView({ week = "next" }: { week?: string }) {
   }
 
   // the player to swap in after a match is called off: the highest-valued unused player in the same position
+  // (only offered when the server would accept it: the player's match is off, the replacement's has not kicked off, the caps hold)
+  const OFF = ["PST", "CANC", "AWD", "WO"];
+  const clubFx = (club: string) => (data?.fixtures ?? []).filter((f) => f.home === club || f.away === club);
+  const calledOff = (club: string) => clubFx(club).every((f) => OFF.includes(f.status));
+  const canPlay = (club: string) => clubFx(club).some((f) => !OFF.includes(f.status) && Date.parse(f.kickoff) > (now ?? Date.now()));
   const swapIn = (outId: number): Pl | null => {
     const out = mine?.team.find((p) => p.id === outId);
-    if (!out) return null;
+    if (!out || !rules) return null;
     const used = new Set(mine?.team.map((p) => p.id));
-    return all.filter((p) => !used.has(p.id) && p.pos === posOf(out.position)).sort((a, b) => b.value - a.value || a.id - b.id)[0] ?? null;
+    const captainAfter = mine?.captain_id === outId ? null : mine?.captain_id ?? null;
+    return all.filter((p) => {
+      if (used.has(p.id) || p.pos !== posOf(out.position) || !canPlay(p.club)) return false;
+      const newTeam = (mine?.team ?? []).map((t) => (t.id === outId ? p : all.find((x) => x.id === t.id))).filter(Boolean) as Pl[];
+      return evaluate(newTeam, captainAfter === null ? p.id : captainAfter, rules).every((c) => c.state === "ok");
+    }).sort((a, b) => b.value - a.value || a.id - b.id)[0] ?? null;
   };
+  const swapOuts = (mine?.team ?? []).filter((p) => { const c = all.find((x) => x.id === p.id)?.club; return c != null && calledOff(c); });
+  const swapOutId = swapOut != null && swapOuts.some((p) => p.id === swapOut) ? swapOut : swapOuts[0]?.id ?? null;
   async function swap() {
-    const out = swapOut ?? mine?.team[0]?.id ?? null;
+    const out = swapOutId;
     const inn = out != null ? swapIn(out) : null;
     if (out == null || !inn || !token) return;
     setBusy(true); setNotice(null);
@@ -388,10 +400,10 @@ export default function DraftView({ week = "next" }: { week?: string }) {
   else if (!localOk) reason = "Name a captain. Your captain scores double.";
   else if (checking) reason = "Checking your team…";
   else if (problems.length) reason = problems.join(" ");
-  else if (blocked) reason = `Hold ${count(rules.requirement)} $ELEVN to save a team.`;
+  else if (blocked) reason = `Hold ${count(rules.requirement)} $ELEVN to save a team. Your picks stay here until you leave the page.`;
   else if (notice?.kind === "ok") reason = <span role="status">{notice.text} You can change it until {lockDay ? `${lockDay}'s` : "the"} first kick-off.</span>;
   else if (!dirty) reason = `Saved. You can change it until ${lockDay ? `${lockDay}'s` : "the"} first kick-off.`;
-  else reason = signedIn ? `Team is valid. Locks at ${lockDay ? `${lockDay}'s` : "the"} first kick-off.` : "Guest view: nothing is saved.";
+  else reason = signedIn ? `Team is valid. Locks at ${lockDay ? `${lockDay}'s` : "the"} first kick-off.` : "Sample team: connecting deals your own fifteen, so this team is not kept.";
 
   const teamBadge = readOnly ? stateBadge
     : localOk ? <span className="e2-badge steel dp-pill">{signedIn ? (dirty ? "Ready · not saved" : "Saved") : "Ready · not saved"}</span>
@@ -447,7 +459,7 @@ export default function DraftView({ week = "next" }: { week?: string }) {
           </p>
           {sealedLeft > 0 && editable && (
             <div className="btns">
-              <button type="button" className={`e2-btn ${signedIn ? "e2-btn-gold" : "e2-btn-line"}`} disabled={busyPack} onClick={() => openPacks(false)}>Open pack {nextSealed}</button>
+              <button type="button" className={`e2-btn ${signedIn && !blocked ? "e2-btn-gold" : "e2-btn-line"}`} disabled={busyPack} onClick={() => openPacks(false)}>Open pack {nextSealed}</button>
               <button type="button" className="e2-btn e2-btn-line" disabled={busyPack} onClick={() => openPacks(true)}>Open all</button>
             </div>
           )}
@@ -548,7 +560,7 @@ export default function DraftView({ week = "next" }: { week?: string }) {
                 <li key={i}><span className="p">{PLACE[i]}</span><span className="pc">{pc}%</span><span className="sol">{pot != null ? solText(pot * pc / 100) : "–"}</span></li>
               ))}
             </ol>
-            <p className="e2-small e2-steel2">Ties: more captain points wins, else split. Half is collectable at once; the rest is released 20% every 24 hours. See <Link className="dp-tl" href="/winnings">Winnings</Link>.</p>
+            <p className="e2-small e2-steel2">Ties: more captain points wins, else split. Half is collectable at once; you can withdraw 20% of the locked rest once every 24 hours. See <Link className="dp-tl" href="/winnings">Winnings</Link>.</p>
           </div>
         </div>
 
@@ -598,16 +610,16 @@ export default function DraftView({ week = "next" }: { week?: string }) {
                   <span className="e2-small e2-muted" aria-live="polite">{notice ? notice.kind === "error" ? <span className="dp-err" role="alert">{notice.text}</span> : <span role="status">{notice.text}</span> : state === "final" ? "This week is final." : "Locked. Scoring runs until the last match is done."}</span>
                 </div>
               ) : null}
-              {state !== "final" && mine?.team.length ? (
+              {state !== "final" && mine?.team.length && swapOuts.length > 0 && swapOutId != null ? (
                 <details className="dp-swap">
                   <summary>A player&apos;s match called off?</summary>
                   <div className="row">
                     <label className="e2-small" htmlFor="dp-swap-out">Swap out</label>
-                    <select id="dp-swap-out" value={swapOut ?? mine.team[0].id} onChange={(e) => setSwapOut(Number(e.target.value))}>
-                      {mine.team.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    <select id="dp-swap-out" value={swapOutId} onChange={(e) => setSwapOut(Number(e.target.value))}>
+                      {swapOuts.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
-                    <span className="e2-small e2-muted">{(() => { const i = swapIn(swapOut ?? mine.team[0].id); return i ? `${i.name} comes in` : "No one left in that position"; })()}</span>
-                    <button type="button" className="e2-btn e2-btn-line e2-btn-sm" disabled={busy || !swapIn(swapOut ?? mine.team[0].id)} onClick={swap}>Swap</button>
+                    <span className="e2-small e2-muted">{(() => { const i = swapIn(swapOutId); return i ? `${i.name} comes in` : "No one left in that position"; })()}</span>
+                    <button type="button" className="e2-btn e2-btn-line e2-btn-sm" disabled={busy || !swapIn(swapOutId)} onClick={swap}>Swap</button>
                   </div>
                 </details>
               ) : null}
@@ -627,7 +639,9 @@ export default function DraftView({ week = "next" }: { week?: string }) {
               </div>
               <div className="dp-save">
                 <span className="e2-small e2-muted" aria-live="polite">{reason}</span>
-                {signedIn
+                {blocked
+                  ? <a className="e2-btn e2-btn-gold" href={process.env.NEXT_PUBLIC_ELEVN_BUY_URL ?? "https://jup.ag"} target="_blank" rel="noopener noreferrer">Get $ELEVN</a>
+                  : signedIn
                   ? <button type="button" className={`e2-btn${canSave && sealedLeft === 0 ? " e2-btn-gold" : " e2-btn-line"}`} disabled={!canSave} onClick={save}>{busy ? "Saving…" : "Save team"}</button>
                   : <button type="button" className="e2-btn e2-btn-line" onClick={signIn} disabled={signingIn}>{signingIn ? "Check your wallet…" : "Connect wallet to save"}</button>}
               </div>
@@ -635,7 +649,7 @@ export default function DraftView({ week = "next" }: { week?: string }) {
           )}
         </div>
       </section>
-      {!signedIn && <p className="e2-small e2-muted dp-note">Guest view: everything here works, nothing is saved.</p>}
+      {!signedIn && <p className="e2-small e2-muted dp-note">Guest view: everything here works, nothing is saved. Connecting deals your own five packs.</p>}
     </div>
   );
 

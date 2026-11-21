@@ -175,7 +175,7 @@ function BlitzCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
   const mine = live?.mine ?? null;
   const running = !over && started.length > 0;
   const state: "pick" | "set" | "running" | "closed" | "plain" =
-    !live ? "plain" : over ? "closed" : running ? "running" : squads.length > 0 ? "set" : "pick";
+    !live ? "plain" : over && squads.length === 0 ? "plain" : over ? "closed" : running ? "running" : squads.length > 0 ? "set" : "pick";
 
   const pot = (
     <div><span className="lbl">{potLabel(c, "Matchday pot")}</span><span className="e2-big">{c && potUnset(c) ? <span className="e2-small">Set at full time</span> : <>{c ? potText(c) : "–"}<small>SOL</small></>}</span></div>
@@ -191,7 +191,7 @@ function BlitzCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
   let button: React.ReactNode = <Link className={`e2-btn ${signedIn && access?.blitz !== false ? "e2-btn-gold" : "e2-btn-line"}`} href="/blitz">Play</Link>;
 
   if (state === "pick") {
-    nums = <><div><span className="lbl">Squads</span><span className="e2-big">{`Pick ${allowed} fixtures`}</span></div>{nextBox}{pot}</>;
+    nums = <><div><span className="lbl">Squads</span><span className="e2-big">{allowed}<small>to pick</small></span></div>{nextBox}{pot}</>;
     if (!anyPickable) {
       nums = <><div><span className="lbl">Squads</span><span className="e2-big">None</span></div><div><span className="lbl">Fixtures</span><span className="e2-big">All kicked off</span></div>{pot}</>;
       button = <Link className="e2-btn e2-btn-line" href="/ranks">Open the board</Link>;
@@ -220,7 +220,7 @@ function BlitzCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
       <div>{third}</div>
     </>;
     if (state === "closed") {
-      note = <span className="e2-small e2-muted">{review ? "Result being checked" : c?.state === "rolled" ? "Fewer than 3 played" : "Collect it on Winnings"}</span>;
+      note = <span className="e2-small e2-muted">{review ? "Result being checked" : c?.state === "rolled" ? "Fewer than 3 played" : c?.state === "final" && (mine?.prize_lamports ?? 0) > 0 ? "Collect it on Winnings" : "Final result"}</span>;
       button = <Link className="e2-btn e2-btn-line" href="/ranks">Result</Link>;
     } else {
       const last = banked[banked.length - 1];
@@ -240,16 +240,20 @@ function BlitzCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
     if (over) button = <Link className="e2-btn e2-btn-line" href="/ranks">Open the board</Link>;
     else button = <Link className={`e2-btn ${signedIn && access?.blitz !== false ? "e2-btn-gold" : "e2-btn-line"}`} href="/blitz">Play</Link>;
   }
+  if (!signedIn && !over) {
+    nums = <p className="none">Build three squads on any three of this matchday&apos;s matches. You can try it now; connect a wallet to save them.</p>;
+    button = <Link className="e2-btn e2-btn-line" href="/blitz">Try Blitz</Link>;
+  }
   return (
     <article className="e2-card e2-mode" aria-labelledby="t-Blitz" aria-busy={loading || undefined} data-state={state}>
       <div className="top">
         <div>
           <h2 className="name" id="t-Blitz">Blitz</h2>
-          <p className="status">Matchday Blitz · 3 squads{c?.day ? ` · ${dayLabel(c.day)}` : ""}</p>
+          <p className="status">Matchday Blitz · {allowed} squads{c?.day ? ` · ${dayLabel(c.day)}` : ""}</p>
         </div>
         {c && <Badge state={c.state} />}
       </div>
-      <div className="nums">{nums}</div>
+      {!signedIn && !over ? nums : <div className="nums">{nums}</div>}
       <div className="foot">
         {signedIn && access && !access.blitz && access.balance != null && !over
           ? <Hold need={access.blitz_requirement} name="" access={access} which="blitz" />
@@ -299,7 +303,7 @@ function DraftCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
   const total = mine && mine.packs.length ? new Set(mine.packs.map((p) => p.pack)).size : DRAFT_PACKS;
   const opens = Math.round(opened / 3);                     // three players in a pack
   const state: "packs" | "team" | "set" | "running" | "missed" | "closed" =
-    over ? "closed" : mine && mine.state !== "open" ? (hasTeam ? "running" : "missed") : mine && hasTeam ? "set" : mine && opens >= total ? "team" : "packs";
+    over && !hasTeam ? "missed" : over ? "closed" : mine && mine.state !== "open" ? (hasTeam ? "running" : "missed") : mine && hasTeam ? "set" : mine && opens >= total ? "team" : "packs";
 
   const lockBox = (
     <div>
@@ -314,15 +318,17 @@ function DraftCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
   let button: React.ReactNode = <Link className="e2-btn e2-btn-line" href="/draft">Play</Link>;
 
   if (state === "packs") {
-    nums = <><div><span className="lbl">Packs</span><span className="e2-big">{`Open your ${total} packs`}</span></div>{lockBox}{potBox}</>;
+    nums = <><div><span className="lbl">Packs</span><span className="e2-big">{total - opens}<small>{opens ? "still to open" : "to open"}</small></span></div>{lockBox}{potBox}</>;
   } else if (state === "team") {
     nums = <><div><span className="lbl">Packs</span><span className="e2-big">{total} of {total}<small>opened</small></span></div><div><span className="lbl">Team</span><span className="e2-big">Not saved</span></div>{lockBox}</>;
   } else if (state === "set") {
     nums = <><div><span className="lbl">Team</span><span className="e2-big">Saved</span></div>{lockBox}{potBox}</>;
     note = <span className="e2-small e2-muted">You can change it until the lock</span>;
   } else if (state === "missed") {
-    nums = <><div><span className="lbl">Team</span><span className="e2-big">None saved</span></div>{lockBox}{potBox}</>;
-    note = <span className="e2-small e2-muted">No team was saved before the lock</span>;
+    nums = over
+      ? <><div><span className="lbl">Team</span><span className="e2-big">{signedIn ? "None" : "–"}</span></div>{potBox}</>
+      : <><div><span className="lbl">Team</span><span className="e2-big">None saved</span></div>{lockBox}{potBox}</>;
+    note = <span className="e2-small e2-muted">{over ? (signedIn ? "No team this week" : "Guests can try the Draft; nothing is saved") : "No team was saved before the lock"}</span>;
     button = <Link className="e2-btn e2-btn-line" href="/ranks?board=draft">Open the board</Link>;
   } else {
     const total_ = mine?.total ?? 0, place = mine?.place ?? null;
@@ -347,7 +353,7 @@ function DraftCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
       <div>{third}</div>
     </>;
     if (over) {
-      note = <span className="e2-small e2-muted">{review ? "Result being checked" : c?.state === "rolled" ? "Fewer than 3 played" : "Collect it on Winnings"}</span>;
+      note = <span className="e2-small e2-muted">{review ? "Result being checked" : c?.state === "rolled" ? "Fewer than 3 played" : c?.state === "final" && (mine?.prize_lamports ?? 0) > 0 ? "Collect it on Winnings" : "Final result"}</span>;
       button = <Link className="e2-btn e2-btn-line" href="/ranks?board=draft">Result</Link>;
     } else {
       note = <span className="e2-small e2-muted">Scores Friday to Monday</span>;
@@ -355,6 +361,10 @@ function DraftCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
     }
   }
   if (!live && !over && signedIn && state === "packs") note = <span className="e2-small e2-muted">Top 5 are paid</span>;
+  if (!signedIn && !over) {
+    nums = <p className="none">Look at sample packs and pick a five-a-side. Your own five packs are dealt when you connect.</p>;
+    button = <Link className="e2-btn e2-btn-line" href="/draft">Try Draft</Link>;
+  }
   if (!signedIn && over) button = <Link className="e2-btn e2-btn-line" href="/ranks?board=draft">Open the board</Link>;
   return (
     <article className="e2-card e2-mode" aria-labelledby="t-Draft" aria-busy={loading || undefined} data-state={state}>
@@ -365,7 +375,7 @@ function DraftCard({ c, loading, now, access, signedIn, live }: { c: Contest | n
         </div>
         {c && <Badge state={c.state} />}
       </div>
-      <div className="nums">{nums}</div>
+      {!signedIn && !over ? nums : <div className="nums">{nums}</div>}
       <div className="foot">
         {signedIn && access && !access.draft && access.balance != null && !over
           ? <Hold need={access.draft_requirement} name=" Draft" access={access} which="draft" />

@@ -153,6 +153,30 @@ def test_open_pack(conn, cid):
 
 
 # ------------------------------------------------------------------ rules ---
+def test_check_uses_the_stored_tiers_of_a_signed_in_wallet(conn, cid):
+    """New price rows after the deal move players across tier lines; a team the check accepts must still save."""
+    give_pool(conn, cid)
+    ids = [p for _, p, _ in POOL]
+    gw = conn.execute("SELECT id FROM gameweeks").fetchone()[0]
+    for pid in (12, 34, 45):                       # stored as Budget, now the highest-priced players
+        conn.execute("UPDATE player_prices SET price = 99 WHERE player_id = %s AND gameweek_id = %s", (pid, gw))
+    stale = [12, 34, 45, 22, 33]                   # stored: 1 Top, 1 Mid, 3 Budget; by today's prices: 3 Top
+    assert draft.check(conn, cid, ids, stale, 33) != []
+    assert draft.check(conn, cid, ids, stale, 33, "w") == []
+    assert draft.check(conn, cid, ids, TEAM, CAPTAIN, "w") == []
+    draft.save(conn, "w", cid, TEAM, CAPTAIN, REQ, BEFORE)
+    draft.save(conn, "w", cid, stale, 33, REQ, BEFORE)
+    assert draft.check(conn, cid, ids, [11, 33, 55, 22, 12], 11, "w") != []     # three stored Top
+    assert draft.check(conn, cid, ids, TEAM, CAPTAIN, "nobody") == draft.check(conn, cid, ids, TEAM, CAPTAIN)
+
+
+def test_refusals_use_the_pages_words(conn, cid):
+    give_pool(conn, cid)
+    for_ = lambda t, c: " ".join(draft.check(conn, cid, [p for _, p, _ in POOL], t, c, "w"))
+    assert "Pick at least 1 attacker." in for_([71, 33, 22, 12, 34], 71)
+    assert "Pick at most 2 Top players." in for_([11, 33, 55, 22, 12], 11)
+
+
 def test_check_rules(conn, cid):
     ids = [p for _, p, _ in POOL]
 
@@ -163,15 +187,15 @@ def test_check_rules(conn, cid):
     assert "exactly 5 different" in problems(TEAM[:4])
     assert "exactly 5 different" in problems([71, 71, 33, 65, 22])
     assert "own 15" in problems([71, 33, 65, 22, 13])
-    assert "at least 1 FWD" in problems([71, 33, 22, 12, 82], 71)                 # no forward
-    assert "at least 1 DEF" in problems([33, 93, 44, 104, 65], 33)                # no defender
+    assert "at least 1 attacker" in problems([71, 33, 22, 12, 82], 71)                 # no forward
+    assert "at least 1 defender" in problems([33, 93, 44, 104, 65], 33)                # no defender
     assert "at most 2 players from Club1" in " ".join(draft.check(conn, cid, [11, 12, 13, 33, 65], [11, 12, 13, 33, 65], 11))
     ranked = draft._eligible(conn, draft._rows(conn, "SELECT * FROM contests WHERE id = %s", (cid,))[0])
     pool = [r["id"] for r in ranked]
     tops = [r["id"] for r in ranked if r["tier"] == "top"]
     mids = [r["id"] for r in ranked if r["tier"] == "mid"]
-    assert "at most 2 top" in problems(tops[:3] + mids[:2], tops[0], pool)
-    assert "at most 2 mid" in problems(tops[:2] + mids[:3], tops[0], pool)
+    assert "at most 2 Top" in problems(tops[:3] + mids[:2], tops[0], pool)
+    assert "at most 2 Mid" in problems(tops[:2] + mids[:3], tops[0], pool)
     assert "captain" in problems(TEAM, 99)
     assert "not available" in problems(TEAM, 71, pool=ids + [16])                 # a goalkeeper is no option
 
@@ -187,7 +211,7 @@ def test_save_and_replace(conn, cid):
 def test_save_refusals(conn, cid):
     give_pool(conn, cid)
     assert "300,000" in refused(draft.save, conn, "w", cid, TEAM, CAPTAIN, REQ - 1, BEFORE)
-    assert "at most 2 top" in refused(draft.save, conn, "w", cid, [11, 33, 55, 22, 12], 11, REQ, BEFORE)
+    assert "at most 2 Top" in refused(draft.save, conn, "w", cid, [11, 33, 55, 22, 12], 11, REQ, BEFORE)
     assert "own 15" in refused(draft.save, conn, "w", cid, [71, 33, 65, 22, 13], 33, REQ, BEFORE)
     assert "packs first" in refused(draft.save, conn, "nobody", cid, TEAM, CAPTAIN, REQ, BEFORE)
     assert "locked" in refused(draft.save, conn, "w", cid, TEAM, CAPTAIN, REQ, LOCK)
@@ -232,7 +256,7 @@ def test_manual_swap(conn, cid):
     assert "own 15" in refused(draft.swap, conn, "w", cid, 22, 21, LIVE)
     assert "must be a DEF" in refused(draft.swap, conn, "w", cid, 22, 34, LIVE)
     assert "unused" in refused(draft.swap, conn, "w", cid, 22, 12, LIVE)
-    assert "at most 2 top" in refused(draft.swap, conn, "w", cid, 22, 11, LIVE)    # 11 would make a third top
+    assert "at most 2 Top" in refused(draft.swap, conn, "w", cid, 22, 11, LIVE)    # 11 would make a third top
     assert "open once" in refused(draft.swap, conn, "w", cid, 22, 82, BEFORE)
     draft.swap(conn, "w", cid, 22, 82, LIVE)
     assert on_team(conn) == sorted([71, 33, 65, 82, 12])
