@@ -9,7 +9,7 @@ and how to start the next section without re-reading the old conversation.
 |---|---|
 | 1. Blueprint | Done. `docs/blueprint/BLUEPRINT.md` (v9). Section 5.1 holds the newest rules and wins over older text. |
 | 2. Design | Done (2026-11-19), including the owner's eight points. |
-| 3. Build | Started 2026-11-19. Step 1 (foundations) is under way: see "Section 3 (the build): progress". |
+| 3. Build | Under way. Foundations, Matchday Blitz and Draft are built: see "Section 3 (the build): progress". |
 | 4. Trial and error | Not started. |
 
 Before writing any build code, get the owner's approval of the foundations plan (see "Open with
@@ -51,68 +51,48 @@ said: start building, with a team of agents on a cheaper model (Sonnet builders;
 
 Nothing is waiting on him. He may still prefer another of the four captain figures.
 
-## Section 3 (the build): progress (state at the end of the 2026-11-19 session)
+## Section 3 (the build): progress (state on 2026-11-21)
 
-Step 1, foundations (`docs/build/FOUNDATIONS_PLAN.md`). Backend suite: 216 passed, 10 skipped.
+Backend suite: 268 passed, 10 skipped. Every page below has been run against the real API in the
+container (`docs/build/RUN_LOCAL.md`; `node scripts/dev_drive.cjs blitz` and `... draft` repeat the runs).
 
-| Piece | State |
+| Step | State |
 |---|---|
-| Config numbers and 8 new tables (`config.toml`, `db/schema.sql`) | Done, reviewed |
-| Prize pots (`squad/pots.py`) | Done, reviewed |
-| Winnings ledger, Collect and Withdraw (`squad/winnings.py`) | Done, reviewed. Tested on LiteSVM only, not real devnet |
-| Contest calendar, finality, release (`squad/contests.py`) | Done, reviewed |
-| API routes, minute job, watcher freeze (`squad/api.py`, `squad/jobs.py`, `squad/watcher.py`) | Done, reviewed |
-| Web shell and Today (`web/src/components/Header.tsx`, `TabBar.tsx`, `elevn2.css`, `today/`) | Done; head review passed, its five fixes applied (the fixes themselves were not re-reviewed) |
-| Ranks page (`web/src/app/(site)/ranks/`) | Built. Head review: approve with changes, NOT yet applied: `docs/build/REVIEW_RANKS_WINNINGS.md` (one blocker: boards show a 0 SOL pot before release) |
-| Winnings page (`web/src/app/(site)/winnings/`) | Built. Same head review. Signing with a real wallet has never been exercised |
-| Admin release screen (`web/src/app/(site)/admin/Release.tsx`) | Built, checked by the lead on screenshots. No head review yet |
+| 1. Foundations (config, tables, pots, winnings, contests, shell, Today, Ranks, Winnings, admin release) | Done. Head reviews applied: `REVIEW_RANKS_WINNINGS.md`, `REVIEW_BLITZ_ADMIN.md` (both in `docs/build/`) |
+| 2. Matchday Blitz (`squad/blitz.py`, routes, `/blitz`, `/blitz/banked`, Today card) | Built, head-reviewed, fixes applied. Plan: `docs/build/BLITZ_PLAN.md` |
+| 3. Draft (`squad/draft.py`, routes, `/draft`, Today card) | Built. Head review in `docs/build/REVIEW_DRAFT_TODAY.md`: check whether its changes are applied. Plan: `docs/build/DRAFT_PLAN.md` |
+| 4. Penalty Shootout, 5. retire Season, 6. home page, 7. News, 8. tutorial | Not started |
 
-Next, in order:
-1. Apply `docs/build/REVIEW_RANKS_WINNINGS.md` (7 changes to Ranks, 6 to Winnings), then a fresh head review.
-2. Run every new page against the REAL API in the container (so far every page was checked against
-   mocked routes only): start Postgres (`scripts/db-container.sh`), load the schema, start the API
-   with `RUN_JOBS=1` and `HOLDINGS_DEV_BALANCE`, insert a few fixtures, entries and scores, release a
-   result from the admin screen, and collect it.
-3. The owner must test Collect and Withdraw on devnet with a real wallet (Phantom) and a funded
-   payout wallet (`PAYOUT_WALLET`, `PAYOUT_WALLET_KEY`).
-4. Then step 2 of blueprint section 8, Matchday Blitz, with its own short plan first; then Draft,
-   Shootout, retire Season, home page, News, tutorial.
+Decisions the lead took on 2026-11-21 (the owner was told; change them if he objects):
+- Boards show an estimated pot before release (`pots.estimate`, `pot_estimated` in the API).
+- A cancelled claim is held for 5 minutes. The locked half appears when a result is released.
+- Draft tiers by value: top 20% Top, next 30% Mid, the rest Budget (`[draft].tier_shares`).
+- The release screen sends the pot the owner checked; the server refuses if it changed, and results
+  of one mode are released in date order.
+- Boards are read without writing; the minute job keeps the results rows fresh.
 
 Open with the owner:
-- When the locked half appears: the server credits it at release; the Winnings mockup said it
-  "joins Locked when you collect". The lead recommended "at release"; no answer yet.
-- The link for "Get $ELEVN" (the page falls back to jup.ag).
-- Before a result is released, should boards and the Today cards show an estimated pot (a small
-  server change; the lead recommends this) or "Set at full time" with percentages only?
-- After a cancelled signature a claim is held for up to 5 minutes before it can be retried:
-  acceptable, or should the server free it at once?
+- He must test Collect and Withdraw on devnet with a real wallet and a funded payout wallet. It
+  could not be done here: the public devnet refuses airdrops. Steps: `docs/build/RUN_LOCAL.md`.
+- Match bonus in Blitz: the rules say on, `config.toml` marks it deferred, so it is not counted.
+- The real "Get $ELEVN" link.
 
-Known gaps to close later:
+Known gaps:
 - While Season squads exist, fee income goes to Season's pots; Blitz and Draft get only the reserve
-  top-ups until Season is retired (step 5) or `payouts.record_income` is changed.
-- A match's end time is estimated as kickoff + 2 hours (`contests.ended_at`) until real full-time
-  times are stored, so "final 15 minutes after the last match" is approximate.
-- The weekly $500 needs a SOL price: the owner enters it at release while the review switch is on.
-  The weekly board counts a wallet's best 3 matchday totals (`[blitz].weekly_best_matchdays`).
-- A claim costs the player 10,000 lamports (two signatures). A wallet that claims while frozen waits
-  a full 24 hours after unfreezing.
-- The minute job (`RUN_JOBS=1` or `python -m squad.jobs`) must run in one process only and has not
-  been run under the real server.
-- A live board is rebuilt on every request; the admin prize preview repeats the pot arithmetic of
-  `pots.fund`. Ranks shows the per-place amount on tied rows before a result is final.
-- The footer and the old payout block on the admin page still belong to Season.
+  top-ups until Season is retired or `payouts.record_income` is changed.
+- A match's end is estimated as kickoff + 2 hours. Two open matchdays show the same estimated pot.
+- The weekly board shows no would-be prize before release. Draft's swap control and the called-off
+  path are untested in a browser. Nothing is deployed.
+- The video session (promo video, `docs/design/video/`) pushes to this same branch: fetch and merge
+  before pushing.
 
 How to run things here:
-- Tests: `scripts/db-container.sh` first (Postgres on 5433), then `uv run -q pytest -q`. Each new
-  test file uses its own database name so builders can run tests at the same time.
-- Web: `npx -y pnpm@8 install --frozen-lockfile` in `web/` (pnpm 10 cannot read the lockfile).
-  Two `next dev` servers in the same `web/` corrupt each other's `.next`: give each agent a private
-  copy of `web/` (node_modules symlinked) and its own port. Use the globally installed Playwright.
-- Builders are Sonnet; the lead reviews backend code itself and uses a head agent for pages.
-
-Smaller loose ends, only if he raises them: the X thread and bio drafts predate this week's rule
-changes; the logo's fold-in animation has no home now the intro video is retired; `scroll.mp4`
-in the home prototype's shots is out of date (the live link replaces it).
+- Tests: `scripts/db-container.sh` first (Postgres on 5433), then `uv run -q pytest -q`. Each test
+  file uses its own database name.
+- Web: `npx -y pnpm@8 install --frozen-lockfile` in `web/`. Never run two `next dev` in the same
+  `web/`: each agent uses a private copy and its own port. Use the globally installed Playwright.
+- Builders are Sonnet with short briefs (task, files owned, the rules needed, a short reading list);
+  the lead reviews backend code itself; page reviews go to a fresh reviewer on a stronger model.
 
 ## Rules that are easy to get wrong
 
