@@ -410,7 +410,7 @@ export default function BlitzView() {
           sub={<>{`${lg}kick-off ${ukTime(sv.kickoff)} · `}<span className="bz-kick">Locked at kick-off</span></>}
           slots={ordered.map((p) => ({
             name: p.name, captain: p.is_captain,
-            mt: `${posOf(p.position)}${p.points != null ? ` · ${p.points}${p.is_captain ? " ×2" : ""}` : ""}`,
+            mt: `${posOf(p.position)}${p.points != null ? ` · ${p.points}${p.is_captain ? " (C ×2)" : ""}` : ""}`,   // already doubled by the API
           }))} />
       );
     }

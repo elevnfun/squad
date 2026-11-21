@@ -1,10 +1,12 @@
 // Drives Today, Ranks, Winnings and /admin in a real browser against the local API (see docs/build/RUN_LOCAL.md).
 // A test wallet signs the real sign-in message (ed25519, node crypto). Usage:
-//   node scripts/dev_drive.cjs <step>      step: guest | me | release | after | all
+//   node scripts/dev_drive.cjs <step>      step: guest | me | release | after | blitz | all
+//   `blitz` plays a whole matchday on the real API (needs the seed, the API with RUN_JOBS=1 and DATABASE_URL set); see below.
 // Env: SITE (default http://localhost:3000), OUT (screenshot dir). Keys come from scripts/dev_seed.py's scheme.
 const { chromium } = require("playwright");
 const crypto = require("crypto");
 const path = require("path");
+const { execSync } = require("child_process");
 const SITE = process.env.SITE || "http://localhost:3000";
 const OUT = process.env.OUT || path.join(__dirname, "..", "docs", "build", "shots");
 const B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -64,9 +66,164 @@ async function signIn(page) {
 async function shot(page, name, width) { await page.waitForTimeout(1200); await page.screenshot({ path: path.join(OUT, `real-${name}-${width}.png`), fullPage: true }); }
 async function visit(page, url) { await page.goto(SITE + url, { waitUntil: "networkidle" }); }
 
+
+// ---------------------------------------------------------------- Matchday Blitz, end to end
+const ROOT = path.join(__dirname, "..");
+const seedPhase = (phase) => {          // moves today's fixtures; the API's minute job then locks and scores
+  const out = execSync(`PYTHONPATH=. uv run -q python scripts/dev_seed.py --phase ${phase}${phase === "pre" ? " --clean" : ""} 2>&1 | grep "phase"`,
+    { cwd: ROOT, env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL || "postgresql://localhost:5433/squad_dev" } }).toString().trim();
+  console.log("  seed:", out);
+};
+let failed = 0;
+const check = (ok, what) => { if (!ok) failed++; console.log(`  ${ok ? "PASS" : "FAIL"} ${what}`); };
+const apiGet = (page, p) => page.evaluate(async (p) => {
+  const t = localStorage.getItem(Object.keys(localStorage).find((k) => k.startsWith("squad.token.")) || "");
+  const r = await fetch("/api" + p, { headers: t ? { Authorization: `Bearer ${t}` } : {} });
+  return r.ok ? r.json() : { error: r.status };
+}, p);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// pick `k` players in the open squad: two from the home club, one from the away club, then make the first picked one captain
+async function build(page, offset = 0) {
+  const swb = page.locator(".bz-swb");
+  const col = (i) => page.locator(".bz-col").nth(i);
+  const take = async (club, n, skip) => {
+    if (await swb.count() && await swb.nth(club).isVisible()) await swb.nth(club).click();     // phone: one club at a time
+    const rows = col(club).locator("button.bz-pick:not([disabled])[aria-pressed=false]");
+    for (let i = 0; i < n; i++) await rows.nth(skip + (n > 1 ? 0 : 0)).click();
+  };
+  await take(0, 2, offset); await take(1, 1, offset);
+  if (await swb.count() && await swb.nth(0).isVisible()) await swb.nth(0).click();
+  await page.locator("button.bz-c[aria-pressed=false]").first().click();
+}
+const saveBtn = (page) => page.getByRole("button", { name: /^Save squad/ });
+async function saveActive(page) {
+  await page.waitForFunction(() => { const b = [...document.querySelectorAll("button")].find((x) => /^Save squad/.test(x.textContent || "")); return b && !b.disabled; }, null, { timeout: 8000 });
+  await saveBtn(page).click();
+  await page.getByText(/Squad \d saved/).first().waitFor({ timeout: 8000 });
+}
+const fxRow = (page, i) => page.locator("button.bz-fxr").nth(i);
+async function waitState(page, slot, pred, label, ms = 130000) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    const m = await apiGet(page, "/blitz/next");
+    const sq = m.mine?.squads?.find((q) => q.slot === slot);
+    if (sq && pred(sq)) return sq;
+    await sleep(5000);
+  }
+  check(false, `${label}: timed out`); return null;
+}
+
+async function blitzFlow(browser, width) {
+  console.log(`== blitz at ${width}`);
+  seedPhase("pre");
+  // 1. a guest builds a squad and checks it; nothing is saved
+  {
+    const { ctx, page } = await open(browser, null, width);
+    await visit(page, "/today"); await shot(page, "blitz-today-guest", width);
+    await visit(page, "/blitz"); await fxRow(page, 0).click();
+    await build(page);
+    await page.getByText(/Connect a wallet to save it/).waitFor({ timeout: 8000 });
+    check(true, "guest: squad ready, the check passed, the save button asks to connect");
+    await shot(page, "blitz-guest-ready", width);
+    await page.reload({ waitUntil: "networkidle" });
+    check(await page.locator(".bz-card.empty").count() === 3, "guest: a refresh clears the squad (nothing saved)");
+    await ctx.close();
+  }
+  // 2. the signing wallet: 3 squads, change one, remove one, save again
+  const { ctx, page } = await open(browser, "me", width);
+  await visit(page, "/blitz"); await signIn(page); await visit(page, "/blitz");
+  await visit(page, "/today"); await shot(page, "blitz-today-pick", width);
+  await visit(page, "/blitz");
+  for (let i = 0; i < 2; i++) { await fxRow(page, i).click(); await build(page); await saveActive(page); }
+  let m = await apiGet(page, "/blitz/next");
+  check(m.mine?.squads?.length === 2, "signed in: 2 squads saved on the server");
+  await shot(page, "blitz-two-saved", width);
+  await visit(page, "/today"); await shot(page, "blitz-today-set", width);
+  await visit(page, "/blitz");
+  await fxRow(page, 2).click(); await build(page); await saveActive(page);
+  m = await apiGet(page, "/blitz/next");
+  check(m.mine?.squads?.length === 3, "signed in: 3 squads saved");
+  const before = m.mine.squads.find((q) => q.slot === 1).players.map((p) => p.id).sort().join();
+  // change squad 1: drop one player, take another, set the captain again
+  await fxRow(page, 0).click();
+  await page.locator("button.bz-pick[aria-pressed=true]").first().click();
+  const swb = page.locator(".bz-swb");
+  if (await swb.count() && await swb.nth(0).isVisible()) await swb.nth(0).click();
+  await page.locator(".bz-col").nth(0).locator("button.bz-pick:not([disabled])[aria-pressed=false]").last().click();
+  if (!(await page.locator("button.bz-c[aria-pressed=true]").count())) await page.locator("button.bz-c[aria-pressed=false]").first().click();
+  await saveActive(page);
+  m = await apiGet(page, "/blitz/next");
+  check(m.mine.squads.find((q) => q.slot === 1).players.map((p) => p.id).sort().join() !== before, "signed in: squad 1 changed and saved");
+  // remove squad 3, then save it again
+  await page.getByRole("button", { name: "Remove squad 3" }).click();
+  await page.waitForFunction(() => document.querySelectorAll(".bz-card.empty").length === 1, null, { timeout: 8000 });
+  m = await apiGet(page, "/blitz/next");
+  check(m.mine.squads.length === 2, "signed in: squad 3 removed");
+  await fxRow(page, 2).click(); await build(page, 1); await saveActive(page);
+  m = await apiGet(page, "/blitz/next");
+  check(m.mine.squads.length === 3, "signed in: squad 3 saved again");
+  await shot(page, "blitz-three-saved", width);
+  await visit(page, "/today"); await shot(page, "blitz-today-set3", width);
+
+  // 3. kick-off of the first fixture: the minute job locks and scores; the squad shows live
+  seedPhase("live");
+  const live = await waitState(page, 1, (q) => q.state === "live" && q.locked, "squad 1 live");
+  check(Boolean(live), "job: squad 1 locked and live after kick-off");
+  if (live) {
+    const cap = live.players.find((p) => p.is_captain);
+    check(live.points === Math.round(live.players.reduce((t, p) => t + p.points, 0) * 100) / 100, "live: squad points equal the sum of players' points (captain already doubled)");
+    await visit(page, "/blitz"); await shot(page, "blitz-live", width);
+    const shown = await page.locator(".bz-card", { hasText: "Live" }).first().innerText();
+    check(shown.includes(`${cap.points} (C ×2)`) && !shown.includes(`${cap.points * 2}`), "pick page shows the captain's points once, labelled C ×2");
+    await visit(page, "/today"); await shot(page, "blitz-today-live", width);
+    await visit(page, "/ranks"); await shot(page, "blitz-ranks-live", width);
+    const you = await page.locator(".rk-you").innerText();
+    const mine = await apiGet(page, `/blitz/${live.day || (await apiGet(page, "/blitz/next")).contest.day}/mine`);
+    check(mine.place != null && you.includes(`${mine.place === 1 ? "1st" : mine.place === 2 ? "2nd" : mine.place === 3 ? "3rd" : mine.place + "th"}`), `ranks: your line says place ${mine.place} like the API`);
+    check(await page.locator(".rk-you a[href='/blitz']").count() === 1, "ranks: your line links to /blitz");
+  }
+
+  // 4. full time, then banked 15 minutes after: squads 1 and 2 bank
+  seedPhase("banked");
+  const bk = await waitState(page, 1, (q) => q.state === "banked", "squad 1 banked");
+  check(Boolean(bk), "job: squad 1 banked");
+  if (bk) {
+    const day = (await apiGet(page, "/blitz/next")).contest.day;
+    await visit(page, `/blitz/banked?day=${day}&slot=1`); await shot(page, "blitz-banked", width);
+    const text = await page.locator("main, .bk-card").first().innerText();
+    const cap = bk.players.find((p) => p.is_captain);
+    check(text.includes(`+${bk.points}`), `banked screen shows +${bk.points}`);
+    const capRow = await page.locator(".bk-prow").first().innerText();
+    check(capRow.trim().endsWith(String(cap.points)) && !capRow.includes(String(cap.points * 2)), `banked screen: captain row shows ${cap.points} (not doubled again)`);
+    await visit(page, "/blitz"); await shot(page, "blitz-banked-list", width);
+    await visit(page, "/today"); await shot(page, "blitz-today-banked", width);
+    check((await page.locator("a[href^='/blitz/banked']").count()) === 1, "today: link to the banked screen");
+    await visit(page, "/ranks"); await shot(page, "blitz-ranks-banked", width);
+  }
+
+  // 5. every match over and the result final: the card shows the final place and the prize
+  seedPhase("closed");
+  const closed = await (async () => {
+    const end = Date.now() + 130000;
+    while (Date.now() < end) {
+      const t = await apiGet(page, "/today");
+      const c = t.contests?.find((x) => x.kind === "blitz_matchday");
+      if (c && (c.state === "review" || c.state === "final")) return c;
+      await sleep(5000);
+    }
+    return null;
+  })();
+  check(Boolean(closed), "job: matchday moved to review after the last match");
+  await visit(page, "/today"); await shot(page, "blitz-today-closed", width);
+  await visit(page, "/ranks"); await shot(page, "blitz-ranks-closed", width);
+  await ctx.close();
+}
+
 async function run(step) {
   const browser = await chromium.launch();
   for (const width of [1440, 390]) {
+    if (step === "blitz") await blitzFlow(browser, width);
     if (step === "guest" || step === "all") {
       const { ctx, page } = await open(browser, null, width);
       await visit(page, "/today"); await shot(page, "today-guest", width);
@@ -106,5 +263,6 @@ async function run(step) {
     }
   }
   await browser.close();
+  if (failed) { console.log(`${failed} check(s) FAILED`); process.exit(2); }
 }
 run(process.argv[2] || "all").catch((e) => { console.error(e); process.exit(1); });

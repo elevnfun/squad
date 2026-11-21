@@ -201,7 +201,7 @@ function YourLine({ b }: { b: Board }) {
   return (
     <div className="e2-card rk-you">
       <div><span className="e2-eyebrow">Your place</span><p className="big">{head}</p></div>
-      <p className="e2-small e2-muted tail">{count(you.points)} points{tail ? `. ${tail}` : ""}{c.state === "final" && you.prize_lamports > 0 ? <> <Link className="rk-tl" href="/winnings">Open Winnings</Link></> : null}</p>
+      <p className="e2-small e2-muted tail">{count(you.points)} points{tail ? `. ${tail}` : ""}{c.state === "final" && you.prize_lamports > 0 ? <> <Link className="rk-tl" href="/winnings">Open Winnings</Link></> : null}{c.kind === "blitz_matchday" && (c.state === "open" || c.state === "live") ? <> <Link className="rk-tl" href="/blitz">Open your squads</Link></> : null}</p>
     </div>
   );
 }
