@@ -99,3 +99,9 @@ The sound model's own catalogue line says "game pipeline only", so it may refuse
    and your free-run balance is unknown. Say if you want me to open one on a preset anyway.
 3. **Screens are still images**, so they move by camera, slides and callouts, not live clicks.
 4. The video is now 42 s because it follows your whole track. Cut it shorter, or keep 42 s?
+
+## Test shot 1 (2026-11-21)
+Cost 35 credits (Seedance 2.5, 5 s, 16:9, 1280x720). Balance after: about 1,095. File: `docs/design/video/tests/test-shot-1.mp4`.
+Good: night street, floodlit fog, low tracking camera, first defender beaten. Weak: the player looks like a
+child (must be an adult for a prize product), the ball looks cream not white, the defender goes to the floor
+instead of being left behind, and the clip carries its own audio, which I will mute and replace.
