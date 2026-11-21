@@ -44,10 +44,20 @@ const ARM = 38;
 const SHOULDER_X = 19;
 const SHOULDER_Y = -86;
 
+// The goalkeeper's art: three transparent PNGs in public/shootout/ (keeper-ready, keeper-dive, keeper-catch), 512 x 512 each.
+// KEEPER_ART is decided at build time (next.config.ts checks the three files exist); without them the SVG keeper below is drawn.
+const KEEPER_ART = process.env.NEXT_PUBLIC_KEEPER_ART === "1";
+const ART = 200;                                       // the square a pose is drawn in, in scene units; feet at the bottom centre
+const GLOVE: Record<ArtPose, [number, number]> = {      // where his reaching glove sits in the picture, as a share of width and height
+  ready: [0.5, 0.5], dive: [0.1, 0.36], catch: [0.5, 0.1],
+};
+const ART_END = { dive: { dx: 150, dy: -34 }, catch: { dx: 0, dy: -12 } };   // where the dive lands, at the left (mirrored for the right)
+
+type ArtPose = "ready" | "dive" | "catch";
 type Ball = { x: number; y: number; r: number; spin: number; shadow: number };
 type Keeper = { dx: number; dy: number; rot: number; arms: number };
-type Anim = { ball: Ball; k: Keeper; ripple: number; moving: boolean };
-const IDLE: Anim = { ball: { x: SPOT.x, y: SPOT.y, r: SPOT.r, spin: 0, shadow: 1 }, k: { dx: 0, dy: 0, rot: 0, arms: 0 }, ripple: 0, moving: false };
+type Anim = { ball: Ball; k: Keeper; ripple: number; moving: boolean; art: { pose: ArtPose; side: ShootoutSide } | null; trail: { x: number; y: number; r: number }[]; flash: { x: number; y: number } | null };
+const IDLE: Anim = { ball: { x: SPOT.x, y: SPOT.y, r: SPOT.r, spin: 0, shadow: 1 }, k: { dx: 0, dy: 0, rot: 0, arms: 0 }, ripple: 0, moving: false, art: null, trail: [], flash: null };
 
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -68,6 +78,15 @@ function hands(k: Keeper): [number, number][] {
   });
 }
 
+// the glove for a save when the keeper is a picture: his pose's glove point, after the dive
+function artGlove(side: ShootoutSide): [number, number] {
+  const pose: ArtPose = side === "centre" ? "catch" : "dive";
+  const e = ART_END[pose], [fx, fy] = GLOVE[pose];
+  const off = (fx - 0.5) * ART;                                  // the glove's offset from his feet line in the picture as drawn (dives left)
+  const x = side === "left" ? KEEPER_HOME.x - e.dx + off : side === "right" ? KEEPER_HOME.x + e.dx - off : KEEPER_HOME.x + off;
+  return [x, KEEPER_HOME.y + e.dy + (fy - 1) * ART];
+}
+
 function keeperEnd(side: ShootoutSide): Keeper {
   if (side === "centre") return { dx: 0, dy: -4, rot: 0, arms: 1 };
   const s = side === "left" ? -1 : 1;
@@ -81,7 +100,10 @@ function ballPlan(kick: ShootoutKick, power: ShootoutPower | null) {
   const key = keeperEnd(kick.keeper_side);
   const pw = kick.power ?? power ?? "medium";
   const ty = TY[pw];
-  let end = { x: TX[side], y: ty, r: 10 };
+  // a goal past a keeper who guessed the side goes just beside his hands, so the ball is seen going in
+  const squeezed = kick.result === "goal" && kick.keeper_side === side;
+  const nudge = !squeezed ? 0 : side === "left" ? -42 : side === "right" ? 42 : kick.round % 2 ? 56 : -56;
+  let end = { x: TX[side] + nudge, y: ty, r: 10 };
   // a goal ends in the net behind the line: smaller (further away) and settling towards the net's floor
   let after = { x: end.x + (side === "left" ? 7 : side === "right" ? -7 : 0), y: Math.min(end.y + 22, BACK.b - 8), r: 8 };
   let over = false;
@@ -92,14 +114,14 @@ function ballPlan(kick: ShootoutKick, power: ShootoutPower | null) {
     after = { x: end.x + (over ? 0 : side === "left" ? -6 : 6), y: end.y - (over ? 8 : 0), r: over ? 7 : 8 };
   } else if (kick.result === "saved") {
     const h = hands(key);
-    const pick = side === "left" ? (h[0][0] < h[1][0] ? h[0] : h[1]) : side === "right" ? (h[0][0] > h[1][0] ? h[0] : h[1]) : (h[0][1] < h[1][1] ? h[0] : h[1]);
+    const pick = KEEPER_ART ? artGlove(kick.keeper_side) : side === "left" ? (h[0][0] < h[1][0] ? h[0] : h[1]) : side === "right" ? (h[0][0] > h[1][0] ? h[0] : h[1]) : (h[0][1] < h[1][1] ? h[0] : h[1]);
     end = { x: pick[0], y: pick[1], r: 10 };
     // low and medium: held in the gloves. High: too hot to hold, pushed away to the side and down
     after = pw === "high"
       ? { x: end.x + (side === "left" ? -46 : side === "right" ? 46 : 38), y: end.y + 38, r: 11 }
       : { x: end.x, y: end.y + 3, r: 10 };
   }
-  return { end, after, key, over, ripple: kick.result === "goal" };
+  return { end, after, key, over, ripple: kick.result === "goal", glove: kick.result === "saved" ? { x: end.x, y: end.y } : null };
 }
 
 const NET_V = 20, NET_H = 9;
@@ -130,7 +152,7 @@ function netLines() {
 const NET_LINES = netLines();
 // the net's mesh drawn in front of the ball once a goal is in, so the ball sits behind the strings
 function NetFront() {
-  return <g className="so-netf" fill="none" stroke="rgba(244,244,241,.34)" strokeWidth="1" pointerEvents="none">{NET_LINES}</g>;
+  return <g className="so-net rip1 so-netf" fill="none" stroke="rgba(244,244,241,.34)" strokeWidth="1" pointerEvents="none">{NET_LINES}</g>;
 }
 function Net({ ripple }: { ripple: number }) {
   const lines = NET_LINES;
@@ -138,6 +160,19 @@ function Net({ ripple }: { ripple: number }) {
     <g className={`so-net${ripple ? ` rip${ripple % 2}` : ""}`} fill="none" stroke="rgba(244,244,241,.2)" strokeWidth="1">
       <polygon points={`${BACK.l},${BACK.t} ${BACK.r},${BACK.t} ${BACK.r},${BACK.b} ${BACK.l},${BACK.b}`} fill="rgba(6,7,9,.55)" stroke="none" />
       {lines}
+    </g>
+  );
+}
+
+// the picture keeper: the three poses, the motion all in CSS (shootout.css). The group is mirrored for a dive to the right.
+function KeeperArt({ art }: { art: Anim["art"] }) {
+  const pose = art?.pose ?? "ready";
+  const flip = art?.side === "right" ? -1 : 1;
+  return (
+    <g transform={`translate(${KEEPER_HOME.x} ${KEEPER_HOME.y}) scale(${flip} 1)`}>
+      <g className={`so-ka ${pose}`}>
+        <image href={`/shootout/keeper-${pose}.png`} x={-ART / 2} y={-ART} width={ART} height={ART} preserveAspectRatio="xMidYMax meet" />
+      </g>
     </g>
   );
 }
@@ -158,7 +193,7 @@ function KeeperFigure({ k, moving }: { k: Keeper; moving: boolean }) {
   };
   return (
     <g transform={`translate(${KEEPER_HOME.x + k.dx} ${KEEPER_HOME.y + k.dy}) rotate(${k.rot} 0 ${PIVOT_Y}) scale(${KS})`}>
-      <g className={moving ? undefined : "so-sway"}>
+      <g className={moving ? undefined : "so-sway"}><g className={moving ? undefined : "so-toes"}>
         {/* legs, socks, boots */}
         {[-1, 1].map((s) => (
           <g key={s}>
@@ -179,7 +214,7 @@ function KeeperFigure({ k, moving }: { k: Keeper; moving: boolean }) {
         <rect x="-4" y="-98" width="8" height="8" fill="#cfc8bb" />
         <circle cx="0" cy="-106" r="11" fill="#d9d3c7" stroke="#0a0b0d" strokeWidth="1.2" />
         <path d="M-11,-108 Q0,-120 11,-108 L11,-110 Q0,-123 -11,-110 Z" fill="#2a2e35" />
-      </g>
+      </g></g>
     </g>
   );
 }
@@ -191,7 +226,8 @@ function BallFigure({ b }: { b: Ball }) {
   }).join(" ");
   return (
     <g>
-      <ellipse cx={b.x} cy={SPOT.y + 16} rx={15} ry={4} fill="#000" opacity={0.45 * b.shadow} />
+      {/* a soft shadow on the grass that shrinks as the ball rises */}
+      <ellipse cx={b.x} cy={SPOT.y + 16} rx={15 * (1 - 0.7 * clamp01((SPOT.y - b.y) / 280))} ry={4 * (1 - 0.6 * clamp01((SPOT.y - b.y) / 280))} fill="url(#so-soft)" opacity={0.75 * b.shadow} />
       <g transform={`translate(${b.x.toFixed(1)} ${b.y.toFixed(1)}) scale(${(b.r / 17).toFixed(3)}) rotate(${b.spin.toFixed(0)})`}>
         <circle r="17" fill="url(#so-ball)" stroke="#0a0b0d" strokeWidth="1" />
         <polygon points={pent} fill="#14161a" />
@@ -217,6 +253,15 @@ function Scene({ anim, aim, power, mode, vb }: { anim: Anim; aim: ShootoutSide |
     }
     return out;
   }, []);
+  // a faint stand behind the goal: specks of light in rows, brightening once on a goal
+  const crowd = useMemo(() => {
+    const dots: React.ReactNode[] = [];
+    for (let row = 0; row < 7; row++) for (let i = 0; i < 44; i++) {
+      const h = Math.sin((row * 44 + i) * 12.9898) * 43758.5453, f = h - Math.floor(h);
+      dots.push(<circle key={`${row}-${i}`} cx={+((i + (row % 2) * 0.5) * 18.4 + f * 5).toFixed(1)} cy={+(34 + row * 14 + f * 4).toFixed(1)} r={+(1.5 + f * 1.2).toFixed(2)} opacity={+(0.05 + f * 0.1).toFixed(3)} />);
+    }
+    return <g className="so-crowd" fill="#f4f4f1" pointerEvents="none">{dots}</g>;
+  }, []);
   return (
     <svg className="so-svg" viewBox={`${vb.x} ${VB_Y} ${vb.w} ${VB_H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
       <defs>
@@ -226,10 +271,14 @@ function Scene({ anim, aim, power, mode, vb }: { anim: Anim; aim: ShootoutSide |
         <linearGradient id="so-post" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#f4f4f1" /><stop offset=".55" stopColor="#c9ccd1" /><stop offset="1" stopColor="#7d8591" /></linearGradient>
         <linearGradient id="so-bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#f4f4f1" /><stop offset=".55" stopColor="#c9ccd1" /><stop offset="1" stopColor="#7d8591" /></linearGradient>
         <linearGradient id="so-shirt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#dde0e5" /><stop offset="1" stopColor="#8d949f" /></linearGradient>
+        <radialGradient id="so-soft"><stop offset="0" stopColor="#000" stopOpacity=".8" /><stop offset="1" stopColor="#000" stopOpacity="0" /></radialGradient>
+        <radialGradient id="so-glove"><stop offset="0" stopColor="#fff6d6" stopOpacity=".95" /><stop offset=".45" stopColor="#f2c14e" stopOpacity=".55" /><stop offset="1" stopColor="#f2c14e" stopOpacity="0" /></radialGradient>
         <radialGradient id="so-ball" cx=".38" cy=".32" r=".8"><stop offset="0" stopColor="#ffffff" /><stop offset=".7" stopColor="#d9dce1" /><stop offset="1" stopColor="#8d949f" /></radialGradient>
       </defs>
       <rect y="0" width="800" height="480" fill="url(#so-sky)" />
       <rect y="0" width="800" height="480" fill="url(#so-flood)" />
+      {crowd}
+      {anim.ripple > 0 && <rect className="so-pulse" y="0" width="800" height="236" fill="url(#so-flood)" />}
       {/* the pitch: far grass behind the goal line, then the strip in front of it */}
       <rect y="236" width="800" height="244" fill="url(#so-ground)" />
       {stripes}
@@ -239,7 +288,7 @@ function Scene({ anim, aim, power, mode, vb }: { anim: Anim; aim: ShootoutSide |
       {/* the goal: net behind the keeper, frame over him */}
       <Net ripple={anim.ripple} />
       <ellipse cx={KEEPER_HOME.x + anim.k.dx * 0.9} cy={GOAL.b + 3} rx="30" ry="5" fill="#000" opacity=".5" />
-      <KeeperFigure k={anim.k} moving={anim.moving} />
+      {KEEPER_ART ? <KeeperArt art={anim.art} /> : <KeeperFigure k={anim.k} moving={anim.moving} />}
       <g>
         <rect x={GOAL.l - 5} y={GOAL.t - 4} width="10" height={GOAL.b - GOAL.t + 4} rx="3" fill="url(#so-post)" stroke="#0a0b0d" strokeWidth="1" />
         <rect x={GOAL.r - 5} y={GOAL.t - 4} width="10" height={GOAL.b - GOAL.t + 4} rx="3" fill="url(#so-post)" stroke="#0a0b0d" strokeWidth="1" />
@@ -252,8 +301,10 @@ function Scene({ anim, aim, power, mode, vb }: { anim: Anim; aim: ShootoutSide |
           <path d="M-25,0H-11M11,0H25M0,-25V-11M0,11V25" stroke="#f2c14e" strokeWidth="2.2" strokeLinecap="round" />
         </g>
       )}
+      {anim.trail.map((t, i) => <circle key={i} cx={t.x} cy={t.y} r={t.r * (0.85 - i * 0.12)} fill="#f4f4f1" opacity={0.28 - i * 0.06} />)}
       <BallFigure b={anim.ball} />
       {anim.ripple > 0 && <NetFront />}
+      {anim.flash && <circle className="so-flash" cx={anim.flash.x} cy={anim.flash.y} r="34" fill="url(#so-glove)" pointerEvents="none" />}
     </svg>
   );
 }
@@ -347,29 +398,38 @@ export default function ShootoutView() {
   const playKick = useCallback((kick: ShootoutKick, pw: ShootoutPower | null) => new Promise<void>((resolve) => {
     const plan = ballPlan(kick, pw);
     const reduce = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const pose: ArtPose = kick.keeper_side === "centre" ? "catch" : "dive";
+    const art = (on: boolean) => (KEEPER_ART ? { pose: on ? pose : ("ready" as ArtPose), side: kick.keeper_side } : null);
     const finalAnim: Anim = {
       ball: { x: plan.after.x, y: plan.after.y, r: plan.after.r, spin: 0, shadow: 0 }, k: plan.key, ripple: plan.ripple ? 1 : 0, moving: true,
+      art: art(true), trail: [], flash: plan.glove,
     };
     if (reduce) { setAnim(finalAnim); resolve(); return; }
     const T_BALL = 620, T_KEEP_AT = 90, T_KEEP = 520, T_END = 840;
     const t0 = performance.now();
     const arc = kick.power === "low" ? 14 : kick.power === "high" ? 46 : 30;
+    // the ball at `el` ms: its flight to the end point, then what it does after it gets there
+    const ballAt = (el: number) => {
+      const p = clamp01(el / T_BALL), e = easeOut2(p);
+      if (el > T_BALL) {
+        const q = easeOut2(clamp01((el - T_BALL) / (T_END - T_BALL)));
+        return { x: lerp(plan.end.x, plan.after.x, q), y: lerp(plan.end.y, plan.after.y, q), r: lerp(plan.end.r, plan.after.r, q), e };
+      }
+      return { x: lerp(SPOT.x, plan.end.x, e), y: lerp(SPOT.y, plan.end.y, e) - arc * Math.sin(Math.PI * e), r: lerp(SPOT.r, plan.end.r, e), e };
+    };
     const frame = (now: number) => {
       if (!alive.current) { resolve(); return; }
       const el = now - t0;
-      const p = clamp01(el / T_BALL), e = easeOut2(p);
-      let x = lerp(SPOT.x, plan.end.x, e), y = lerp(SPOT.y, plan.end.y, e) - arc * Math.sin(Math.PI * e), r = lerp(SPOT.r, plan.end.r, e);
-      if (el > T_BALL) {
-        const q = easeOut2(clamp01((el - T_BALL) / (T_END - T_BALL)));
-        x = lerp(plan.end.x, plan.after.x, q); y = lerp(plan.end.y, plan.after.y, q); r = lerp(plan.end.r, plan.after.r, q);
-      }
+      const { x, y, r, e } = ballAt(el);
       const ke = easeOut3(clamp01((el - T_KEEP_AT) / T_KEEP));
       const kp = kick.keeper_side === "centre"
         ? { dx: 0, dy: -4 * ke - 22 * Math.sin(Math.PI * ke), rot: 0, arms: Math.min(1, ke * 1.7) }
         : { dx: ke * plan.key.dx, dy: ke * plan.key.dy - 22 * Math.sin(Math.PI * ke), rot: ke * plan.key.rot, arms: Math.min(1, ke * 1.7) };
+      // a short trail behind the ball while it flies
+      const trail = el < T_BALL + 60 ? [1, 2, 3, 4].map((i) => ballAt(Math.max(0, el - i * 30))).filter((b) => el - 0 > 0 && (b.x !== x || b.y !== y)) : [];
       setAnim({
-        ball: { x, y, r, spin: e * 380, shadow: Math.max(0, 1 - e * 5) }, k: kp,
-        ripple: plan.ripple && el >= T_BALL - 40 ? 1 : 0, moving: true,
+        ball: { x, y, r, spin: e * 380, shadow: Math.max(0, 1 - e) }, k: kp, art: art(el >= T_KEEP_AT), trail,
+        ripple: plan.ripple && el >= T_BALL - 40 ? 1 : 0, moving: true, flash: plan.glove && el >= T_BALL ? plan.glove : null,
       });
       if (el < T_END) raf.current = requestAnimationFrame(frame);
       else { setAnim(finalAnim); resolve(); }

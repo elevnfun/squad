@@ -35,10 +35,39 @@
 .so-play { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(280px, 1fr); gap: 32px; align-items: stretch; }
 .so-stage { position: relative; aspect-ratio: 800 / 392; --gl: 12.5%; --gw: 75%; border-radius: 14px; overflow: hidden; border: 1px solid var(--steel-edge); background: #0c0e11; }
 .so-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* the SVG keeper: shifts his weight side to side while he waits, and rises on his toes */
 .so-sway { animation: so-sway 2.6s ease-in-out infinite alternate; }
-@keyframes so-sway { from { transform: translateX(-7px); } to { transform: translateX(7px); } }
-.so-net.rip1 { animation: so-rip 360ms var(--ease); transform-origin: 400px 165px; }
-@keyframes so-rip { 0% { transform: scale(1); } 35% { transform: scale(1.035, 1.05); } 100% { transform: scale(1); } }
+@keyframes so-sway { from { transform: translateX(-7px) rotate(-1.6deg); } to { transform: translateX(7px) rotate(1.6deg); } }
+.so-toes { animation: so-toes .62s ease-in-out infinite alternate; }
+@keyframes so-toes { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+/* the picture keeper: the same waiting motion on the ready pose, then the dive along an arc and a landing */
+.so-ka { transform-box: fill-box; transform-origin: 50% 100%; }
+.so-ka.ready { animation: so-ka-shift 3.1s ease-in-out infinite alternate; }
+.so-ka.ready image { animation: so-ka-toes .62s ease-in-out infinite alternate; }
+@keyframes so-ka-shift { from { transform: translateX(-6px) rotate(-1.6deg); } to { transform: translateX(6px) rotate(1.6deg); } }
+@keyframes so-ka-toes { from { transform: translateY(0); } to { transform: translateY(-3px); } }
+.so-ka.dive { animation: so-ka-dive 520ms cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes so-ka-dive {
+  0% { transform: translate(0, 0) rotate(0); }
+  45% { transform: translate(-82px, -78px) rotate(-12deg); }
+  85% { transform: translate(-150px, -34px) rotate(-3deg); }
+  100% { transform: translate(-150px, -34px) rotate(0) scale(1.04, .96); }
+}
+.so-ka.catch { animation: so-ka-catch 520ms cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes so-ka-catch {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(0, -34px); }
+  85% { transform: translate(0, -12px); }
+  100% { transform: translate(0, -12px) scale(1.03, .97); }
+}
+/* a goal: the net shakes, and the stand lights up once */
+.so-net.rip1 { animation: so-rip 560ms var(--ease); transform-origin: 400px 165px; }
+@keyframes so-rip { 0% { transform: scale(1); } 15% { transform: translate(5px, -2px) scale(1.06, 1.08); } 32% { transform: translate(-4px, 1px) scale(1.03, 1.05); } 50% { transform: translate(3px, 0) scale(1.04, 1.03); } 72% { transform: translate(-2px, 0) scale(1.01); } 100% { transform: none; } }
+.so-pulse { animation: so-pulse 900ms ease-out both; mix-blend-mode: screen; }
+@keyframes so-pulse { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+.so-crowd { transition: opacity .3s; }
+.so-flash { animation: so-flash 460ms ease-out both; transform-box: fill-box; transform-origin: center; }
+@keyframes so-flash { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.7); } }
 .so-aim { transition: none; }
 
 .so-thirds { position: absolute; left: var(--gl); top: 8.16%; width: var(--gw); height: 52.55%; display: grid; grid-template-columns: repeat(3, 1fr); }
@@ -58,9 +87,15 @@
 /* the result stamp sits on the grass below the goal line (never over the keeper or the ball) and fades out after about a second */
 .so-stamp { position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 0; padding: 4px 24px 6px; border-radius: 12px;
   background: rgba(10,11,13,.78); border: 1px solid var(--edge-control); backdrop-filter: blur(8px); pointer-events: none; white-space: nowrap;
-  animation: so-stamp var(--dur-fast) var(--ease), so-stamp-out 300ms var(--ease) 950ms forwards; }
-@keyframes so-stamp { from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(.94); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+  animation: so-stamp 420ms cubic-bezier(.2,.9,.3,1) both, so-stamp-out 300ms var(--ease) 950ms forwards; }
+/* the pop: in small, past full size, then settle */
+@keyframes so-stamp { 0% { opacity: 0; transform: translateX(-50%) scale(.45); } 50% { opacity: 1; transform: translateX(-50%) scale(1.2); } 75% { transform: translateX(-50%) scale(.96); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
 @keyframes so-stamp-out { to { opacity: 0; } }
+.so-stamp.goal { border-color: var(--ok); box-shadow: 0 0 28px -6px rgba(61,220,132,.55); }
+.so-stamp.goal .so-word { color: var(--ok); }
+.so-stamp.saved { border-color: var(--accent); box-shadow: 0 0 28px -6px rgba(242,193,78,.5); }
+.so-stamp.saved .so-word { color: var(--accent); }
+.so-stamp.missed .so-word { color: var(--steel); }
 .so-word { font-family: var(--e2-display); font-weight: 700; text-transform: uppercase; font-size: clamp(30px, 4vw, 56px); line-height: 1; letter-spacing: .03em; }
 .so-sub { font-size: 14px; font-weight: 500; color: var(--muted); }
 
@@ -146,5 +181,11 @@
   .so-bhd .e2-small { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .so-sway, .so-net.rip1, .so-stamp { animation: none; }
+  .so-sway, .so-toes, .so-ka, .so-net.rip1, .so-pulse, .so-stamp { animation: none !important; }
+  .so-ka.ready image { animation: none !important; }
+  .so-ka.dive { transform: translate(-150px, -34px); }
+  .so-ka.catch { transform: translate(0, -12px); }
+  .so-flash { display: none; }
+  .so-stamp { opacity: 1; }
 }
+.so-stage[data-busy="1"] .so-aim { display: none; }

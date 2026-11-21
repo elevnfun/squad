@@ -41,6 +41,8 @@ node scripts/dev_drive.cjs after      # Ranks (final) and Winnings
 node scripts/dev_drive.cjs collect    # presses Collect (needs a funded payout wallet to succeed)
 node scripts/dev_drive.cjs blitz      # a whole Blitz matchday (below); about 8 minutes per width, waits on the minute job
 node scripts/dev_drive.cjs draft      # a whole Draft week (below); needs a UK Friday to Monday
+node scripts/dev_drive.cjs shootout   # Penalty Shootout (below); about 10 minutes
+node scripts/dev_drive.cjs faucet     # the devnet test-token card on Today (the API's /me is given a faucet block)
 ```
 Shots go to `docs/build/shots/real-*.png` at 1440 and 390 wide.
 
@@ -73,3 +75,11 @@ runs all of it at 1440 and 390 (about 5 minutes per width): a guest opens sample
 `me` opens 5 packs, saves a team, changes the captain, saves again, is refused a 3-Top team with the server's words; the lock passes
 and the minute job locks and scores; live; every match over and review; released and final; the board on Ranks; the Today card in
 each state. It prints PASS/FAIL. Shots: `docs/build/shots/real-draft-*.png`.
+
+## Penalty Shootout run
+`node scripts/dev_drive.cjs shootout` needs the API and `DATABASE_URL` as above; it empties `shootout_games` and `shootout_sets` first. At 1440 and 390:
+a guest plays a whole practice game (5 penalties, 5 dives) to the end panel; `me` plays a ranked game (the "ranked games left today" count drops,
+the board lists the wallet, its picks are stored); nine finished ranked games are inserted for `me`, so the page and the API show the daily limit;
+`ben` then plays a ranked game and meets `me`'s stored picks exactly (the only stored set). It also checks that only one gold button is ever visible.
+Shots: `docs/build/shots/real-shootout-*.png` (the 1440 save, goal and mid-flight shots are taken during the game, so they change from run to run).
+The goalkeeper is drawn in SVG until `web/public/shootout/keeper-{ready,dive,catch}.png` exist; `next.config.ts` checks for the three files at build time.

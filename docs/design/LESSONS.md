@@ -506,3 +506,8 @@ Reporting
 - How: one SVG scene driven by a requestAnimationFrame timeline (ball 0.62 s, keeper dive 0.52 s, 1.4 s result hold); thirds are real radio buttons over the SVG. Playwright `page.clock` (install, pauseAt, runFor) gives exact mid-flight frames.
 - Changed: the API shape changed mid-build (score is for/against, one game view for every call, kick object); first scene had too much empty pitch, so the view box was cropped.
 - Rule for next time: keep animation maths in one place and test with the fake clock; hide the page's fixed banners before element screenshots.
+
+## 2026-11-21 · builder · Shootout on the real API, health after Season
+- Did: tsc, lint and `next build` clean; e2e tests (all Season/league pages), `public/fan`, `public/leagues` removed; `shootout` and `faucet` runs in `dev_drive.cjs`; stamp, ball ends, 390 goal width, devnet FaucetCard on Today; keeper art is swappable (`public/shootout/keeper-*.png`, build-time check in `next.config.ts`).
+- Changed: SSR floats (`Math.sin` dots) broke hydration, so round generated SVG numbers; the Shootout opens on Practice by itself at the daily limit, so a test must click Ranked to see the limit message; `innerText` is upper-cased by CSS, so match with `/i`.
+- Rule for next time: draw the opponent's kick from the server's `kick.power`, never a guess; run the drive with the page and the API in a private copy, and rerun it after every visual edit.

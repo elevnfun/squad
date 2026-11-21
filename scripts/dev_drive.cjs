@@ -1,6 +1,6 @@
 // Drives Today, Ranks, Winnings and /admin in a real browser against the local API (see docs/build/RUN_LOCAL.md).
 // A test wallet signs the real sign-in message (ed25519, node crypto). Usage:
-//   node scripts/dev_drive.cjs <step>      step: guest | me | release | after | blitz | draft | shootout | all
+//   node scripts/dev_drive.cjs <step>      step: guest | me | release | after | blitz | draft | shootout | faucet | all
 //   `blitz` plays a whole matchday on the real API (needs the seed, the API with RUN_JOBS=1 and DATABASE_URL set); see below.
 //   `draft` plays the weekly Draft the same way (a UK Friday to Monday; it moves all six seeded fixtures); see below.
 //   `shootout` plays Penalty Shootout on the real API: a guest practice game, a ranked game, the daily limit, a second wallet vs stored picks.
@@ -455,7 +455,7 @@ async function shootoutFlow(browser, width) {
         start: true,
         before: async (mode, n) => {
           maxGold = Math.max(maxGold, await goldCount(page));
-          if (mode === "keep" && !sawKeep) { sawKeep = true; if (!wide && !seen.keeping) { await qshot(page, "keeping", width); seen.keeping = true; } }
+          if (mode === "keep" && !sawKeep) { sawKeep = true; if (!wide && !seen.keeping) { await page.evaluate(() => { const r = document.querySelector(".so-strip").getBoundingClientRect(); window.scrollBy(0, r.top - 80); }); await qshot(page, "keeping", width, false); seen.keeping = true; } }
         },
         hook: {
           flight: async (mode, n) => { if (mode === "shoot" && n === 0 && wide && !seen.mid) { await page.waitForTimeout(300); await qshot(page, "midflight", width, false); seen.mid = true; } },
@@ -469,7 +469,7 @@ async function shootoutFlow(browser, width) {
     }
     check(kicks.length === 10 && kicks.filter((k) => k.kind === "shoot").length === 5 && kicks.filter((k) => k.kind === "keep").length === 5, "guest: 5 penalties and 5 dives played");
     const t = await page.locator(".so-end").innerText();
-    check(/Full time/.test(t) && /Practice games are not on the board/.test(t), "guest: the end panel says full time and that practice is not on the board");
+    check(/full time/i.test(t) && /Practice games are not on the board/.test(t), "guest: the end panel says full time and that practice is not on the board");
     check(await page.locator(".so-mk.p").count() === 0, "guest: all ten marks filled in");
     await qshot(page, "end", width);
     check(await goldCount(page) === 1, `guest: one gold button on the end panel (${await goldCount(page)})`);
@@ -490,7 +490,7 @@ async function shootoutFlow(browser, width) {
   check(/9\s*of 10 ranked games left today/.test(await page.locator(".so-meta").innerText()), "me: the count dropped to 9 of 10");
   const home = await apiGet(page, "/shootout");
   check(home.ranked_left === 9 && home.board.length === 1, `API: ranked_left ${home.ranked_left}, board rows ${home.board.length}`);
-  check((await page.locator(".so-row.you").count()) === 1 && /You/.test(await page.locator(".so-row.you").innerText()), "me: the board lists the wallet with a You tag");
+  check((await page.locator(".so-row.you").count()) === 1 && /you/i.test(await page.locator(".so-row.you").innerText()), "me: the board lists the wallet with a You tag");
   check(/It counts on today's board/.test(await page.locator(".so-end").innerText()), "me: the end panel says it counts on the board");
   await qshot(page, "ranked-board", width);
   const me = psql("SELECT picks FROM shootout_sets WHERE wallet IS NOT NULL ORDER BY id DESC LIMIT 1");
@@ -500,6 +500,8 @@ async function shootoutFlow(browser, width) {
   const w = b58(Buffer.from(keyOf("me").pub));
   psql(`INSERT INTO shootout_games (token, wallet, mode, opp, state, goals_for, goals_against, finished_at) SELECT 'dev-limit-' || g || '-' || ${width}, '${w}', 'ranked', '{"shots":[],"dives":[]}', 'done', 3, 1, now() FROM generate_series(1, 9) g`);
   await visit(page, "/shootout");
+  check(await page.locator(".so-tabs button.on").innerText() === "Practice", "me: at the limit the page opens on Practice by itself");
+  await page.locator(".so-tabs button", { hasText: "Ranked" }).click();
   const lim = await page.locator(".so-pre").innerText();
   check(/played all 10 ranked games for today/.test(lim) && await page.getByRole("button", { name: "Start game" }).count() === 0, "me: at the limit the page says so and offers no Start button");
   check(/0\s*of 10 ranked games left today/.test(await page.locator(".so-meta").innerText()), "me: the header says 0 of 10 left");
@@ -531,12 +533,31 @@ async function shootoutFlow(browser, width) {
   }
 }
 
+// the devnet test-token card at the bottom of Today: the local API has no faucet keys, so /api/me is given a faucet block here
+async function faucetFlow(browser, width) {
+  console.log(`== faucet card at ${width}`);
+  const { ctx, page } = await open(browser, "me", width);
+  await visit(page, "/today"); await signIn(page);
+  check(await page.locator("text=free test $ELEVN").count() === 0, "faucet: no card while the API offers none");
+  await page.route("**/api/me", async (r) => { const res = await r.fetch(); const j = await res.json(); j.faucet = { amount: 300000, claimed: false }; await r.fulfill({ response: res, json: j }); });
+  await visit(page, "/today");
+  const card = page.locator("article", { hasText: "free test $ELEVN" });
+  await card.waitFor({ timeout: 10000 });
+  check(await card.count() === 1 && /300,000/.test(await card.innerText()), "faucet: the card shows on devnet when the API offers it");
+  const last = await page.evaluate(() => { const a = [...document.querySelectorAll("main article")]; return a[a.length - 1].innerText.includes("free test"); });
+  check(last, "faucet: the card is the last one on Today");
+  check(await card.locator("button.e2-btn-gold").count() === 0 && await card.locator("button.e2-btn-line").count() === 1, "faucet: a secondary (outlined) button, not gold");
+  await shot(page, "faucet-today", width);
+  await ctx.close();
+}
+
 async function run(step) {
   const browser = await chromium.launch();
   for (const width of [1440, 390]) {
     if (step === "blitz") await blitzFlow(browser, width);
     if (step === "draft") await draftFlow(browser, width);
     if (step === "shootout") await shootoutFlow(browser, width);
+    if (step === "faucet") await faucetFlow(browser, width);
     if (step === "guest" || step === "all") {
       const { ctx, page } = await open(browser, null, width);
       await visit(page, "/today"); await shot(page, "today-guest", width);
