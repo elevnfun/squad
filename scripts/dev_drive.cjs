@@ -91,6 +91,13 @@ async function run(step) {
       await shot(page, "admin-after", width);
       await ctx.close();
     }
+    if (step === "collect") {
+      const { ctx, page } = await open(browser, "me", width);
+      await visit(page, "/winnings"); await signIn(page); await visit(page, "/winnings");
+      await page.getByRole("button", { name: "Collect", exact: true }).click();
+      await page.waitForTimeout(4000); await shot(page, "winnings-collect-try", width);
+      await ctx.close();
+    }
     if (step === "after" || step === "all") {
       const { ctx, page } = await open(browser, "me", width);
       await visit(page, "/ranks"); await signIn(page); await visit(page, "/ranks"); await shot(page, "ranks-final", width);
