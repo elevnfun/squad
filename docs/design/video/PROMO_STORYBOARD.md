@@ -221,3 +221,10 @@ Join checks (mean pixel difference between neighbouring frames, normal footage s
 Intentional bright frames: snap flash at 9.5, glass flash at 12.0-12.2.
 Music: -5 dB overall, ducked 7 dB from 8.2 to 11.0 (back up by 11.25), 0.4 s fade-in, limited.
 Credits so far this section: 35.75 (balance about 989). Sound effects (crowd, shout, whooshes, ticks) not yet made.
+
+## Section v3 with free sound effects (2026-11-21)
+File: `docs/design/video/sections/section_goal_to_platform_v3_sfx.mp4` (0-14 s). Free CC0 effects from Katana's library, placed on the beats:
+boom + hit at 8.0 (goal), long whoosh 8.75 into a hit on 9.5 (pull-back snap), whoosh 11.0 (whip), riser 11.55, flash 12.0 (glass), hit and blip 12.5,
+blips 13.0 and 13.25, typing ticks 13.5 and 13.75, power-on chime 13.95 (rank). Licences: listed by the library (all CC0).
+Mix: true peak -2.1 dBTP, loudness -16.5 LUFS (a little quiet against the -14 target; raise later with the final limiter).
+An earlier mix (v2) peaked above 0 dBFS after AAC encoding and was replaced. Still missing: the crowd roar and the viewer's shout (generated, about 8 credits, not yet approved).
